@@ -17,7 +17,7 @@ import "./hihu.css"
 import ThemeNavigation from './ThemeNavigation'; 
 import ThemeDetails from './ThemeDetails';
 
-const REACT_APP_API_URL="http://localhost:5000";
+const REACT_APP_API_URL=import.meta.env.VITE_APP_API_URL;
 //const REACT_APP_API_URL = "https://geetagt-2.onrender.com";
 const testApi = async () => {
   try {
