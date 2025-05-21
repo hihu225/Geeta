@@ -678,7 +678,7 @@ setIsOpen(true)}
 };
 const handleThemeSelect = async (themeName) => {
   try {
-    const response = await axios.get(`/api/themes/${themeName}`);
+    const response = await axios.get(`${REACT_APP_API_URL}/api/themes/${themeName}`);
     setThemeData(response.data);
     setSelectedTheme(themeName);
     setShowThemeSection(true);

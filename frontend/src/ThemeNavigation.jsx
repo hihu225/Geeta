@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { backend_url } from './utils/backend';
 const ThemeNavigation = ({ onSelectTheme }) => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +10,7 @@ const ThemeNavigation = ({ onSelectTheme }) => {
   useEffect(() => {
   const fetchThemes = async () => {
     try {
-      const response = await axios.get('/api/themes');
+      const response = await axios.get(`${backend_url}/api/themes`);
       console.log('Themes API response:', response.data);
       
       // Adjust here based on actual shape of response.data
