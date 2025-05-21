@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Geeta Gpt</string>
+    <string name="title_activity_main">Geeta Gpt</string>
+    <string name="package_name">com.hihu.geetagpt</string>
+    <string name="custom_url_scheme">com.hihu.geetagpt</string>
+</resources>
