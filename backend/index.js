@@ -28,6 +28,7 @@ const chatSchema = new mongoose.Schema({
   translation: String,
   chapter: String,
   verse: String,
+  intent: String,
   createdAt: { type: Date, default: Date.now },
   isFavorite: { type: Boolean, default: false }
 });
@@ -143,6 +144,7 @@ Shloka: <Relevant Sanskrit shloka in Devanagari script only>
 Translation: <English translation of the shloka>
 Chapter: <chapter number>
 Verse: <verse number>
+Intent: <Intent of the user message, if applicable>
 
 Question: ${message}
 `;
@@ -157,7 +159,8 @@ Question: ${message}
     const translationMatch = response.match(/Translation:\s*(.*?)(?:\s*Chapter:|$)/s);
     const chapterMatch = response.match(/Chapter:\s*(\d+)/);
     const verseMatch = response.match(/Verse:\s*(\d+)/);
-
+    const intentMatch = response.match(/Intent:\s*(.*?)(?:\s*$)/);
+    const intent = intentMatch ? intentMatch[1].trim() : "Intent not found";
     const answer = answerMatch ? answerMatch[1].trim() : "Answer not found";
     const shloka = shlokaMatch ? shlokaMatch[1].trim() : "Shloka not found";
     const translation = translationMatch ? translationMatch[1].trim() : "Translation not found";
@@ -176,6 +179,7 @@ Question: ${message}
       translation,
       chapter,
       verse,
+      intent,
       isFavorite: false
     });
     await chat.save();
@@ -188,6 +192,7 @@ Question: ${message}
       translation,
       chapter,
       verse,
+      intent,
       _id: chat._id,
       isFavorite: false
     });
