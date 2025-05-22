@@ -426,32 +426,34 @@ app.get("/api/themes", async (req, res) => {
 
     // 2. Construct prompt for Gemini with required JSON schema.
     const prompt = `
-      Based on the user intents: ${intents},
-      generate a JSON array of theme objects. Each theme must include:
-      "name", "description", "tags" (array of strings), and "verses" (array).
-      Each verse object should have "chapter", "verse", "shloka", "translation",
-      "explanation", and "relevance". Output valid JSON only. give shloka in Sanskrit language.
-      The JSON should look like this:
-      [
+  Based on the user intents: ${intents},
+  generate a JSON array of theme objects. Each theme must include:
+  "name", "description", "tags" (array of strings), and "verses" (array).
+  Each verse object should have "chapter", "verse", "shloka", "translation",
+  "explanation", and "relevance". Output valid JSON only.
+  The "shloka" field must be in Sanskrit using Devanagari script (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे..."), not in transliterated English.
+  The JSON should look like this:
+  [
+    {
+      "name": "Theme Name",
+      "description": "Theme Description",
+      "tags": ["tag1", "tag2"],
+      "verses": [
         {
-          "name": "Theme Name",
-          "description": "Theme Description",
-          "tags": ["tag1", "tag2"],
-          "verses": [
-            {
-              "chapter": 1,
-              "verse": 1,
-              "shloka": "Sanskrit Shloka",
-              "translation": "Translation of the shloka",
-              "explanation": "Explanation of the verse",
-              "relevance": "Why this verse is relevant"
-            }
-          ]
+          "chapter": 1,
+          "verse": 1,
+          "shloka": "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...",
+          "translation": "Translation of the shloka",
+          "explanation": "Explanation of the verse",
+          "relevance": "Why this verse is relevant"
         }
       ]
-      Please ensure the JSON is well-formed and valid.
-      Do not include any additional text or explanations.
-    `;
+    }
+  ]
+  Please ensure the JSON is well-formed and valid.
+  Do not include any additional text or explanations.
+`;
+
 
     // 3. Call Gemini to generate content. Use generateContent on a Gemini model.
     const aiResponse = await model.generateContent(prompt);
