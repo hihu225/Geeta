@@ -426,47 +426,61 @@ app.get("/api/themes", async (req, res) => {
 
     // 2. Construct prompt for Gemini with required JSON schema.
     const prompt = `
-  🎯 TASK:
-  Generate a **minimum of 4** unique theme objects based on the user intents: ${intents}
+🎯 TASK:
+Generate a **minimum of 4** unique theme objects based on the user intents: ${intents}
 
-  Each theme must be a JSON object containing:
-  - "name": A concise, meaningful theme name.
-  - "description": A brief explanation of the theme.
-  - "tags": An array of relevant keywords (e.g., "karma", "duty").
-  - "verses": An array of verse objects, each with:
-    - "chapter" (number),
-    - "verse" (number),
-    - "shloka": The original verse in **pure Sanskrit Devanagari script ONLY** (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...").
-      ❌ NO Latin or English transliteration (e.g., "duḥkheṣv anudvignā-manāḥ..." is INVALID).
-    - "translation": Accurate English translation.
-    - "explanation": Explanation of meaning and context.
-    - "relevance": Why this verse is relevant to the theme and user intent.
+🚨 EXTREMELY IMPORTANT - SHLOKA FORMAT REQUIREMENT:
+The "shloka" field MUST contain verses written ONLY in Sanskrit Devanagari script (the original Indian script that looks like this: धर्म, कर्म, योग).
 
-  ❗ CRITICAL RULES:
-  - At least 4 theme objects must be included.
-  - Each theme should contain 1 or more properly formatted verse objects.
-  - Any verse with shloka **not in Devanagari script** invalidates the output.
-  - Output must be a **pure, valid JSON array** — no markdown, comments, or extra text.
+❌ NEVER use Roman/Latin letters for Sanskrit like:
+- "karmaṇy-evādhikāras te" ← THIS IS WRONG
+- "duḥkheṣv anudvignā-manāḥ" ← THIS IS WRONG
+- Any Sanskrit with English letters ← THIS IS WRONG
 
-  ✅ OUTPUT FORMAT (STRICT):
-  [
-    {
-      "name": "Theme Name",
-      "description": "Theme Description",
-      "tags": ["tag1", "tag2"],
-      "verses": [
-        {
-          "chapter": 1,
-          "verse": 1,
-          "shloka": "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...",
-          "translation": "Translation of the shloka",
-          "explanation": "Explanation of the verse",
-          "relevance": "Why this verse is relevant"
-        }
-      ]
-    },
-    ...
-  ]
+✅ ALWAYS use Devanagari script like:
+- "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"
+- "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः"
+
+📋 REQUIRED JSON STRUCTURE:
+Each theme must be a JSON object containing:
+- "name": A concise, meaningful theme name
+- "description": A brief explanation of the theme
+- "tags": An array of relevant keywords (e.g., ["karma", "duty", "action"])
+- "verses": An array of verse objects, each with:
+  - "chapter": Chapter number (integer)
+  - "verse": Verse number (integer)
+  - "shloka": The verse in Devanagari script ONLY (like "धर्मक्षेत्रे कुरुक्षेत्रे...")
+  - "translation": Accurate English translation
+  - "explanation": Explanation of meaning and context
+  - "relevance": Why this verse relates to the theme and user intent
+
+🔥 CRITICAL SUCCESS CRITERIA:
+1. Output exactly 4 or more theme objects
+2. Each shloka MUST be in Devanagari script (looks like: कर्म, धर्म, योग)
+3. NO Roman/Latin transliteration allowed in shloka field
+4. Output must be valid JSON array format
+5. No markdown formatting, no code blocks, no extra text
+
+✅ EXACT OUTPUT FORMAT:
+[
+  {
+    "name": "Theme Name Here",
+    "description": "Brief theme description here",
+    "tags": ["keyword1", "keyword2", "keyword3"],
+    "verses": [
+      {
+        "chapter": 2,
+        "verse": 47,
+        "shloka": "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
+        "translation": "You have the right to perform your actions, but never to the fruits of action. Do not let the fruits of action be your motive, nor let your attachment be to inaction.",
+        "explanation": "This verse establishes the principle of Nishkama Karma - performing duty without attachment to results.",
+        "relevance": "This verse directly addresses the theme by explaining how to act without being bound by outcomes."
+      }
+    ]
+  }
+]
+
+Remember: If even ONE shloka contains Roman letters instead of Devanagari script, the entire response fails. Always use the original Sanskrit script that looks like धर्म, कर्म, योग.
 `;
 
 
