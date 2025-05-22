@@ -429,10 +429,18 @@ app.get("/api/themes", async (req, res) => {
   Based on the user intents: ${intents},
   generate a JSON array of theme objects. Each theme must include:
   "name", "description", "tags" (array of strings), and "verses" (array).
-  Each verse object should have "chapter", "verse", "shloka", "translation",
-  "explanation", and "relevance". Output valid JSON only.
-  The "shloka" field must be in Sanskrit using Devanagari script (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे..."), not in transliterated English.
-  The JSON should look like this:
+  Each verse object must include: "chapter", "verse", "shloka", "translation",
+  "explanation", and "relevance".
+
+  ❗ VERY IMPORTANT:
+  - The "shloka" field must be written strictly in **Sanskrit using Devanagari script only** (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...").
+  - Do **NOT** use English transliteration (like "dharmakshetre kurukshetre...").
+  - If the shloka is not in Devanagari, the output is invalid.
+
+  ✅ Output only a well-formatted JSON array.
+  ❌ Do not include any explanations, markdown, or extra text.
+
+  Example format:
   [
     {
       "name": "Theme Name",
@@ -450,9 +458,8 @@ app.get("/api/themes", async (req, res) => {
       ]
     }
   ]
-  Please ensure the JSON is well-formed and valid.
-  Do not include any additional text or explanations.
 `;
+
 
 
     // 3. Call Gemini to generate content. Use generateContent on a Gemini model.
