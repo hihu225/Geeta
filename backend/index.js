@@ -486,7 +486,12 @@ app.get("/api/themes", async (req, res) => {
         await newTheme.save();
       }
     }
-    res.json(themes);
+    const themeNames = themes.map((t) => t.name);
+    const savedThemes = await Theme.find({
+      name: { $in: themeNames },
+    });
+
+    res.json(savedThemes);
   } catch (error) {
     // Handle any errors from the AI call or parsing
     console.error("Error generating themes:", error);
@@ -495,14 +500,14 @@ app.get("/api/themes", async (req, res) => {
 });
 
 // Get verses for a specific theme
-app.get("/api/themes/:themeName", async (req, res) => {
+app.get("/api/themes/:id", async (req, res) => {
   try {
-    const { themeName } = req.params;
+    const { id } = req.params;
 
     // Find theme by name (case insensitive)
-    const theme = await Theme.findOne({
-      name: { $regex: new RegExp(`^${themeName}$`, "i") },
-    });
+    const theme = await Theme.findById(id).select(
+      "name description tags verses"
+    );
 
     if (!theme) {
       return res.status(404).json({ error: "Theme not found" });
