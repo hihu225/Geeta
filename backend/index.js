@@ -426,21 +426,29 @@ app.get("/api/themes", async (req, res) => {
 
     // 2. Construct prompt for Gemini with required JSON schema.
     const prompt = `
-  Based on the user intents: ${intents},
-  generate a JSON array of theme objects. Each theme must include:
-  "name", "description", "tags" (array of strings), and "verses" (array).
-  Each verse object must include: "chapter", "verse", "shloka", "translation",
-  "explanation", and "relevance".
+  🎯 TASK:
+  Generate a **minimum of 4** unique theme objects based on the user intents: ${intents}
 
-  ❗ VERY IMPORTANT:
-  - The "shloka" field must be written strictly in **Sanskrit using Devanagari script only** (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...").
-  - Do **NOT** use English transliteration (like "dharmakshetre kurukshetre...").
-  - If the shloka is not in Devanagari, the output is invalid.
+  Each theme must be a JSON object containing:
+  - "name": A concise, meaningful theme name.
+  - "description": A brief explanation of the theme.
+  - "tags": An array of relevant keywords (e.g., "karma", "duty").
+  - "verses": An array of verse objects, each with:
+    - "chapter" (number),
+    - "verse" (number),
+    - "shloka": The original verse in **pure Sanskrit Devanagari script ONLY** (e.g., "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः...").
+      ❌ NO Latin or English transliteration (e.g., "duḥkheṣv anudvignā-manāḥ..." is INVALID).
+    - "translation": Accurate English translation.
+    - "explanation": Explanation of meaning and context.
+    - "relevance": Why this verse is relevant to the theme and user intent.
 
-  ✅ Output only a well-formatted JSON array.
-  ❌ Do not include any explanations, markdown, or extra text.
+  ❗ CRITICAL RULES:
+  - At least 4 theme objects must be included.
+  - Each theme should contain 1 or more properly formatted verse objects.
+  - Any verse with shloka **not in Devanagari script** invalidates the output.
+  - Output must be a **pure, valid JSON array** — no markdown, comments, or extra text.
 
-  Example format:
+  ✅ OUTPUT FORMAT (STRICT):
   [
     {
       "name": "Theme Name",
@@ -456,7 +464,8 @@ app.get("/api/themes", async (req, res) => {
           "relevance": "Why this verse is relevant"
         }
       ]
-    }
+    },
+    ...
   ]
 `;
 
