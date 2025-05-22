@@ -39,7 +39,7 @@ button.scroll-to-top:hover {
   transform: scale(0.95);
 }
 .krishna-advice-container p {
-  background-color: #FFFFFF;
+  background-color: #E8F5E9;
   padding: 0.875rem; /* Reduced from 1rem */
   border-radius: 6px;
   margin: 0;
@@ -194,7 +194,7 @@ body.dark-theme .krishna-advice-container p {
   line-height: 1.6; /* Reduced from 1.8 for mobile */
   font-size: 1rem; /* Reduced from 1.05rem */
   font-weight: 400;
-  background-color: #f5efe6; 
+  background-color: #FCE4EC; 
   padding: 1rem; /* Reduced from 1.2rem */
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -210,7 +210,7 @@ body.dark-theme .theme-description {
 
 .krishna-advice-container {
   width: 100%;
-  background-color: #FFF8E6;
+  background-color: #FFF8E1;
   border-left: 5px solid var(--theme-accent-color, var(--accent-color));
   padding: 1.25rem 1rem; /* Adjusted padding for mobile */
   margin-bottom: 1.5rem;
@@ -243,7 +243,7 @@ body.dark-theme .krishna-advice-container {
 
 .verse-card {
   width: 100%;
-  background-color: #f5efe6; 
+  background-color: #FFF8E1; 
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 1.25rem 1rem; /* Adjusted padding for mobile */
@@ -363,8 +363,8 @@ body.dark-theme .verse-card {
   --light-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
   --light-box-shadow: 0 10px 25px rgba(139, 0, 0, 0.12), 0 6px 12px rgba(139, 0, 0, 0.08);
   --light-scrollbar: rgba(0, 0, 0, 0.3);
-  --light-shloka-bg: #FFF9E6;
-  --light-relevance-bg: #704214;         /* Earthy brown — warm, readable with white text */
+  --light-shloka-bg: #E8F5E9;
+  --light-relevance-bg: #3E2723;         /* Earthy brown — warm, readable with white text */
 --light-relevance-heading: #b8860b;
 
   --light-krishna-advice-bg: #F5EDD8;
