@@ -20,7 +20,9 @@ const ThemeDetails = ({ themeData, onClose }) => {
       
       <div className="krishna-advice-container">
         <h3>Krishna's Advice</h3>
-        <p>{krishnaAdvice}</p>
+        <p style={{
+          fontWeight:400,
+        }}>{krishnaAdvice}</p>
       </div>
       
       <div className="theme-verses-container">
@@ -33,7 +35,12 @@ const ThemeDetails = ({ themeData, onClose }) => {
             
             <div className="shloka-container">
               <p className="shloka-sanskrit">{verse.shloka}</p>
-              <p className="shloka-translation">{verse.translation}</p>
+              <p
+                className="shloka-translation"
+                style={{ fontWeight: 500 }}>
+                {verse.translation}
+              </p>
+
             </div>
             
             <div className="verse-explanation">
@@ -42,7 +49,15 @@ const ThemeDetails = ({ themeData, onClose }) => {
             
             <div className="verse-relevance">
               <h5>Why this verse?</h5>
-              <p>{verse.relevance}</p>
+              <p style={{
+                    fontWeight: 500,             
+                    fontSize: '1.05rem',         
+                    lineHeight: '1.6',           
+                    color: 'white'       
+                  }}>
+              {verse.relevance}
+              </p>
+
             </div>
           </div>
         ))}

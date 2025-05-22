@@ -307,7 +307,7 @@ body.dark-theme .verse-card {
   color: var(--relevance-heading);
   font-size: 0.95rem; /* Reduced from 1rem */
   font-family: 'Palatino Linotype', 'Book Antiqua', 'Baskerville', serif;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .themes-button {
@@ -364,7 +364,7 @@ body.dark-theme .verse-card {
   --light-box-shadow: 0 10px 25px rgba(139, 0, 0, 0.12), 0 6px 12px rgba(139, 0, 0, 0.08);
   --light-scrollbar: rgba(0, 0, 0, 0.3);
   --light-shloka-bg: #E8F5E9;
-  --light-relevance-bg: #3E2723;         /* Earthy brown — warm, readable with white text */
+  --light-relevance-bg: 	#4A2C2A;         /* Earthy brown — warm, readable with white text */
 --light-relevance-heading: #b8860b;
 
   --light-krishna-advice-bg: #F5EDD8;
