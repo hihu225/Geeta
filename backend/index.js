@@ -451,7 +451,6 @@ app.get("/api/themes", async (req, res) => {
       ]
       Please ensure the JSON is well-formed and valid.
       Do not include any additional text or explanations.
-      Ensure the sanskrit shlokas are in Devanagari script not in english.
     `;
 
     // 3. Call Gemini to generate content. Use generateContent on a Gemini model.
