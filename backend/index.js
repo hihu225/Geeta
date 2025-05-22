@@ -476,6 +476,16 @@ app.get("/api/themes", async (req, res) => {
     }
 
     // 6. Return the generated themes array.
+    //save to DB
+    for (const theme of themes) {
+      const existingTheme = await Theme.findOne({
+        name: { $regex: new RegExp(`^${theme.name}$`, "i") },
+      });
+      if (!existingTheme) {
+        const newTheme = new Theme(theme);
+        await newTheme.save();
+      }
+    }
     res.json(themes);
   } catch (error) {
     // Handle any errors from the AI call or parsing
