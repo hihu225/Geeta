@@ -460,6 +460,7 @@ Each theme must be a JSON object containing:
 3. NO Roman/Latin transliteration allowed in shloka field
 4. Output must be valid JSON array format
 5. No markdown formatting, no code blocks, no extra text
+6. No themes should be repeated
 
 ✅ EXACT OUTPUT FORMAT:
 [
