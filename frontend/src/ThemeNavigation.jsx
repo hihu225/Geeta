@@ -41,7 +41,7 @@ const ThemeNavigation = ({ onSelectTheme }) => {
             <div 
               key={theme._id} 
               className="theme-card"
-              onClick={() => onSelectTheme(theme.name)}
+              onClick={() => onSelectTheme(theme._id)}
             >
               <h4>{theme.name}</h4>
               <p className="theme-tags">
