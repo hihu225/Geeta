@@ -430,7 +430,7 @@ app.get("/api/themes", async (req, res) => {
       generate a JSON array of theme objects. Each theme must include:
       "name", "description", "tags" (array of strings), and "verses" (array).
       Each verse object should have "chapter", "verse", "shloka", "translation",
-      "explanation", and "relevance". Output valid JSON only.
+      "explanation", and "relevance". Output valid JSON only. give shloka in Sanskrit language.
       The JSON should look like this:
       [
         {
