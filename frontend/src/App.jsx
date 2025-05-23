@@ -1,6 +1,5 @@
 "use client";
 
-// Line 3-4: Update imports
 import { FaMicrophone, FaShareAlt, FaTrash, FaSpinner, FaDharmachakra, FaMoon, FaSun, FaStar } from "react-icons/fa";
 import React, { useState, useEffect,useRef, createContext, useReducer } from "react";
 import { FaRegPaperPlane, FaOm, FaBookOpen, FaHeart } from "react-icons/fa";
@@ -16,9 +15,9 @@ import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import "./hihu.css"
 import ThemeNavigation from './ThemeNavigation'; 
 import ThemeDetails from './ThemeDetails';
+import { v4 as uuidv4 } from 'uuid';
 
 const REACT_APP_API_URL=import.meta.env.VITE_APP_API_URL;
-//const REACT_APP_API_URL = "https://geetagt-2.onrender.com";
 const testApi = async () => {
   try {
     const res = await axios.get(`${REACT_APP_API_URL}/api/messages`)
@@ -29,7 +28,7 @@ const testApi = async () => {
 };
 
 const addKeyframes = () => {
-  const styleSheet = document.styleSheets[0]; // get the first stylesheet in the document
+  const styleSheet = document.styleSheets[0];
   const keyframes =
     `@keyframes scrollText {
       0% { transform: translateX(0); }
@@ -46,7 +45,6 @@ const addKeyframes = () => {
 addKeyframes();
 
 const BhagavadGitaBot = () => {
-  // Helper function for timestamp formatting (around line 14-15)
   const formatTimestamp = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + 
@@ -71,7 +69,6 @@ const BhagavadGitaBot = () => {
 const scrollToTop = () => {
     window.scrollTo({ top: 500, behavior: "smooth" });
   };
-  // Add a new state for tracking which chat is being edited
 const [editingChatId, setEditingChatId] = useState(null);
 const [editText, setEditText] = useState("");
 const [showInputWrapper, setShowInputWrapper] = React.useState(true);
@@ -86,13 +83,11 @@ useEffect(() => {
   window.addEventListener("scroll", onScroll);
   return () => window.removeEventListener("scroll", onScroll);
 }, []);
-// Function to handle starting the edit process
 const handleEditChat = (index, message) => {
   setEditingChatId(index);
   setEditText(message);
 };
 
-// Function to cancel editing
 const handleCancelEdit = () => {
   setEditingChatId(null);
   setEditText("");
@@ -250,13 +245,13 @@ const handleExportAllChats = async () => {
     alert("Failed to save/share PDF. Try again");
   }
 };
-// Function to save edits and regenerate response
+
 const handleSaveEdit = async (index) => {
   if (!editText.trim()) return;
   setLoading(true);
   
   try {
-    // Get the chat to update
+    
     const chatToUpdate = chats[index];
     
     // Create a new request with the edited message
@@ -692,7 +687,6 @@ const handleCloseThemeDetails = () => {
 };
 const toggleSound = new Audio('/toggle.mp3');
 
-// FRONTEND: Improved delete function that properly handles state
 const deleteSound = new Audio('/delete.mp3');
 
 const handleDeleteChat = async (index) => {
@@ -817,8 +811,6 @@ const toggleSelectAll = () => {
     setSelectedChats(allSelected);
   }
 };
-  // Line 45-50: Add new state variables
-  // Around line 48-50 (state variables)
 
   const [showFavorites, setShowFavorites] = useState(false);
   const [visibleChats, setVisibleChats] = useState(3);
@@ -873,7 +865,6 @@ useEffect(() => {
   }
 }, [favorites]);
 
-// Load chats and favorites from local storage on component mount
 // Load chats, favorites and language preferences from local storage on component mount
 useEffect(() => {
   const savedChats = localStorage.getItem('bhagavadGitaChats');
@@ -1029,42 +1020,45 @@ const recognitionRef = useRef(null);
 const responseSound = new Audio('/received.wav');
 
 
-  // Update handleSubmit with skeleton loading (around line 115)
+  
   const handleSubmit = async (e) => {
   e.preventDefault();
   if (!input.trim()) return;
   sendSound.play();
   setLoading(true);
   setShowSkeleton(true);
-    
+  
+  const tempId = uuidv4();  // Temporary ID for new chat
+
   try {
     const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
       message: input,
       chatHistory: chats.slice(0, 5),
     });
     responseSound.play();
-    
-    // Check if response contains theme data
+
+    // If backend returns a real _id, update the temp chat with it
+    const newChat = {
+      _id: res?.data.chatId || tempId,  // use backend id or fallback to tempId
+      userMessage: input,
+      botResponse: res?.data.botResponse,
+      hindiResponse: res?.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
+      shloka: res?.data.shloka,
+      translation: res?.data.translation,
+      chapter: res?.data.chapter,
+      verse: res?.data.verse,
+      createdAt: new Date(),
+    };
+
+    // Update theme if present
     if (res?.data.themeData) {
       setThemeData(res.data.themeData);
       setSelectedTheme(res.data.themeData.name);
       setShowThemeSection(true);
     }
     
-    setChats([
-      {
-        userMessage: input,
-        botResponse: res?.data.botResponse,
-        hindiResponse: res?.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है", // Default Hindi message if not available
-        shloka: res?.data.shloka,
-        translation: res?.data.translation,
-        chapter: res?.data.chapter,
-        verse: res?.data.verse,
-        createdAt: new Date(),
-      },
-      ...chats,
-    ]);
-    
+    setChats([newChat, ...chats]);
+
     getRandomQuote();
     setInput("");
   } catch (error) {
@@ -1075,7 +1069,6 @@ const responseSound = new Audio('/received.wav');
   scrollToTop();
 };
   
-  // Updated styles with theme and font size support (line 146 onwards)
   
   const [styles, setStyles] = useState(getStyles(theme,fontSize, isOpen, isListening));
   useEffect(()=>{
@@ -1157,7 +1150,7 @@ const responseSound = new Audio('/received.wav');
         <div style={styles.preferencesBar}>
   <button 
   onClick={() => {
-    toggleSound.play(); // 🔊 Play toggle sound
+    toggleSound.play(); 
 
     const newTheme = theme === "light" ? "dark" : "light";
     localStorage.setItem("theme", newTheme);
@@ -1345,7 +1338,6 @@ const responseSound = new Audio('/received.wav');
     </button>
   </div>
 
-  {/* Center-aligned Select All / Share / Delete section on next line */}
   {selectMode && (
     <div
       style={{
