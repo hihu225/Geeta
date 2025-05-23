@@ -441,6 +441,9 @@ The "shloka" field MUST contain verses written ONLY in Sanskrit Devanagari scrip
 - "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"
 - "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः"
 
+🚫 THEME UNIQUENESS MANDATE:
+Each theme MUST be completely unique in its name, concept, and content. DO NOT REPEAT any previously used theme name, description, or idea. Even partially similar themes should be strictly avoided. Repetition in any form (semantic or literal) will be considered a failure.
+
 📋 REQUIRED JSON STRUCTURE:
 Each theme must be a JSON object containing:
 - "name": A concise, meaningful theme name
@@ -455,12 +458,12 @@ Each theme must be a JSON object containing:
   - "relevance": Why this verse relates to the theme and user intent
 
 🔥 CRITICAL SUCCESS CRITERIA:
-1. Output exactly 4 or more theme objects
-2. Each shloka MUST be in Devanagari script (looks like: कर्म, धर्म, योग)
-3. NO Roman/Latin transliteration allowed in shloka field
-4. Output must be valid JSON array format
-5. No markdown formatting, no code blocks, no extra text
-6. No themes should be repeated
+1. Output **at least 4** completely **distinct** theme objects
+2. Each **shloka MUST be in Devanagari script** (e.g., कर्म, धर्म, योग)
+3. **NO Roman/Latin transliteration** allowed in "shloka" field
+4. Output must be in **valid JSON array format only**
+5. **No markdown formatting**, no code blocks, and **no extra text**
+6. **Strictly no repeated themes** (by name, description, idea, or intent)
 
 ✅ EXACT OUTPUT FORMAT:
 [
@@ -481,7 +484,8 @@ Each theme must be a JSON object containing:
   }
 ]
 
-Remember: If even ONE shloka contains Roman letters instead of Devanagari script, the entire response fails. Always use the original Sanskrit script that looks like धर्म, कर्म, योग.
+🚨 FINAL REMINDER:
+If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme is repeated in concept or name, the entire response is invalid. Strictly adhere to all formatting, uniqueness, and script rules.
 `;
 
 
