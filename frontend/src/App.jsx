@@ -686,29 +686,44 @@ const handleCloseThemeDetails = () => {
   setSelectedTheme(null);
 };
 const handleFav = async (chat) => {
+  console.log("handleFav called with chat:", chat._id);
+  console.log("Current favorites:", favorites.map(f => f._id));
+  
   try {
     const isTempId = chat._id.length !== 24; // MongoDB ObjectId is 24 chars hex
     const isAlreadyFavorite = favorites.some(fav => fav._id === chat._id);
-
+    
+    console.log("isTempId:", isTempId);
+    console.log("isAlreadyFavorite:", isAlreadyFavorite);
+    
     if (isTempId) {
       // TEMP ID: toggle favorite locally ONLY (no backend call)
       if (isAlreadyFavorite) {
+        console.log("Removing temp favorite");
         setFavorites(favorites.filter(fav => fav._id !== chat._id));
       } else {
+        console.log("Adding temp favorite");
         setFavorites([...favorites, chat]);
       }
     } else {
       // PERMANENT ID: update backend
-      const response = await fetch(`/api/chats/${chat._id}/favorite`, {
+      console.log("Updating backend for permanent ID");
+      
+      // FIX: Use the same base URL as your other API calls
+      const response = await fetch(`${REACT_APP_API_URL}/api/chats/${chat._id}/favorite`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: !isAlreadyFavorite }),
       });
-
-      if (!response.ok) throw new Error("Failed to update favorite status");
-
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update favorite status: ${response.status} - ${errorText}`);
+      }
+      
       const updatedChat = await response.json();
-
+      console.log("Backend response:", updatedChat);
+      
       // Update local favorites accordingly
       if (updatedChat.isFavorite) {
         setFavorites([...favorites.filter(fav => fav._id !== chat._id), updatedChat]);
@@ -720,7 +735,145 @@ const handleFav = async (chat) => {
     console.error("handleFav error:", error);
   }
 };
-
+const handleDeleteFavoriteChat = async (chat, favoriteIndex) => {
+  try {
+    if (!chat || !chat._id) {
+      console.error("Cannot delete chat: Invalid chat or missing ID");
+      return;
+    }
+    
+    // Show loading state
+    setLoading(true);
+    
+    // Check if it's a temp ID or permanent ID
+    const isTempId = chat._id.length !== 24;
+    
+    if (isTempId) {
+      // For temp IDs, we need to either:
+      // 1. Delete from backend if it exists there, OR
+      // 2. Find the actual backend ID and delete that
+      
+      try {
+        // Try to find the chat in backend by other identifiers (title, timestamp, etc.)
+        const backendChats = await axios.get(`${REACT_APP_API_URL}/api/chats`);
+        
+        // Find matching chat by title and approximate creation time
+        const matchingChat = backendChats.data.find(backendChat => 
+          backendChat.title === chat.title && 
+          // Add other matching criteria as needed (timestamp, first message, etc.)
+          Math.abs(new Date(backendChat.createdAt) - new Date(chat.createdAt)) < 60000 // Within 1 minute
+        );
+        
+        if (matchingChat) {
+          // Delete the actual backend chat
+          const response = await axios.delete(`${REACT_APP_API_URL}/api/chats/${matchingChat._id}`);
+          
+          if (response.data.success) {
+            deleteSound.play();
+            console.log("Temp chat found and deleted from backend");
+            
+            // Remove from local state
+            setFavorites(prevFavorites => 
+              prevFavorites.filter(fav => fav._id !== chat._id)
+            );
+            setChats(prevChats => prevChats.filter(c => c._id !== chat._id));
+            
+            // FIX: Refresh data and get actual favorite status from backend
+            const refreshedChats = await axios.get(`${REACT_APP_API_URL}/api/chats`);
+            
+            // Update chats with backend data (backend should have correct isFavorite status)
+            setChats(refreshedChats.data);
+            
+            // Update favorites based on backend data
+            const backendFavorites = refreshedChats.data.filter(c => c.isFavorite);
+            setFavorites(backendFavorites);
+          }
+        } else {
+          // If not found in backend, just remove locally (truly temporary)
+          deleteSound.play();
+          setFavorites(prevFavorites => prevFavorites.filter(fav => fav._id !== chat._id));
+          setChats(prevChats => prevChats.filter(c => c._id !== chat._id));
+          console.log("Temp chat removed from local state only");
+        }
+      } catch (tempError) {
+        console.error("Error handling temp chat deletion:", tempError);
+        
+        // Fallback: remove from local state
+        setFavorites(prevFavorites => prevFavorites.filter(fav => fav._id !== chat._id));
+        setChats(prevChats => prevChats.filter(c => c._id !== chat._id));
+      }
+    } else {
+      // For permanent IDs, use your existing logic
+      let deleteSuccess = false;
+      
+      try {
+        // Strategy 1: Delete by ID
+        const response = await axios.delete(`${REACT_APP_API_URL}/api/chats/${chat._id}`);
+        
+        if (response.data.success) {
+          deleteSuccess = true;
+          console.log("Chat deleted successfully from backend (by ID)");
+        }
+      } catch (idError) {
+        console.log("ID-based deletion failed, trying fallback...");
+        
+        // Strategy 2: Fallback to index-based deletion
+        try {
+          const chatIndex = chats.findIndex(c => c._id === chat._id);
+          
+          if (chatIndex !== -1) {
+            const fallbackResponse = await axios.delete(`${REACT_APP_API_URL}/api/chats/index/${chatIndex}`);
+            
+            if (fallbackResponse.data.success) {
+              deleteSuccess = true;
+              console.log("Chat deleted successfully (fallback method)");
+            }
+          }
+        } catch (fallbackError) {
+          console.error("Both deletion methods failed:", fallbackError);
+        }
+      }
+      
+      if (deleteSuccess) {
+        deleteSound.play();
+        
+        // Wait a bit for backend to process
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // FIX: Refresh from server and let backend determine favorite status
+        try {
+          const refreshedChats = await axios.get(`${REACT_APP_API_URL}/api/chats`);
+          
+          // Use backend data as source of truth for both chats and favorites
+          setChats(refreshedChats.data);
+          
+          // Update favorites based on what backend says is favorited
+          const backendFavorites = refreshedChats.data.filter(chat => chat.isFavorite);
+          setFavorites(backendFavorites);
+          
+          console.log("Data refreshed from server after deletion");
+        } catch (refreshError) {
+          console.error("Failed to refresh data:", refreshError);
+          
+          // Fallback: Remove locally only the deleted chat
+          setChats(prevChats => prevChats.filter(c => c._id !== chat._id));
+          setFavorites(prevFavorites => prevFavorites.filter(fav => fav._id !== chat._id));
+        }
+        
+        // Adjust visible chats
+        setVisibleChats(prev => Math.max(1, prev - 1));
+        
+      } else {
+        alert("Failed to delete the chat. Please try again.");
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting favorite chat:", error);
+    alert(`Error deleting chat: ${error.message || "Unknown error"}`);
+  } finally {
+    setLoading(false);
+  }
+};
 const toggleSound = new Audio('/toggle.mp3');
 
 const deleteSound = new Audio('/delete.mp3');
@@ -1063,9 +1216,8 @@ const responseSound = new Audio('/received.wav');
   sendSound.play();
   setLoading(true);
   setShowSkeleton(true);
-
   const tempId = uuidv4();  // Temporary ID for new chat
-
+  
   // Add chat locally immediately with tempId
   const tempChat = {
     _id: tempId,
@@ -1074,14 +1226,14 @@ const responseSound = new Audio('/received.wav');
     createdAt: new Date(),
   };
   setChats([tempChat, ...chats]);  // Show loading chat
-
+  
   try {
     const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
       message: input,
       chatHistory: chats.slice(0, 5),
     });
     responseSound.play();
-
+    
     const newChat = {
       _id: res?.data.chatId || tempId,
       userMessage: input,
@@ -1093,19 +1245,27 @@ const responseSound = new Audio('/received.wav');
       verse: res?.data.verse,
       createdAt: new Date(),
     };
-
-    // Replace temp chat with permanent chat (_id might change)
+    
+    // Replace temp chat with permanent chat
     setChats(prevChats => {
       return prevChats.map(chat => (chat._id === tempId ? newChat : chat));
     });
-
+    
+    // IMPORTANT: Update favorites if this temp chat was favorited
+    if (res?.data.chatId && res.data.chatId !== tempId) {
+      setFavorites(prevFavorites => {
+        return prevFavorites.map(fav => 
+          fav._id === tempId ? { ...fav, _id: res.data.chatId } : fav
+        );
+      });
+    }
+    
     // Other stuff
     if (res?.data.themeData) {
       setThemeData(res.data.themeData);
       setSelectedTheme(res.data.themeData.name);
       setShowThemeSection(true);
     }
-
     getRandomQuote();
     setInput("");
   } catch (error) {
@@ -1115,7 +1275,6 @@ const responseSound = new Audio('/received.wav');
   setShowSkeleton(false);
   scrollToTop();
 };
-
   
   const [styles, setStyles] = useState(getStyles(theme,fontSize, isOpen, isListening));
   useEffect(()=>{
@@ -1441,52 +1600,71 @@ const responseSound = new Audio('/received.wav');
 
   {/* Favorite chats section */}
   {showFavorites && favorites.length > 0 && (
-    <div style={styles.favoritesSection}>
-      <h2 style={{ ...styles.subtitle, textAlign: "left", marginBottom: "1rem" }}>
-        Your Favorite Wisdom
-      </h2>
+  <div style={styles.favoritesSection}>
+    <h2 style={{ ...styles.subtitle, textAlign: "left", marginBottom: "1rem" }}>
+      Your Favorite Wisdom
+    </h2>
 
-      {favorites.map((chat, index) => (
-        <div key={`fav-${index}`} style={styles.chatBubble}>
+    {favorites.map((chat, index) => (
+      <div key={`fav-${index}`} style={styles.chatBubble}>
+        
+        {selectMode && (
+          <div style={{
+            position: 'absolute',
+            top: '15px',
+            left: '15px',
+            zIndex: 5
+          }}>
+            <input
+              type="checkbox"
+              checked={!!selectedChats[chat._id || `fav-${index}`]}
+              onChange={() => {
+                setSelectedChats(prev => ({
+                  ...prev,
+                  [chat._id || `fav-${index}`]: !prev[chat._id || `fav-${index}`]
+                }));
+              }}
+              style={{
+                width: '20px',
+                height: '20px',
+                cursor: 'pointer'
+              }}
+            />
+          </div>
+        )}
+
+        {/* Action buttons container */}
+        <div style={{
+          position: 'absolute',
+          top: '15px',
+          right: '15px',
+          display: 'flex',
+          gap: '8px',
+          zIndex: 5
+        }}>
           
-          {selectMode && (
-      <div style={{
-        position: 'absolute',
-        top: '15px',
-        left: '15px',
-        zIndex: 5
-      }}>
-        <input
-          type="checkbox"
-          checked={!!selectedChats[chat._id || `fav-${index}`]}
-          onChange={() => {
-            setSelectedChats(prev => ({
-              ...prev,
-              [chat._id || `fav-${index}`]: !prev[chat._id || `fav-${index}`]
-            }));
-          }}
-          style={{
-            width: '20px',
-            height: '20px',
-            cursor: 'pointer'
-          }}
-          
-        />
-      </div>
-      
-    )}
-          {/* Delete favorite */}
-          <button 
-            onClick={() => {
-              const newFavorites = [...favorites];
-              newFavorites.splice(index, 1);
-              setFavorites(newFavorites);
-            }} 
-            style={styles.deleteButton}
+          {/* Unfavorite button */}
+          <button
+            onClick={() => handleFav(chat)}
+            style={{
+              ...styles.favoriteButton,
+              color: "#FFD700", // Always gold since this is in favorites section
+            }}
             title="Remove from favorites"
           >
-            <FaTrash />
+            <FaStar />
           </button>
+
+          {/* Delete permanently button */}
+          <button 
+            onClick={() => handleDeleteFavoriteChat(chat, index)} 
+            style={styles.deleteButton}
+            disabled={loading}
+            title="Delete this conversation permanently"
+          >
+            {loading ? <FaSpinner style={{animation: "spin 2s linear infinite"}} /> : <FaTrash />}
+          </button>
+        </div>
           
 
         <p style={{...styles.timestamp}}>
@@ -1703,10 +1881,19 @@ const responseSound = new Audio('/received.wav');
         </button>
 
         <button
-  onClick={() => handleFav(chat)}
+  onClick={() => {
+    console.log("Button clicked for chat:", chat._id);
+    console.log("Chat object:", chat);
+    console.log("Favorites before click:", favorites);
+    handleFav(chat);
+  }}
   style={{
     ...styles.favoriteButton,
-    color: favorites.some(fav => fav._id === chat._id) ? "#FFD700" : "#8B4513",
+    color: (() => {
+      const isFavorited = favorites.some(fav => fav._id === chat._id);
+      console.log(`Chat ${chat._id} is favorited:`, isFavorited);
+      return isFavorited ? "#FFD700" : "#8B4513";
+    })(),
   }}
   title={favorites.some(fav => fav._id === chat._id) ? "Remove from favorites" : "Add to favorites"}
 >
