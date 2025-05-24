@@ -685,6 +685,42 @@ const handleCloseThemeDetails = () => {
   setShowThemeSection(false);
   setSelectedTheme(null);
 };
+const handleFav = async (chat) => {
+  try {
+    const isTempId = chat._id.length !== 24; // MongoDB ObjectId is 24 chars hex
+    const isAlreadyFavorite = favorites.some(fav => fav._id === chat._id);
+
+    if (isTempId) {
+      // TEMP ID: toggle favorite locally ONLY (no backend call)
+      if (isAlreadyFavorite) {
+        setFavorites(favorites.filter(fav => fav._id !== chat._id));
+      } else {
+        setFavorites([...favorites, chat]);
+      }
+    } else {
+      // PERMANENT ID: update backend
+      const response = await fetch(`/api/chats/${chat._id}/favorite`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: !isAlreadyFavorite }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update favorite status");
+
+      const updatedChat = await response.json();
+
+      // Update local favorites accordingly
+      if (updatedChat.isFavorite) {
+        setFavorites([...favorites.filter(fav => fav._id !== chat._id), updatedChat]);
+      } else {
+        setFavorites(favorites.filter(fav => fav._id !== chat._id));
+      }
+    }
+  } catch (error) {
+    console.error("handleFav error:", error);
+  }
+};
+
 const toggleSound = new Audio('/toggle.mp3');
 
 const deleteSound = new Audio('/delete.mp3');
@@ -1027,8 +1063,17 @@ const responseSound = new Audio('/received.wav');
   sendSound.play();
   setLoading(true);
   setShowSkeleton(true);
-  
+
   const tempId = uuidv4();  // Temporary ID for new chat
+
+  // Add chat locally immediately with tempId
+  const tempChat = {
+    _id: tempId,
+    userMessage: input,
+    botResponse: "...loading...",
+    createdAt: new Date(),
+  };
+  setChats([tempChat, ...chats]);  // Show loading chat
 
   try {
     const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
@@ -1037,9 +1082,8 @@ const responseSound = new Audio('/received.wav');
     });
     responseSound.play();
 
-    // If backend returns a real _id, update the temp chat with it
     const newChat = {
-      _id: res?.data.chatId || tempId,  // use backend id or fallback to tempId
+      _id: res?.data.chatId || tempId,
       userMessage: input,
       botResponse: res?.data.botResponse,
       hindiResponse: res?.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
@@ -1050,14 +1094,17 @@ const responseSound = new Audio('/received.wav');
       createdAt: new Date(),
     };
 
-    // Update theme if present
+    // Replace temp chat with permanent chat (_id might change)
+    setChats(prevChats => {
+      return prevChats.map(chat => (chat._id === tempId ? newChat : chat));
+    });
+
+    // Other stuff
     if (res?.data.themeData) {
       setThemeData(res.data.themeData);
       setSelectedTheme(res.data.themeData.name);
       setShowThemeSection(true);
     }
-    
-    setChats([newChat, ...chats]);
 
     getRandomQuote();
     setInput("");
@@ -1068,7 +1115,7 @@ const responseSound = new Audio('/received.wav');
   setShowSkeleton(false);
   scrollToTop();
 };
-  
+
   
   const [styles, setStyles] = useState(getStyles(theme,fontSize, isOpen, isListening));
   useEffect(()=>{
@@ -1440,6 +1487,7 @@ const responseSound = new Audio('/received.wav');
           >
             <FaTrash />
           </button>
+          
 
         <p style={{...styles.timestamp}}>
           {formatTimestamp(chat.createdAt)}
@@ -1654,25 +1702,18 @@ const responseSound = new Audio('/received.wav');
           <FaEdit />
         </button>
 
-        <button 
-          onClick={() => {
-            const newFavorites = [...favorites];
-            const index = newFavorites.findIndex(fav => fav.userMessage === chat.userMessage);
-            if (index >= 0) {
-              newFavorites.splice(index, 1);
-            } else {
-              newFavorites.push(chat);
-            }
-            setFavorites(newFavorites);
-          }} 
-          style={{
-            ...styles.favoriteButton,
-            color: favorites.some(fav => fav.userMessage === chat.userMessage) ? "#FFD700" : "#8B4513"
-          }}
-          title={favorites.some(fav => fav.userMessage === chat.userMessage) ? "Remove from favorites" : "Add to favorites"}
-        >
-          <FaStar />
-        </button>
+        <button
+  onClick={() => handleFav(chat)}
+  style={{
+    ...styles.favoriteButton,
+    color: favorites.some(fav => fav._id === chat._id) ? "#FFD700" : "#8B4513",
+  }}
+  title={favorites.some(fav => fav._id === chat._id) ? "Remove from favorites" : "Add to favorites"}
+>
+  <FaStar />
+</button>
+
+
         <p style={{...styles.timestamp}}>
           {formatTimestamp(chat.createdAt)}
         </p>
