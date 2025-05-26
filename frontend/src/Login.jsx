@@ -109,33 +109,6 @@ const Login = () => {
     toast.info("Forgot password functionality will be implemented soon!");
   };
 
-  const generateRandomCredentials = () => {
-    
-    const randomNumber = Math.floor(Math.random() * 100000);
-    const timestamp = Date.now().toString().slice(-6);
-    const demoEmail = `demo_${randomNumber}_${timestamp}@example.com`;
-    
-    
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomPassword = 'demo_';
-    for (let i = 0; i < 8; i++) {
-      randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    return { email: demoEmail, password: randomPassword };
-  };
-
-  const handleDemoLogin = () => {
-    const { email, password } = generateRandomCredentials();
-    setFormData({
-      email: email,
-      password: password,
-    });
-    // Clear any existing errors
-    setErrors({});
-    toast.info("Unique demo credentials generated! Click Sign In to continue.");
-  };
-
   return (
     <div className="login-container">
       <div className="login-background">
@@ -255,15 +228,6 @@ const Login = () => {
             )}
           </button>
 
-          <button 
-            type="button" 
-            className="demo-btn" 
-            onClick={handleDemoLogin}
-            disabled={loading}
-          >
-            <span className="btn-icon">🎭</span>
-            Try Demo
-          </button>
         </form>
 
         <div className="login-footer">
