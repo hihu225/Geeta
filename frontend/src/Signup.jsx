@@ -1,34 +1,35 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './signup.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Cookies from "js-cookie"; // <-- import js-cookie
+import "./signup.css";
+import { backend_url } from "./utils/backend";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
-    // Clear error when user starts typing
+
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -36,33 +37,29 @@ const Signup = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Email validation
     const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = "Please enter a valid email";
     }
 
-    // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
-    // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -71,34 +68,43 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
     try {
       const { confirmPassword, ...submitData } = formData;
-      
-      const response = await axios.post('/api/auth/signup', submitData);
-      
+
+      const response = await axios.post(
+        `${backend_url}/api/auth/signup`,
+        submitData
+      );
+
       if (response.data.success) {
-        // Store token if provided
         if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
+          // Store token in cookie (session cookie)
+          Cookies.set("token", response.data.token, {
+            sameSite: "strict",
+            expires: 7,
+          });
+          // Set axios default headers for future requests
+          axios.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${response.data.token}`;
         }
-        
-        alert('Account created successfully!');
-        navigate('/chat'); // or wherever you want to redirect
+
+        alert("Account created successfully!");
+        navigate("/chat");
       }
     } catch (error) {
       if (error.response?.data?.message) {
-        if (error.response.data.message.includes('email')) {
-          setErrors({ email: 'Email already exists' });
+        if (error.response.data.message.includes("email")) {
+          setErrors({ email: "Email already exists" });
         } else {
           setErrors({ general: error.response.data.message });
         }
       } else {
-        setErrors({ general: 'Something went wrong. Please try again.' });
+        setErrors({ general: "Something went wrong. Please try again." });
       }
     } finally {
       setLoading(false);
@@ -115,9 +121,7 @@ const Signup = () => {
 
         <form onSubmit={handleSubmit} className="signup-form">
           {errors.general && (
-            <div className="error-message general-error">
-              {errors.general}
-            </div>
+            <div className="error-message general-error">{errors.general}</div>
           )}
 
           <div className="form-group">
@@ -128,7 +132,7 @@ const Signup = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={errors.name ? 'error' : ''}
+              className={errors.name ? "error" : ""}
               placeholder="Enter your full name"
               disabled={loading}
             />
@@ -143,7 +147,7 @@ const Signup = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={errors.email ? 'error' : ''}
+              className={errors.email ? "error" : ""}
               placeholder="Enter your email"
               disabled={loading}
             />
@@ -154,12 +158,12 @@ const Signup = () => {
             <label htmlFor="password">Password</label>
             <div className="password-input">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? 'error' : ''}
+                className={errors.password ? "error" : ""}
                 placeholder="Enter your password"
                 disabled={loading}
               />
@@ -169,22 +173,24 @@ const Signup = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
-            {errors.password && <span className="error-text">{errors.password}</span>}
+            {errors.password && (
+              <span className="error-text">{errors.password}</span>
+            )}
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="password-input">
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={errors.confirmPassword ? 'error' : ''}
+                className={errors.confirmPassword ? "error" : ""}
                 placeholder="Confirm your password"
                 disabled={loading}
               />
@@ -194,25 +200,26 @@ const Signup = () => {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={loading}
               >
-                {showConfirmPassword ? '🙈' : '👁️'}
+                {showConfirmPassword ? "🙈" : "👁️"}
               </button>
             </div>
-            {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && (
+              <span className="error-text">{errors.confirmPassword}</span>
+            )}
           </div>
 
-          <button 
-            type="submit" 
-            className="signup-btn"
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
+          <button type="submit" className="signup-btn" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         <div className="signup-footer">
           <p>
-            Already have an account? 
-            <Link to="/login" className="login-link"> Sign in here</Link>
+            Already have an account?
+            <Link to="/login" className="login-link">
+              {" "}
+              Sign in here
+            </Link>
           </p>
         </div>
       </div>
