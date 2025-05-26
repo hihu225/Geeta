@@ -602,7 +602,7 @@ If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme 
 });
 
 // Get verses for a specific theme
-app.get("/api/themes/:id",auth, async (req, res) => {
+app.get("/api/themes/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -629,7 +629,7 @@ app.get("/api/themes/:id",auth, async (req, res) => {
 });
 
 // Search for themes by tags
-app.get("/api/themes/search/:tag",auth, async (req, res) => {
+app.get("/api/themes/search/:tag", auth, async (req, res) => {
   try {
     const { tag } = req.params;
 
@@ -665,7 +665,9 @@ app.delete("/api/chats/:id", auth, async (req, res) => {
 
     // Check if the chat belongs to the authenticated user
     if (chat.userId.toString() !== userId) {
-      return res.status(403).json({ error: "Unauthorized to delete this chat" });
+      return res
+        .status(403)
+        .json({ error: "Unauthorized to delete this chat" });
     }
 
     // Delete the chat
@@ -686,9 +688,8 @@ app.delete("/api/chats/:id", auth, async (req, res) => {
   }
 });
 
-
 // Keep the original index-based delete method as a fallback
-app.delete("/api/chats/index/:index",auth, async (req, res) => {
+app.delete("/api/chats/index/:index", auth, async (req, res) => {
   try {
     const index = parseInt(req.params.index);
 
@@ -733,16 +734,15 @@ app.delete("/api/chats/index/:index",auth, async (req, res) => {
 });
 
 // Toggle Favorite Status
-app.put("/api/chats/:id/favorite",auth, async (req, res) => {
+app.put("/api/chats/:id/favorite", auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { isFavorite } = req.body;
 
-    const updatedChat = await Chat.findByIdAndUpdate(
-      id,
-      {userId: req.user.userId}, 
-      { isFavorite: isFavorite },
-      { new: true }
+    const updatedChat = await Chat.findOneAndUpdate(
+      { _id: id, userId: req.user.userId }, // match document with ID and user ownership
+      { isFavorite: isFavorite }, // update isFavorite field
+      { new: true } // return updated document
     );
 
     if (!updatedChat) {
@@ -755,7 +755,7 @@ app.put("/api/chats/:id/favorite",auth, async (req, res) => {
     res.status(500).json({ error: "Failed to update favorite status" });
   }
 });
-app.put("/api/themes/:id",auth, async (req, res) => {
+app.put("/api/themes/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, tags, verses } = req.body;
@@ -779,14 +779,14 @@ app.put("/api/themes/:id",auth, async (req, res) => {
   }
 });
 // Get Favorite Chats
-app.get("/api/favorites",auth, async (req, res) => {
+app.get("/api/favorites", auth, async (req, res) => {
   try {
     const favorites = await Chat.find({
-  userId: req.user.userId, // ensure only the user's chats are fetched
-  isFavorite: true
-}).sort({
-  createdAt: -1
-});
+      userId: req.user.userId, // ensure only the user's chats are fetched
+      isFavorite: true,
+    }).sort({
+      createdAt: -1,
+    });
     res.json(favorites);
   } catch (error) {
     console.error("Error fetching favorites:", error);
@@ -795,7 +795,7 @@ app.get("/api/favorites",auth, async (req, res) => {
 });
 
 // Share Chat - Updated to include Hindi translation option
-app.get("/api/share/:chatId",auth, async (req, res) => {
+app.get("/api/share/:chatId", auth, async (req, res) => {
   console.log("Received share request for chatId:", req.params.chatId);
   try {
     const { chatId } = req.params;
@@ -804,7 +804,7 @@ app.get("/api/share/:chatId",auth, async (req, res) => {
     console.log("➡️ Request for chatId:", chatId);
 
     const chat = await Chat.findById(chatId);
-    if(chat.userId.toString() !== req.user.userId) {
+    if (chat.userId.toString() !== req.user.userId) {
       console.log("❌ Unauthorized access to chat");
       return res.status(403).json({ error: "Unauthorized access to chat" });
     }
@@ -839,7 +839,7 @@ app.get("/api/share/:chatId",auth, async (req, res) => {
 });
 
 // Modified endpoint to get response in a specific language
-app.get("/api/chats/:id/language/:language",auth, async (req, res) => {
+app.get("/api/chats/:id/language/:language", auth, async (req, res) => {
   try {
     const { id, language } = req.params;
 
@@ -849,7 +849,7 @@ app.get("/api/chats/:id/language/:language",auth, async (req, res) => {
     }
 
     const chat = await Chat.findById(id);
-    if(chat.userId.toString() !== req.user.userId) {
+    if (chat.userId.toString() !== req.user.userId) {
       return res.status(403).json({ error: "Unauthorized access to chat" });
     }
     if (!chat) {
@@ -896,7 +896,7 @@ app.listen(PORT, "0.0.0.0", async () => {
 });
 
 // Sidebar Navigation Endpoint - Get Chat Titles
-app.get("/api/sidebar",auth, async (req, res) => {
+app.get("/api/sidebar", auth, async (req, res) => {
   try {
     // Fetch only the necessary fields for sidebar navigation
     const sidebarItems = await Chat.find({
