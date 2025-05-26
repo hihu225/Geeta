@@ -120,17 +120,44 @@ const Signup = () => {
       setLoading(false);
     }
   };
-
-  const handleDemoFill = () => {
-    setFormData({
-      name: "Demo User",
-      email: "demo@example.com",
-      password: "demo123",
-      confirmPassword: "demo123",
-    });
-    toast.info("Demo credentials filled!");
+const generateRandomCredentials = () => {
+  
+  const firstNames = ['Alex', 'Jordan', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn', 'Parker', 'Sage'];
+  const lastNames = ['Smith', 'Johnson', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
+  const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+  
+  
+  const randomNumber = Math.floor(Math.random() * 100000);
+  const timestamp = Date.now().toString().slice(-6);
+  const demoEmail = `demo_${randomNumber}_${timestamp}@example.com`;
+  
+ 
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomPassword = 'demo_';
+  for (let i = 0; i < 8; i++) {
+    randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return { 
+    name: randomName,
+    email: demoEmail, 
+    password: randomPassword,
+    confirmPassword: randomPassword
   };
+};
 
+const handleDemoFill = () => {
+  const { name, email, password, confirmPassword } = generateRandomCredentials();
+  setFormData({
+    name: name,
+    email: email,
+    password: password,
+    confirmPassword: confirmPassword,
+  });
+  // Clear any existing errors
+  setErrors({});
+  toast.info("Unique demo credentials generated! Ready to sign up.");
+};
   return (
     <div className="signup-container">
       <div className="signup-background">
