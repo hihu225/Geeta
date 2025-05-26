@@ -70,6 +70,12 @@ const themeSchema = new mongoose.Schema({
       relevance: String, // "Why this verse?" explanation
     },
   ],
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: false,
+  },
 });
 
 const Theme = mongoose.model("Theme", themeSchema);
@@ -106,7 +112,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // Handle User Queries
-app.post("/api/message",auth, async (req, res) => {
+app.post("/api/message", auth, async (req, res) => {
   try {
     const { message, chatHistory } = req.body;
     if (!message) return res.status(400).json({ error: "Message is required" });
@@ -281,7 +287,7 @@ Question: ${message}
   }
 });
 
-app.post("/api/themes", async (req, res) => {
+app.post("/api/themes", auth, async (req, res) => {
   try {
     const { name, description, tags, verses } = req.body;
 
@@ -289,10 +295,12 @@ app.post("/api/themes", async (req, res) => {
     if (!name || !description || !tags || !verses || !Array.isArray(verses)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+    console.log(req.user.userId);
 
     // Check if theme already exists
     const existingTheme = await Theme.findOne({
       name: { $regex: new RegExp(`^${name}$`, "i") },
+      userId: req.user.userId,
     });
     if (existingTheme) {
       return res
@@ -306,6 +314,7 @@ app.post("/api/themes", async (req, res) => {
       description,
       tags,
       verses,
+      userId: req.user.userId,
     });
 
     await newTheme.save();
@@ -482,10 +491,12 @@ app.get("/api/chats", auth, async (req, res) => {
   }
 });
 // Get all available themes
-app.get("/api/themes", async (req, res) => {
+app.get("/api/themes", auth, async (req, res) => {
   try {
     // 1. Fetch last 20 chat intents (sorted by creation time):contentReference[oaicite:4]{index=4}.
-    const chats = await Chat.find().sort({ createdAt: -1 }).limit(20);
+    const chats = await Chat.find({ userId: req.user.userId })
+      .sort({ createdAt: -1 })
+      .limit(20);
     const intents = chats
       .map((c) => c.intent)
       .filter(Boolean)
@@ -582,15 +593,21 @@ If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme 
     for (const theme of themes) {
       const existingTheme = await Theme.findOne({
         name: { $regex: new RegExp(`^${theme.name}$`, "i") },
+        userId: req.user.userId,
       });
       if (!existingTheme) {
-        const newTheme = new Theme(theme);
+        const newTheme = new Theme({
+          ...theme,
+          userId: req.user.userId,
+        });
+
         await newTheme.save();
       }
     }
     const themeNames = themes.map((t) => t.name);
     const savedThemes = await Theme.find({
       name: { $in: themeNames },
+      userId: req.user.userId,
     });
 
     res.json(savedThemes);
