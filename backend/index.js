@@ -106,7 +106,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // Handle User Queries
-app.post("/api/message", async (req, res) => {
+app.post("/api/message",auth, async (req, res) => {
   try {
     const { message, chatHistory } = req.body;
     if (!message) return res.status(400).json({ error: "Message is required" });
@@ -143,6 +143,7 @@ app.post("/api/message", async (req, res) => {
             chapter: verse.chapter.toString(),
             verse: verse.verse.toString(),
             isFavorite: false,
+            userId: req.user.userId,
           });
           await chat.save();
 
@@ -258,6 +259,7 @@ Question: ${message}
       verse,
       intent,
       isFavorite: false,
+      userId: req.user.userId, // Use userId from auth middleware
     });
     await chat.save();
 
@@ -467,7 +469,12 @@ async function initializeThemes() {
 // Get Recent Chats
 app.get("/api/chats", auth, async (req, res) => {
   try {
-    const chats = await Chat.find().sort({ createdAt: -1 }).limit(50);
+    const userId = req.user.userId; // extracted from auth middleware
+
+    const chats = await Chat.find({ userId }) // <-- Filter by userId
+      .sort({ createdAt: -1 })
+      .limit(50);
+
     res.json(chats);
   } catch (error) {
     console.error("Error fetching chats:", error);
