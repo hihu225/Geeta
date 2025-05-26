@@ -30,7 +30,7 @@ export const getStyles = (theme, fontSize, isOpen, isListening) => ({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  padding: "1rem",
+  padding: "5px",
   flexDirection: "column",
   backgroundAttachment: "fixed",
   transition: "all 0.5s ease",
@@ -70,7 +70,7 @@ paper: {
   maxWidth: "600px",       // Max width for larger screens
   marginLeft: "auto",
   marginRight: "auto",
-  padding: "1.5rem 1rem",  // Reduced side padding for small devices
+  padding: "1.5rem 5px",  // Reduced side padding for small devices
   borderRadius: "12px",
   backgroundColor: theme === "light" ? "rgba(255, 252, 240, 0.97)" : "rgba(40, 40, 40, 0.97)",
   border: theme === "light" ? "2px solid #D4A017" : "2px solid #664D00",

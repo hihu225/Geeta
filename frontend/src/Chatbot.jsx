@@ -1587,7 +1587,12 @@ const BhagavadGitaBot = () => {
           </div>
           {showThemeSection && (
             <div className="themes-section">
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+              }}>
               <ThemeNavigation onSelectTheme={handleThemeSelect} />
+              </div>
               {themeData && (
                 <ThemeDetails
                   themeData={themeData}
