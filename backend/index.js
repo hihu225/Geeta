@@ -619,7 +619,7 @@ If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme 
 });
 
 // Get verses for a specific theme
-app.get("/api/themes/:id", async (req, res) => {
+app.get("/api/themes/:id",auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -646,13 +646,14 @@ app.get("/api/themes/:id", async (req, res) => {
 });
 
 // Search for themes by tags
-app.get("/api/themes/search/:tag", async (req, res) => {
+app.get("/api/themes/search/:tag",auth, async (req, res) => {
   try {
     const { tag } = req.params;
 
     // Find themes with matching tag
     const themes = await Theme.find({
       tags: { $regex: new RegExp(tag, "i") },
+      userId: req.user.userId,
     }).select("name description tags");
 
     res.json(themes);
@@ -662,23 +663,31 @@ app.get("/api/themes/search/:tag", async (req, res) => {
   }
 });
 // Enhanced delete endpoint with improved error handling
-app.delete("/api/chats/:id", async (req, res) => {
+app.delete("/api/chats/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.userId;
 
-    // Check if the ID is valid
+    // Check if the ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid chat ID format" });
     }
 
-    // Find and delete the chat by ID
-    const deletedChat = await Chat.findByIdAndDelete(id);
+    // Find the chat first
+    const chat = await Chat.findById(id);
 
-    if (!deletedChat) {
+    if (!chat) {
       return res.status(404).json({ error: "Chat not found with this ID" });
     }
 
-    // Return success response with the deleted chat info
+    // Check if the chat belongs to the authenticated user
+    if (chat.userId.toString() !== userId) {
+      return res.status(403).json({ error: "Unauthorized to delete this chat" });
+    }
+
+    // Delete the chat
+    const deletedChat = await Chat.findByIdAndDelete(id);
+
     return res.json({
       success: true,
       message: "Chat deleted successfully",
@@ -694,8 +703,9 @@ app.delete("/api/chats/:id", async (req, res) => {
   }
 });
 
+
 // Keep the original index-based delete method as a fallback
-app.delete("/api/chats/index/:index", async (req, res) => {
+app.delete("/api/chats/index/:index",auth, async (req, res) => {
   try {
     const index = parseInt(req.params.index);
 
@@ -704,7 +714,9 @@ app.delete("/api/chats/index/:index", async (req, res) => {
     }
 
     // Get all chats in order without a limit to ensure we have all chats
-    const chats = await Chat.find().sort({ createdAt: -1 });
+    const chats = await Chat.find({
+      userId: req.user.userId,
+    }).sort({ createdAt: -1 });
 
     // Check if index is valid
     if (index >= chats.length) {
@@ -738,13 +750,14 @@ app.delete("/api/chats/index/:index", async (req, res) => {
 });
 
 // Toggle Favorite Status
-app.put("/api/chats/:id/favorite", async (req, res) => {
+app.put("/api/chats/:id/favorite",auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { isFavorite } = req.body;
 
     const updatedChat = await Chat.findByIdAndUpdate(
       id,
+      {userId: req.user.userId}, 
       { isFavorite: isFavorite },
       { new: true }
     );
@@ -759,7 +772,7 @@ app.put("/api/chats/:id/favorite", async (req, res) => {
     res.status(500).json({ error: "Failed to update favorite status" });
   }
 });
-app.put("/api/themes/:id", async (req, res) => {
+app.put("/api/themes/:id",auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, tags, verses } = req.body;
@@ -767,6 +780,7 @@ app.put("/api/themes/:id", async (req, res) => {
     // Find and update theme
     const updatedTheme = await Theme.findByIdAndUpdate(
       id,
+      { userId: req.user.userId },
       { name, description, tags, verses },
       { new: true }
     );
@@ -782,11 +796,14 @@ app.put("/api/themes/:id", async (req, res) => {
   }
 });
 // Get Favorite Chats
-app.get("/api/favorites", async (req, res) => {
+app.get("/api/favorites",auth, async (req, res) => {
   try {
-    const favorites = await Chat.find({ isFavorite: true }).sort({
-      createdAt: -1,
-    });
+    const favorites = await Chat.find({
+  userId: req.user.userId, // ensure only the user's chats are fetched
+  isFavorite: true
+}).sort({
+  createdAt: -1
+});
     res.json(favorites);
   } catch (error) {
     console.error("Error fetching favorites:", error);
@@ -795,7 +812,7 @@ app.get("/api/favorites", async (req, res) => {
 });
 
 // Share Chat - Updated to include Hindi translation option
-app.get("/api/share/:chatId", async (req, res) => {
+app.get("/api/share/:chatId",auth, async (req, res) => {
   console.log("Received share request for chatId:", req.params.chatId);
   try {
     const { chatId } = req.params;
@@ -804,6 +821,10 @@ app.get("/api/share/:chatId", async (req, res) => {
     console.log("➡️ Request for chatId:", chatId);
 
     const chat = await Chat.findById(chatId);
+    if(chat.userId.toString() !== req.user.userId) {
+      console.log("❌ Unauthorized access to chat");
+      return res.status(403).json({ error: "Unauthorized access to chat" });
+    }
     if (!chat) {
       console.log("❌ Chat not found");
       return res.status(404).json({ error: "Chat not found" });
@@ -835,7 +856,7 @@ app.get("/api/share/:chatId", async (req, res) => {
 });
 
 // Modified endpoint to get response in a specific language
-app.get("/api/chats/:id/language/:language", async (req, res) => {
+app.get("/api/chats/:id/language/:language",auth, async (req, res) => {
   try {
     const { id, language } = req.params;
 
@@ -845,7 +866,9 @@ app.get("/api/chats/:id/language/:language", async (req, res) => {
     }
 
     const chat = await Chat.findById(id);
-
+    if(chat.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ error: "Unauthorized access to chat" });
+    }
     if (!chat) {
       return res.status(404).json({ error: "Chat not found" });
     }
@@ -890,10 +913,12 @@ app.listen(PORT, "0.0.0.0", async () => {
 });
 
 // Sidebar Navigation Endpoint - Get Chat Titles
-app.get("/api/sidebar", async (req, res) => {
+app.get("/api/sidebar",auth, async (req, res) => {
   try {
     // Fetch only the necessary fields for sidebar navigation
-    const sidebarItems = await Chat.find({})
+    const sidebarItems = await Chat.find({
+      userId: req.user.userId, // Ensure we only fetch the user's chats
+    })
       .select("_id userMessage createdAt isFavorite")
       .sort({ createdAt: -1 })
       .lean();

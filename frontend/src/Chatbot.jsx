@@ -16,7 +16,7 @@ import "./hihu.css"
 import ThemeNavigation from './ThemeNavigation.jsx'; 
 import ThemeDetails from './ThemeDetails.jsx';
 import { v4 as uuidv4 } from 'uuid';
-
+import { useNavigate } from "react-router-dom";
 const REACT_APP_API_URL=import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
   try {
@@ -45,6 +45,7 @@ const addKeyframes = () => {
 addKeyframes();
 
 const BhagavadGitaBot = () => {
+  const navigate = useNavigate();
   const formatTimestamp = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + 
@@ -1292,6 +1293,9 @@ const responseSound = new Audio('/received.wav');
     
     <div style={styles.container}>
       <div style={styles.paper}>
+        <button onClick={() => navigate("/logout")}>
+          Logout
+          </button>
         <h1 style={styles.title}>
           <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
         </h1>
