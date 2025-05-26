@@ -1159,51 +1159,6 @@ const BhagavadGitaBot = () => {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chats]);
-  // Add local storage functionality - save chats when they change
-  useEffect(() => {
-    if (chats.length > 0) {
-      localStorage.setItem("bhagavadGitaChats", JSON.stringify(chats));
-    }
-  }, [chats]);
-
-  // Add local storage functionality - save favorites when they change
-  useEffect(() => {
-    if (favorites.length > 0) {
-      localStorage.setItem("bhagavadGitaFavorites", JSON.stringify(favorites));
-    }
-  }, [favorites]);
-
-  // Load chats, favorites and language preferences from local storage on component mount
-  useEffect(() => {
-    const savedChats = localStorage.getItem("bhagavadGitaChats");
-    const savedFavorites = localStorage.getItem("bhagavadGitaFavorites");
-    const savedLanguages = localStorage.getItem("bhagavadGitaLanguages");
-
-    if (savedChats) {
-      setChats(JSON.parse(savedChats));
-    }
-
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
-
-    if (savedLanguages) {
-      setChatLanguages(JSON.parse(savedLanguages));
-    }
-  }, []);
-
-  // Save language preferences when they change
-  useEffect(() => {
-    if (Object.keys(chatLanguages).length > 0) {
-      localStorage.setItem(
-        "bhagavadGitaLanguages",
-        JSON.stringify(chatLanguages)
-      );
-    }
-  }, [chatLanguages]);
-  const loadMoreChats = () => {
-    setVisibleChats((prevVisibleChats) => prevVisibleChats + 3);
-  };
 
   const getRandomQuote = () => {
     const vedicQuotes = [
