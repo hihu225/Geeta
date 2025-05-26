@@ -80,7 +80,8 @@ paper: {
   textAlign: "center",
   transition: "all 0.3s ease",
   margin: "0.5rem auto",
-  boxSizing: "border-box"  // Prevent overflow due to padding
+  boxSizing: "border-box",  // Prevent overflow due to padding
+  overflowX : "hidden", // Prevent horizontal overflow
 },
 
 
