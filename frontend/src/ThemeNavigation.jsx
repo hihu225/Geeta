@@ -1,8 +1,9 @@
 // Add this component to your App.jsx or create a new ThemeNavigation.jsx file
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { backend_url } from './utils/backend';
+import './hihu.css';
+
 const ThemeNavigation = ({ onSelectTheme }) => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);

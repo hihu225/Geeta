@@ -150,9 +150,9 @@ body.dark-theme .krishna-advice-container p {
   width: 100%;
   max-width: 600px;
   margin: 0.5rem auto;
-  padding: 1.5rem 1rem; /* Match parent container padding */
+  padding: 1.5rem 1rem;
   background-color: var(--card-bg);
-  border-radius: 12px; /* Match parent border-radius */
+  border-radius: 12px;
   box-shadow: var(--box-shadow);
   border: var(--border-style);
   transition: all 0.3s ease;
@@ -580,28 +580,21 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
     padding: 0.875rem 0.5rem;
     margin: 0.5rem auto 0.75rem auto;
   }
-  
+
   .theme-details-container {
     padding: 1.25rem 0.75rem;
+    margin: 0.5rem 0.25rem; /* Reduced horizontal margin for smaller screens */
   }
-  
-  .theme-card {
-    min-width: 110px;
-    padding: 0.875rem;
-  }
-  
-  .krishna-advice-container {
-    padding: 1rem 0.75rem;
-  }
-  
+
+  .krishna-advice-container,
   .verse-card {
     padding: 1rem 0.75rem;
   }
-  
+
   .theme-details-header h2 {
     font-size: 1.3rem;
   }
-  
+
   .shloka-sanskrit {
     font-size: 1rem;
   }
