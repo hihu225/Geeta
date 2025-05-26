@@ -1159,6 +1159,7 @@ const BhagavadGitaBot = () => {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chats]);
+  
 
   const getRandomQuote = () => {
     const vedicQuotes = [
