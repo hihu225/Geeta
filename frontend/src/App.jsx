@@ -12,66 +12,72 @@ import Signup from "./Signup";
 import BhagavadGitaBot from "./Chatbot";
 import Layout from "./Layout";
 import Logout from "./Logout";
+import {ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/logout" element={<Logout />} />
+    <>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/logout" element={<Logout />} />
 
-        {/* Protected Routes wrapped in Layout */}
-        <Route
-          path="/dashboard"
-          element={
-            <Layout>
-              <Dashboard />
-            </Layout>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <Layout>
-              <BhagavadGitaBot />
-            </Layout>
-          }
-        />
+          {/* Protected Routes wrapped in Layout */}
+          <Route
+            path="/dashboard"
+            element={
+              <Layout>
+                <Dashboard />
+              </Layout>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <Layout>
+                <BhagavadGitaBot />
+              </Layout>
+            }
+          />
 
-        {/* Redirect based on token presence */}
-        <Route
-          path="/"
-          element={
-            Cookies.get("token") ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          {/* Redirect based on token presence */}
+          <Route
+            path="/"
+            element={
+              Cookies.get("token") ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
 
-        {/* 404 */}
-        <Route
-          path="*"
-          element={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                flexDirection: "column",
-              }}
-            >
-              <h1>404 - Page Not Found</h1>
-              <p>The page you're looking for doesn't exist.</p>
-            </div>
-          }
-        />
-      </Routes>
-    </Router>
+          {/* 404 */}
+          <Route
+            path="*"
+            element={
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100vh",
+                  flexDirection: "column",
+                }}
+              >
+                <h1>404 - Page Not Found</h1>
+                <p>The page you're looking for doesn't exist.</p>
+              </div>
+            }
+          />
+        </Routes>
+      </Router>
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 }
 

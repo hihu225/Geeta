@@ -32,6 +32,7 @@ import ThemeNavigation from "./ThemeNavigation.jsx";
 import ThemeDetails from "./ThemeDetails.jsx";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
+
 const REACT_APP_API_URL = import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
   try {
@@ -1369,7 +1370,11 @@ const BhagavadGitaBot = () => {
 
       <div style={styles.container}>
         <div style={styles.paper}>
-          <button onClick={() => navigate("/logout")}>Logout</button>
+    <button style={{
+      ...styles.logoutbutton,
+      position: "fixed",
+      zIndex: 1001,
+      }} onClick={() => navigate("/logout")}>Logout</button>
           <h1 style={styles.title}>
             <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
           </h1>

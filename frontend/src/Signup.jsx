@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Cookies from "js-cookie"; // <-- import js-cookie
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 import "./signup.css";
 import { backend_url } from "./utils/backend";
 
@@ -16,8 +17,14 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const navigate = useNavigate();
+
+  // Animation trigger
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,70 +100,111 @@ const Signup = () => {
           ] = `Bearer ${response.data.token}`;
         }
 
-        alert("Account created successfully!");
+        toast.success("Account created successfully! Welcome aboard! 🎉");
         navigate("/chat");
       }
     } catch (error) {
       if (error.response?.data?.message) {
         if (error.response.data.message.includes("email")) {
           setErrors({ email: "Email already exists" });
+          toast.error("Email already exists");
         } else {
           setErrors({ general: error.response.data.message });
+          toast.error(error.response.data.message);
         }
       } else {
         setErrors({ general: "Something went wrong. Please try again." });
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDemoFill = () => {
+    setFormData({
+      name: "Demo User",
+      email: "demo@example.com",
+      password: "demo123",
+      confirmPassword: "demo123",
+    });
+    toast.info("Demo credentials filled!");
+  };
+
   return (
     <div className="signup-container">
-      <div className="signup-card">
+      <div className="signup-background">
+        <div className="signup-background-shape shape-1"></div>
+        <div className="signup-background-shape shape-2"></div>
+        <div className="signup-background-shape shape-3"></div>
+      </div>
+      
+      <div className={`signup-card ${mounted ? 'mounted' : ''}`}>
         <div className="signup-header">
+          <div className="signup-logo">
+            <div className="logo-icon">✨</div>
+          </div>
           <h2>Create Account</h2>
-          <p>Join us today and start chatting!</p>
+          <p>Join us today and start your journey!</p>
         </div>
 
         <form onSubmit={handleSubmit} className="signup-form">
           {errors.general && (
-            <div className="error-message general-error">{errors.general}</div>
+            <div className="error-message general-error">
+              <span className="error-icon">⚠️</span>
+              {errors.general}
+            </div>
           )}
 
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={errors.name ? "error" : ""}
-              placeholder="Enter your full name"
-              disabled={loading}
-            />
-            {errors.name && <span className="error-text">{errors.name}</span>}
+            <div className="input-wrapper">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={errors.name ? "error" : ""}
+                placeholder="Enter your full name"
+                disabled={loading}
+                autoComplete="name"
+              />
+            </div>
+            {errors.name && (
+              <span className="error-text">
+                <span className="error-icon">❌</span>
+                {errors.name}
+              </span>
+            )}
           </div>
 
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={errors.email ? "error" : ""}
-              placeholder="Enter your email"
-              disabled={loading}
-            />
-            {errors.email && <span className="error-text">{errors.email}</span>}
+            <div className="input-wrapper">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={errors.email ? "error" : ""}
+                placeholder="Enter your email"
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
+            {errors.email && (
+              <span className="error-text">
+                <span className="error-icon">❌</span>
+                {errors.email}
+              </span>
+            )}
           </div>
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <div className="password-input">
+            <div className="input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
@@ -164,8 +212,9 @@ const Signup = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className={errors.password ? "error" : ""}
-                placeholder="Enter your password"
+                placeholder="Create a strong password"
                 disabled={loading}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -177,13 +226,16 @@ const Signup = () => {
               </button>
             </div>
             {errors.password && (
-              <span className="error-text">{errors.password}</span>
+              <span className="error-text">
+                <span className="error-icon">❌</span>
+                {errors.password}
+              </span>
             )}
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
-            <div className="password-input">
+            <div className="input-wrapper">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
@@ -193,6 +245,7 @@ const Signup = () => {
                 className={errors.confirmPassword ? "error" : ""}
                 placeholder="Confirm your password"
                 disabled={loading}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -204,12 +257,35 @@ const Signup = () => {
               </button>
             </div>
             {errors.confirmPassword && (
-              <span className="error-text">{errors.confirmPassword}</span>
+              <span className="error-text">
+                <span className="error-icon">❌</span>
+                {errors.confirmPassword}
+              </span>
             )}
           </div>
 
           <button type="submit" className="signup-btn" disabled={loading}>
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading ? (
+              <>
+                <span className="loading-spinner"></span>
+                Creating Account...
+              </>
+            ) : (
+              <>
+                <span className="btn-icon">🚀</span>
+                Create Account
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="demo-btn"
+            onClick={handleDemoFill}
+            disabled={loading}
+          >
+            <span className="btn-icon">🎭</span>
+            Fill Demo Data
           </button>
         </form>
 
@@ -217,7 +293,6 @@ const Signup = () => {
           <p>
             Already have an account?
             <Link to="/login" className="login-link">
-              {" "}
               Sign in here
             </Link>
           </p>
