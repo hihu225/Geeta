@@ -742,7 +742,7 @@ app.put("/api/chats/:id/favorite", auth, async (req, res) => {
     const updatedChat = await Chat.findOneAndUpdate(
       { _id: id, userId: req.user.userId }, // match document with ID and user ownership
       { isFavorite: isFavorite }, // update isFavorite field
-      { new: true } // return updated document
+      { new: true } 
     );
 
     if (!updatedChat) {
