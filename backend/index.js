@@ -87,7 +87,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 app.use("/api/auth", authRoutes); // Use auth routes
 
 // Health check endpoint
-app.get("/api/health", (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Server is running",
