@@ -5,7 +5,7 @@ const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 //import routes
 const authRoutes = require("./authRoutes"); 
-const users = require("./models/usermodels");
+// const users = require("./models/usermodels");
 const app = express();
 const corsOptions = {
   origin: true, // Reflect request origin, allowing requests from anywhere
@@ -32,7 +32,7 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-users.dropIndex("username_1")
+
 
 // Chat Schema & Model
 const chatSchema = new mongoose.Schema({
