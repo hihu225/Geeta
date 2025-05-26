@@ -790,14 +790,8 @@ const BhagavadGitaBot = () => {
           }
         );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Failed to update favorite status: ${response.status} - ${errorText}`
-          );
-        }
 
-        const updatedChat = await response.json();
+        const updatedChat = response.data;
         console.log("Backend response:", updatedChat);
 
         // Update local favorites accordingly
