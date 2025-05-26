@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+} from "react-router-dom";
+import axios from "axios";
 
 // Import your components
-import Login from './Login';
-import Signup from './Signup';
-import BhagavadGitaBot from './Chatbot';
+import Login from "./Login";
+import Signup from "./Signup";
+import BhagavadGitaBot from "./Chatbot";
 // Import your existing chatbot components here
 // import Dashboard from './components/Dashboard';
 // import ChatInterface from './components/ChatInterface';
@@ -21,8 +27,9 @@ function App() {
   // Set up axios defaults
   useEffect(() => {
     // Set base URL for API calls
-    axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL || 'http://localhost:5000';
-    
+    axios.defaults.baseURL =
+      import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+
     // Check for existing token and validate it
     checkAuthStatus();
   }, []);
@@ -30,16 +37,18 @@ function App() {
   const checkAuthStatus = async () => {
     try {
       // Check both localStorage and sessionStorage for token
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+      const userData =
+        localStorage.getItem("user") || sessionStorage.getItem("user");
 
       if (token && userData) {
         // Set default authorization header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
         // Verify token with backend
-        const response = await axios.get('/api/auth/me');
-        
+        const response = await axios.get("/api/auth/me");
+
         if (response.data.success) {
           setUser(JSON.parse(userData));
           setIsAuthenticated(true);
@@ -49,7 +58,7 @@ function App() {
         }
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error("Auth check failed:", error);
       clearAuthData();
     } finally {
       setLoading(false);
@@ -57,21 +66,21 @@ function App() {
   };
 
   const clearAuthData = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    delete axios.defaults.headers.common["Authorization"];
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const login = (userData, token, rememberMe = false) => {
     const storage = rememberMe ? localStorage : sessionStorage;
-    storage.setItem('token', token);
-    storage.setItem('user', JSON.stringify(userData));
-    
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    storage.setItem("token", token);
+    storage.setItem("user", JSON.stringify(userData));
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setUser(userData);
     setIsAuthenticated(true);
   };
@@ -79,17 +88,19 @@ function App() {
   const logout = async () => {
     try {
       // Optional: notify backend about logout
-      await axios.post('/api/auth/logout');
+      await axios.post("/api/auth/logout");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       clearAuthData();
     }
   };
 
   const updateUser = (updatedUserData) => {
-    const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-    storage.setItem('user', JSON.stringify(updatedUserData));
+    const storage = localStorage.getItem("user")
+      ? localStorage
+      : sessionStorage;
+    storage.setItem("user", JSON.stringify(updatedUserData));
     setUser(updatedUserData);
   };
 
@@ -97,18 +108,20 @@ function App() {
   const ProtectedRoute = ({ children }) => {
     if (loading) {
       return (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '18px' 
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            fontSize: "18px",
+          }}
+        >
           Loading...
         </div>
       );
     }
-    
+
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
@@ -116,18 +129,20 @@ function App() {
   const PublicRoute = ({ children }) => {
     if (loading) {
       return (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '18px' 
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            fontSize: "18px",
+          }}
+        >
           Loading...
         </div>
       );
     }
-    
+
     return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
   };
 
@@ -137,18 +152,20 @@ function App() {
     login,
     logout,
     updateUser,
-    loading
+    loading,
   };
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '18px' 
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          fontSize: "18px",
+        }}
+      >
         Loading...
       </div>
     );
@@ -160,87 +177,101 @@ function App() {
         <div className="App">
           <Routes>
             {/* Public Routes */}
-            <Route 
-              path="/login" 
+            <Route
+              path="/login"
               element={
                 <PublicRoute>
                   <Login />
                 </PublicRoute>
-              } 
+              }
             />
-            <Route 
-              path="/signup" 
+            <Route
+              path="/signup"
               element={
                 <PublicRoute>
                   <Signup />
                 </PublicRoute>
-              } 
+              }
             />
 
             {/* Protected Routes */}
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   {/* Replace with your Dashboard component */}
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                  <div style={{ padding: "20px", textAlign: "center" }}>
                     <h1>Welcome to Dashboard!</h1>
                     <p>Hello, {user?.name}!</p>
-                    <button 
+                    <button
                       onClick={logout}
                       style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
+                        padding: "10px 20px",
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
                       }}
                     >
                       Logout
                     </button>
+                    <Link
+                      to="/chat"
+                      style={{
+                        display: "block",
+                        marginTop: "20px",
+                        color: "#007bff",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Go to Chatbot
+                    </Link>
                   </div>
                 </ProtectedRoute>
-              } 
+              }
             />
 
             {/* Add your existing chatbot routes here */}
-            
-            <Route 
-              path="/chat" 
+
+            <Route
+              path="/chat"
               element={
                 <ProtectedRoute>
                   <BhagavadGitaBot />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
 
             {/* Default redirect */}
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
-                isAuthenticated ? 
-                  <Navigate to="/dashboard" replace /> : 
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
                   <Navigate to="/login" replace />
-              } 
+                )
+              }
             />
 
             {/* 404 Route */}
-            <Route 
-              path="*" 
+            <Route
+              path="*"
               element={
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  alignItems: 'center', 
-                  height: '100vh',
-                  flexDirection: 'column' 
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100vh",
+                    flexDirection: "column",
+                  }}
+                >
                   <h1>404 - Page Not Found</h1>
                   <p>The page you're looking for doesn't exist.</p>
                 </div>
-              } 
+              }
             />
           </Routes>
         </div>
