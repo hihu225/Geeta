@@ -88,7 +88,7 @@ const Signup = () => {
         }
         
         alert('Account created successfully!');
-        navigate('/dashboard'); // or wherever you want to redirect
+        navigate('/chat'); // or wherever you want to redirect
       }
     } catch (error) {
       if (error.response?.data?.message) {

@@ -73,7 +73,7 @@ const Login = () => {
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
         alert('Login successful!');
-        navigate('/dashboard'); // or wherever you want to redirect
+        navigate('/chat'); // or wherever you want to redirect
       }
     } catch (error) {
       if (error.response?.data?.message) {
