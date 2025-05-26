@@ -4,7 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 //import routes
-const authRoutes = require("./authRoutes"); 
+const authRoutes = require("./authRoutes");
+const auth = require("./middleware/auth");
 // const users = require("./models/usermodels");
 const app = express();
 const corsOptions = {
@@ -15,13 +16,15 @@ const corsOptions = {
 app.use(cors());
 app.use(express.json());
 
- // Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Middleware
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // MongoDB Connection
 mongoose
@@ -32,10 +35,13 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-
-
 // Chat Schema & Model
 const chatSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   userMessage: String,
   botResponse: String,
   hindiResponse: String, // Field for Hindi responses
@@ -75,48 +81,29 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 app.use("/api/auth", authRoutes); // Use auth routes
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
   });
 });
 // Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
   });
 }
 // Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
   });
 }
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-// Handle 404 routes
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
-
 
 // Handle User Queries
 app.post("/api/message", async (req, res) => {
@@ -233,7 +220,7 @@ Intent: <Understanding of what the person is seeking - guidance, knowledge, comf
 Remember: You are a spiritual guide applying the Bhagavad Gita's teachings. Every question should be answered through the lens of Gita wisdom, whether it's about Krishna's life, modern problems, or spiritual matters. Focus on how the Gita's teachings provide solutions and understanding.
 
 Question: ${message}
-`
+`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response.text();
@@ -478,7 +465,7 @@ async function initializeThemes() {
   }
 }
 // Get Recent Chats
-app.get("/api/chats", async (req, res) => {
+app.get("/api/chats", auth, async (req, res) => {
   try {
     const chats = await Chat.find().sort({ createdAt: -1 }).limit(50);
     res.json(chats);
@@ -560,8 +547,6 @@ Each theme must be a JSON object containing:
 🚨 FINAL REMINDER:
 If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme is repeated in concept or name, the entire response is invalid. Strictly adhere to all formatting, uniqueness, and script rules.
 `;
-
-
 
     // 3. Call Gemini to generate content. Use generateContent on a Gemini model.
     const aiResponse = await model.generateContent(prompt);
