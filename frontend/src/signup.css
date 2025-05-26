@@ -208,30 +208,167 @@
 }
 
 /* Responsive Design */
+/* Enhanced Mobile Responsive Design for Signup */
 @media (max-width: 480px) {
   .signup-container {
-    padding: 10px;
-  }
+  display: flex; /* Required for flex properties */
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height */
+  width: 100vw; /* Ensure full screen width */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: hidden; /* Optional: prevents unwanted scrollbars */
+}
+
   
   .signup-card {
-    padding: 30px 25px;
+    padding: 30px 20px 25px 20px;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 0;
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .signup-card::before {
+    display: none;
+  }
+  
+  .signup-header {
+    margin-bottom: 25px;
   }
   
   .signup-header h2 {
-    font-size: 24px;
+    font-size: 22px;
+    line-height: 1.3;
+  }
+  
+  .signup-header p {
+    font-size: 14px;
+  }
+  
+  .signup-form {
+    gap: 16px;
+  }
+  
+  .form-group {
+    gap: 4px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
   }
   
   .form-group input {
     padding: 12px 14px;
-    font-size: 15px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    border-radius: 6px;
+    min-height: 44px; /* Apple's recommended touch target */
+    box-sizing: border-box;
+  }
+  
+  .password-input input {
+    padding-right: 45px;
+  }
+  
+  .password-toggle {
+    right: 10px;
+    font-size: 16px;
+    padding: 8px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .signup-btn {
-    padding: 14px;
+    padding: 14px 16px;
+    font-size: 16px;
+    margin-top: 8px;
+    min-height: 48px;
+    border-radius: 6px;
+  }
+  
+  .signup-footer {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+  
+  .signup-footer p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  
+  .error-message {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .error-text {
+    font-size: 11px;
+  }
+}
+
+/* Additional mobile enhancements */
+@media (max-width: 360px) {
+  .signup-container {
+    padding: 0;
+  }
+  
+  .signup-card {
+    padding: 25px 16px 20px 16px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
+  .signup-header h2 {
+    font-size: 20px;
+  }
+  
+  .form-group input {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+  
+  .signup-btn {
+    padding: 12px 14px;
     font-size: 15px;
   }
 }
 
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+  .signup-container {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  
+  .signup-card {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  .signup-header {
+    margin-bottom: 20px;
+  }
+  
+  .signup-form {
+    gap: 14px;
+  }
+}
 /* Loading animation */
 @keyframes spin {
   0% { transform: rotate(0deg); }
