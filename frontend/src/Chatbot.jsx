@@ -252,12 +252,39 @@ const handleExportAllChats = async () => {
       });
 
       await Swal.fire({
-        icon: 'success',
-        title: 'PDF Saved!',
-        text: 'Your conversation has been saved successfully in documents.',
-        timer: 3000,
-        showConfirmButton: false
-      });
+  icon: 'success',
+  title: 'PDF Saved Successfully!',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        Your conversation has been saved to your documents folder.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.293 4L10 .707A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 10.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 12a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/>
+        </svg>
+        <small style="font-weight: 500;">Ready to view or share</small>
+      </div>
+    </div>
+  `,
+  timer: 4000,
+  timerProgressBar: true,
+  showConfirmButton: false,
+  toast: false,
+  position: 'center',
+  backdrop: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__fadeInDown animate__faster',
+    icon: 'animate__animated animate__bounceIn animate__delay-1s'
+  },
+  didOpen: (toast) => {
+    // Add subtle hover effect to pause timer
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
 
       const fileUri = await Filesystem.getUri({
         directory: Directory.Documents,
@@ -265,12 +292,39 @@ const handleExportAllChats = async () => {
       });
 
       await Swal.fire({
-        icon: 'info',
-        title: 'Ready to Share',
-        text: 'You can now share your saved Bhagavad Gita PDF.',
-        timer: 2500,
-        showConfirmButton: false
-      });
+  icon: 'info',
+  title: 'Ready to Share',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        Your Bhagavad Gita PDF is ready to be shared with others.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+        </svg>
+        <small style="font-weight: 500;">Share with friends & family</small>
+      </div>
+    </div>
+  `,
+  timer: 3000,
+  timerProgressBar: true,
+  showConfirmButton: false,
+  toast: false,
+  position: 'center',
+  backdrop: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__fadeInUp animate__faster',
+    icon: 'animate__animated animate__pulse animate__delay-1s'
+  },
+  didOpen: (toast) => {
+    // Add subtle hover effect to pause timer
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
 
       await Share.share({
         title: "Share Bhagavad Gita PDF",
@@ -284,10 +338,27 @@ const handleExportAllChats = async () => {
   } catch (error) {
     console.error("Error exporting all chats:", error);
     await Swal.fire({
-      icon: 'error',
-      title: 'Export Failed',
-      text: 'Failed to save or share the PDF. Please try again.',
-    });
+  icon: 'error',
+  title: 'Export Failed',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        We couldn't save or share your PDF at this moment.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <small style="font-weight: 500;">This is usually temporary</small>
+      </div>
+      <div style="font-size: 13px; color: #888;">
+        <strong>What you can try:</strong><br>
+        • Check your internet connection<br>
+        • Refresh the page and try again<br>
+      </div>
+    </div>
+  `,
+});
   }
 };
 
@@ -343,20 +414,73 @@ const handleExportAllChats = async () => {
     setEditText("");
 
     await Swal.fire({
-      icon: "success",
-      title: "Updated",
-      text: "Chat updated successfully.",
-      confirmButtonColor: "#8B0000",
-    });
-
+  icon: 'success',
+  title: 'Chat Updated Successfully!',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        Your changes have been saved and applied to the conversation.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
+          <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
+        </svg>
+        <small style="font-weight: 500;">All changes synchronized</small>
+      </div>
+    </div>
+  `,
+  timer: 2500,
+  timerProgressBar: true,
+  showConfirmButton: true,
+  confirmButtonText: 'Continue',
+  confirmButtonColor: '#8B0000',
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__fadeIn animate__faster',
+    icon: 'animate__animated animate__bounceIn animate__delay-1s'
+  },
+  didOpen: (toast) => {
+    // Add hover effect to pause timer
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
   } catch (error) {
     console.error("Error updating chat:", error);
     await Swal.fire({
-      icon: "error",
-      title: "Update Failed",
-      text: error.message || "Unknown error occurred.",
-      confirmButtonColor: "#8B0000",
-    });
+  icon: 'error',
+  title: 'Update Failed',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        We couldn't save your changes to the chat.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <small style="font-weight: 500;">Your changes weren't saved</small>
+      </div>
+      ${error.message && error.message !== "Unknown error occurred." ? 
+        `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
+          <strong style="color: #721c24;">Error Details:</strong><br>
+          <code style="color: #6c757d; font-size: 12px;">${error.message}</code>
+        </div>` : ''}
+      <div style="font-size: 13px; color: #888; margin-top: 15px;">
+        <strong>What you can try:</strong><br>
+        • Check your internet connection<br>
+        • Try making the update again<br>
+        • Refresh the page if the issue persists
+      </div>
+    </div>
+  `,
+  reverseButtons: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  buttonsStyling: true
+});
   } finally {
     setLoading(false);
   }
@@ -576,10 +700,47 @@ const handleExportAllChats = async () => {
 const handleDeleteSelected = async () => {
   if (Object.keys(selectedChats).length === 0) {
     await Swal.fire({
-      icon: 'info',
-      title: 'No chats selected',
-      text: 'Please select at least one chat to delete',
-    });
+  icon: 'info',
+  title: 'No Chats Selected',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        Please select at least one chat to delete before proceeding.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+          <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+        </svg>
+        <small style="font-weight: 500;">Selection required</small>
+      </div>
+      <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 12px; margin: 15px 0;">
+        <div style="font-size: 13px; color: #004085;">
+          <strong>How to select chats:</strong><br>
+          • Check the boxes next to chat names<br>
+          • Use "Select All" to choose multiple chats<br>
+          • Then try the delete action again
+        </div>
+      </div>
+    </div>
+  `,
+  timer: 4000,
+  timerProgressBar: true,
+  showConfirmButton: true,
+  confirmButtonText: 'Got it',
+  confirmButtonColor: '#17a2b8',
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__fadeInDown animate__faster',
+    icon: 'animate__animated animate__bounce animate__delay-1s'
+  },
+  didOpen: (toast) => {
+    // Add hover effect to pause timer
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
     return;
   }
 
@@ -631,17 +792,86 @@ const handleDeleteSelected = async () => {
     }
 
     await Swal.fire({
-      icon: 'success',
-      title: 'Deleted!',
-      text: `${Object.keys(selectedChats).length} chat(s) deleted successfully.`,
-    });
+  icon: 'success',
+  title: 'Chats Deleted Successfully!',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        ${Object.keys(selectedChats).length === 1 ? 
+          'Your selected chat has been permanently removed.' : 
+          `All ${Object.keys(selectedChats).length} selected chats have been permanently removed.`}
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+        </svg>
+        <small style="font-weight: 500;">
+          ${Object.keys(selectedChats).length === 1 ? '1 chat removed' : `${Object.keys(selectedChats).length} chats removed`}
+        </small>
+      </div>
+      <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 10px; margin: 15px 0;">
+        <div style="font-size: 13px; color: #155724;">
+          <strong>✓ Action completed</strong><br>
+          Your chat list has been updated and the selected conversations are no longer accessible.
+        </div>
+      </div>
+    </div>
+  `,
+  timer: 3000,
+  timerProgressBar: true,
+  showConfirmButton: true,
+  confirmButtonText: 'Continue',
+  confirmButtonColor: '#28a745',
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__zoomIn animate__faster',
+    icon: 'animate__animated animate__bounceIn animate__delay-1s'
+  },
+  didOpen: (toast) => {
+    // Add hover effect to pause timer
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
   } catch (error) {
     console.error("Error deleting selected chats:", error);
     await Swal.fire({
-      icon: 'error',
-      title: 'Deletion Failed',
-      text: error.message || 'An unknown error occurred',
-    });
+  icon: 'error',
+  title: 'Deletion Failed',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        We couldn't delete the selected ${Object.keys(selectedChats).length === 1 ? 'chat' : 'chats'} at this time.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M11.46.146A.5.5 0 0 0 11.107 0H4.893a.5.5 0 0 0-.353.146L.146 4.54A.5.5 0 0 0 0 4.893v6.214a.5.5 0 0 0 .146.353l4.394 4.394a.5.5 0 0 0 .353.146h6.214a.5.5 0 0 0 .353-.146l4.394-4.394a.5.5 0 0 0 .146-.353V4.893a.5.5 0 0 0-.146-.353L11.46.146zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <small style="font-weight: 500;">
+          ${Object.keys(selectedChats).length === 1 ? 'Chat remains in your list' : 'Chats remain in your list'}
+        </small>
+      </div>
+      ${error.message && error.message !== "An unknown error occurred" ? 
+        `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
+          <strong style="color: #721c24;">Error Details:</strong><br>
+          <code style="color: #6c757d; font-size: 12px;">${error.message}</code>
+        </div>` : ''}
+      <div style="font-size: 13px; color: #888; margin-top: 15px;">
+        <strong>What you can try:</strong><br>
+        • Check your internet connection<br>
+        • Try selecting and deleting again<br>
+        • Refresh the page if the issue persists<br>
+        • Contact support if the problem continues
+      </div>
+    </div>
+  `,
+  reverseButtons: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  buttonsStyling: true
+});
   } finally {
     setLoading(false);
   }
@@ -693,11 +923,52 @@ const handleDeleteSelected = async () => {
     if (!chatToExport) {
       console.error("Chat not found for export");
       await Swal.fire({
-        icon: "error",
-        title: "Export Failed",
-        text: "Chat not found for export.",
-        confirmButtonColor: "#8B0000",
-      });
+  icon: 'error',
+  title: 'Export Failed',
+  html: `
+    <div style="text-align: center; margin-top: 10px;">
+      <p style="color: #666; margin-bottom: 15px;">
+        The selected chat could not be found or is no longer available for export.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+          <path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/>
+        </svg>
+        <small style="font-weight: 500;">Chat is not accessible</small>
+      </div>
+      <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; margin: 15px 0;">
+        <div style="font-size: 13px; color: #495057;">
+          <strong>Possible reasons:</strong><br>
+          • The chat may have been deleted<br>
+          • Chat data could be corrupted<br>
+          • You may not have access to this chat<br>
+          • There might be a temporary sync issue
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #888; margin-top: 15px;">
+        <strong>What you can try:</strong><br>
+        • Select a different chat to export<br>
+        • Refresh the page and try again<br>
+        • Check if the chat still exists in your list
+      </div>
+    </div>
+  `,
+  showConfirmButton: true,
+  confirmButtonText: 'Select Another Chat',
+  confirmButtonColor: '#8B0000',
+  showCancelButton: true,
+  cancelButtonText: 'Close',
+  reverseButtons: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  customClass: {
+    popup: 'animate__animated animate__fadeInDown animate__faster',
+    confirmButton: 'swal2-confirm-button-custom',
+    cancelButton: 'swal2-cancel-button-custom'
+  },
+  buttonsStyling: true
+});
       return;
     }
 
@@ -757,11 +1028,30 @@ const handleDeleteSelected = async () => {
       });
 
       await Swal.fire({
-        icon: "success",
-        title: "PDF Saved",
-        text: "PDF saved successfully!",
-        confirmButtonColor: "#8B0000",
-      });
+  icon: "success",
+  title: "PDF Saved Successfully",
+  text: "Your PDF has been generated and saved to your device.",
+  confirmButtonText: "Great!",
+  confirmButtonColor: "#22c55e",
+  background: "#ffffff",
+  color: "#374151",
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutUp animate__faster'
+  },
+  customClass: {
+    confirmButton: 'px-6 py-2 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200',
+    title: 'text-xl font-bold text-gray-800',
+    htmlContainer: 'text-gray-600'
+  },
+  buttonsStyling: false,
+  timer: 3000,
+  timerProgressBar: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true
+});
 
       const fileUri = await Filesystem.getUri({
         directory: Directory.Documents,
@@ -769,11 +1059,34 @@ const handleDeleteSelected = async () => {
       });
 
       await Swal.fire({
-        icon: "success",
-        title: "PDF Ready",
-        text: "PDF ready to share!",
-        confirmButtonColor: "#8B0000",
-      });
+  icon: "success",
+  title: "PDF Ready to Share",
+  text: "Your PDF has been generated and is ready to be shared with others.",
+  confirmButtonText: "Awesome!",
+  confirmButtonColor: "#10b981",
+  background: "#ffffff",
+  showClass: {
+    popup: 'animate__animated animate__bounceIn animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  customClass: {
+    confirmButton: 'px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105',
+    title: 'text-2xl font-bold text-gray-800 mb-2',
+    htmlContainer: 'text-gray-600 text-lg'
+  },
+  buttonsStyling: false,
+  timer: 4000,
+  timerProgressBar: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  backdrop: `
+    rgba(0,0,0,0.4)
+    left top
+    no-repeat
+  `
+});
 
       await Share.share({
         title: "Share Bhagavad Gita PDF",
@@ -784,20 +1097,50 @@ const handleDeleteSelected = async () => {
     } else {
       doc.save(fileName);
       await Swal.fire({
-        icon: "success",
-        title: "PDF Downloaded",
-        text: "PDF has been downloaded successfully.",
-        confirmButtonColor: "#8B0000",
-      });
+  icon: "success",
+  title: "PDF Downloaded Successfully",
+  text: "Your PDF has been saved to your Downloads folder.",
+  confirmButtonText: "Perfect!",
+  confirmButtonColor: "#059669",
+  showClass: {
+    popup: 'animate__animated animate__slideInDown animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__slideOutUp animate__faster'
+  },
+  customClass: {
+    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105',
+    title: 'text-xl font-bold text-gray-800',
+    htmlContainer: 'text-gray-600'
+  },
+  buttonsStyling: false,
+  timer: 3500,
+  timerProgressBar: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true
+});
     }
   } catch (error) {
     console.error("Error exporting to PDF:", error);
     await Swal.fire({
-      icon: "error",
-      title: "Export Failed",
-      text: "Failed to save or share PDF. Please try again.",
-      confirmButtonColor: "#8B0000",
-    });
+  icon: "error",
+  title: "Export Failed",
+  text: "Unable to save or share your PDF. Please check your connection and try again.",
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  buttonsStyling: false,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  backdrop: `
+    rgba(0,0,0,0.5)
+    left top
+    no-repeat
+  `
+});
   }
 };
 
@@ -1032,22 +1375,50 @@ const handleDeleteSelected = async () => {
           setVisibleChats((prev) => Math.max(1, prev - 1));
         } else {
               await Swal.fire({
-                icon: "error",
-                title: "Deletion Failed",
-                text: "Failed to delete the chat. Please try again.",
-                confirmButtonColor: "#8B0000"
-              });
+  icon: "error",
+  title: "Deletion Failed",
+  text: "Unable to delete the chat. Please check your connection and try again.",
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  buttonsStyling: false,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  backdrop: `
+    rgba(0,0,0,0.5)
+    left top
+    no-repeat
+  `
+});
           }
 
       }
     } catch (error) {
   console.error("Error deleting favorite chat:", error);
   await Swal.fire({
-    icon: "error",
-    title: "Error Deleting Chat",
-    text: `Error deleting chat: ${error.message || "Unknown error"}`,
-    confirmButtonColor: "#8B0000"
-  });
+  icon: "error",
+  title: "Error Deleting Chat",
+  html: `
+    <p class="text-gray-600 mb-3">Unable to delete the chat due to the following error:</p>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+      <code class="text-sm text-red-700 font-mono">${error.message || "Unknown error occurred"}</code>
+    </div>
+    <p class="text-sm text-gray-500">Please try again or contact support if the issue persists.</p>
+  `,
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  buttonsStyling: false,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  width: '500px'
+});
 }
  finally {
       setLoading(false);
@@ -1097,11 +1468,23 @@ const handleDeleteSelected = async () => {
       } else {
   console.error("Backend reported delete failure:", response.data);
   await Swal.fire({
-    icon: "error",
-    title: "Delete Failed",
-    text: "Failed to delete the chat. Please try again.",
-    confirmButtonColor: "#8B0000"
-  });
+  icon: "error",
+  title: "Delete Failed",
+  text: "Unable to delete the chat. Please check your connection and try again.",
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  backdrop: `
+    rgba(0,0,0,0.5)
+    left top
+    no-repeat
+  `
+});
 }
 
     } catch (error) {
@@ -1124,21 +1507,51 @@ const handleDeleteSelected = async () => {
         } else {
   console.error("Backend reported delete failure:", response.data);
   await Swal.fire({
-    icon: "error",
-    title: "Delete Failed",
-    text: "Failed to delete the chat. Please try again.",
-    confirmButtonColor: "#8B0000"
-  });
+  icon: "error",
+  title: "Delete Failed",
+  text: "Unable to delete the chat. Please check your connection and try again.",
+  confirmButtonText: "Retry",
+  confirmButtonColor: "#dc2626",
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  customClass: {
+    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300',
+    title: 'text-xl font-bold text-gray-800',
+    htmlContainer: 'text-gray-600'
+  },
+  buttonsStyling: false,
+  allowOutsideClick: true,
+  allowEscapeKey: true
+});
 }
 
       } catch (fallbackError) {
   console.error("Fallback delete also failed:", fallbackError);
   await Swal.fire({
-    icon: "error",
-    title: "Error Deleting Chat",
-    text: fallbackError.message || "Unknown error",
-    confirmButtonColor: "#8B0000"
-  });
+  icon: "error",
+  title: "Error Deleting Chat",
+  html: `
+    <p class="text-gray-600 mb-3">Unable to delete the chat due to an error:</p>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+      <code class="text-sm text-red-700 font-mono">${fallbackError.message || "Unknown error occurred"}</code>
+    </div>
+    <p class="text-sm text-gray-500">Please try again or refresh the page if the issue persists.</p>
+  `,
+  showClass: {
+    popup: 'animate__animated animate__shakeX animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  buttonsStyling: false,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  width: '500px'
+});
 }
 
     } finally {
@@ -1154,11 +1567,28 @@ const handleDeleteSelected = async () => {
 
       if (chatsToShare.length === 0) {
   await Swal.fire({
-    icon: "info",
-    title: "No Chats Selected",
-    text: "Please select at least one chat to share",
-    confirmButtonColor: "#8B0000"
-  });
+  icon: "info",
+  title: "No Chats Selected",
+  text: "Please select at least one chat before sharing.",
+  confirmButtonText: "Got it",
+  confirmButtonColor: "#3b82f6",
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  customClass: {
+    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300',
+    title: 'text-xl font-bold text-gray-800',
+    htmlContainer: 'text-gray-600'
+  },
+  buttonsStyling: false,
+  timer: 4000,
+  timerProgressBar: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true
+});
   return;
 }
 
@@ -1189,11 +1619,22 @@ const handleDeleteSelected = async () => {
       } else {
   await navigator.clipboard.writeText(shareText);
   await Swal.fire({
-    icon: "success",
-    title: "Copied!",
-    text: "Multiple chats copied to clipboard!",
-    confirmButtonColor: "#8B0000",
-  });
+  icon: "success",
+  title: "Successfully Copied!",
+  text: "Multiple chats have been copied to your clipboard",
+  timer: 2500,
+  timerProgressBar: true,
+  showConfirmButton: false,
+  toast: true,
+  position: 'top-end',
+  customClass: {
+    popup: 'colored-toast'
+  },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 }
 
 
@@ -1308,11 +1749,24 @@ const handleDeleteSelected = async () => {
         const available = await SpeechRecognition.available();
         if (!available) {
   await Swal.fire({
-    icon: "error",
-    title: "Oops...",
-    text: "Speech recognition not available on this device.",
-    confirmButtonColor: "#8B0000",
-  });
+  icon: "warning",
+  title: "Speech Recognition Unavailable",
+  html: `
+    <p>Speech recognition isn't supported on this device or browser.</p>
+    <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border-radius: 4px; font-size: 14px;">
+      <strong>Alternatives:</strong><br>
+      • Type your message manually<br>
+      • Check if microphone permissions are enabled
+    </div>
+  `,
+  confirmButtonText: "I understand",
+  confirmButtonColor: "#3b82f6",
+  customClass: {
+    popup: 'swal2-warning-modern',
+    htmlContainer: 'text-left'
+  },
+  allowOutsideClick: true
+});
   return;
 }
         SpeechRecognition.isListening().then((result) => {
@@ -1360,11 +1814,21 @@ const handleDeleteSelected = async () => {
           window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognitionWeb) {
   await Swal.fire({
-    icon: "error",
-    title: "Unsupported",
-    text: "Speech recognition is not supported in this browser.",
-    confirmButtonColor: "#8B0000",
-  });
+  icon: "info",
+  title: "Switch to Chrome, Edge, or Safari for speech recognition",
+  toast: true,
+  position: 'top',
+  showConfirmButton: false,
+  timer: 4000,
+  timerProgressBar: true,
+  customClass: {
+    popup: 'browser-compat-toast'
+  },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
   return;
 }
 
@@ -2340,6 +2804,7 @@ const handleDeleteSelected = async () => {
               <span>Made with</span> <FaHeart color="#8B0000" />{" "}
               <span>and ancient wisdom.</span>
             </p>
+            <p><em>Contact Support if facing any issue.</em></p>
             <p className="text-sm italic text-gray-500">
               <em>
                 Disclaimer: This chatbot may occasionally generate incorrect
