@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./signup.css";
 import { backend_url } from "./utils/backend";
-import Swal from "sweetalert2"; // Fixed import - was 'swal'
+import Swal from "sweetalert2"; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -146,13 +146,11 @@ const Signup = () => {
     }
   };
 
-  // Handle regular OTP-based signup
   const handleOTPSignup = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Step 1: Send OTP
       const sendRes = await fetch(`${backend_url}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,7 +165,6 @@ const Signup = () => {
         return;
       }
 
-      // Step 2: Show SweetAlert to enter OTP
           const { value: otp } = await Swal.fire({
       title: 'Enter OTP',
       input: 'text',
@@ -185,7 +182,6 @@ const Signup = () => {
     });
 
 
-      // Step 3: Final signup request with OTP
       const signupRes = await fetch(`${backend_url}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -223,7 +219,6 @@ const Signup = () => {
     }
   };
 
-  // Main form submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -242,7 +237,7 @@ const Signup = () => {
       password: password,
       confirmPassword: confirmPassword,
     });
-    setIsDemoAccount(true); // Mark as demo account
+    setIsDemoAccount(true); 
     setErrors({});
     toast.info("Demo credentials generated! Click 'Create Account' to proceed without OTP.");
   };

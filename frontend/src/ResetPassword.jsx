@@ -166,7 +166,6 @@ const ResetPassword = () => {
     />
   </div>
 
-  {/* Error message if any */}
   {errors.otp && (
     <span className="error-text">
       <span className="error-icon">❌</span>
@@ -174,7 +173,6 @@ const ResetPassword = () => {
     </span>
   )}
 
-  {/* Spam folder note */}
   {!errors.otp && (
     <span className="info-text" style={{ color: 'gray', fontSize: '0.85rem' }}>
       📩 Didn't get the OTP? Check your <b>Spam</b> or <b>Promotions</b> folder.

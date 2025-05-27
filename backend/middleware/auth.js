@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/usermodels'); // Adjust the path as necessary
+const User = require('../models/usermodels'); 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
     }
 
     // Extract token
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7);
 
     try {
       // Verify token

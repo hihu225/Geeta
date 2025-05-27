@@ -18,7 +18,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://localhost",
   "capacitor://localhost", // For Capacitor Android
-  "http://192.168.x.x:5173", // Replace with your dev IP if needed
+  "http://192.168.x.x:5173",
   process.env.CLIENT_URL,
 ];
 
@@ -85,7 +85,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 //routes
-app.use("/api/auth", authRoutes); // Use auth routes
+app.use("/api/auth", authRoutes); 
 
 // Health check endpoint
 app.get("/", (req, res) => {
@@ -249,7 +249,7 @@ Question: ${message}
       verse,
       intent,
       isFavorite: false,
-      userId: req.user.userId, // Use userId from auth middleware
+      userId: req.user.userId, 
     });
     await chat.save();
 
@@ -311,7 +311,7 @@ app.post("/api/themes", auth, async (req, res) => {
 // Hindi translation function
 async function translateToHindi(englishText) {
   try {
-    // Using Google Generative AI model for translation instead of external API
+    
     const prompt = `Translate the following English text to Hindi:
     
     "${englishText}"
@@ -336,8 +336,6 @@ async function translateToHindi(englishText) {
 }
 // Generate Krishna's Advice based on theme
 function generateKrishnaAdvice(theme) {
-  // This will be replaced with AI-generated advice in production
-  // For now, we'll use a simple template
   return `Based on the teachings of the Bhagavad Gita regarding ${theme.name.toLowerCase()}, 
   Krishna advises us to maintain equanimity and follow our dharma with detachment from results. 
   The key message is to perform our duties with full dedication while surrendering the outcome to the divine.`;
@@ -464,7 +462,7 @@ app.get("/api/chats", auth, async (req, res) => {
   try {
     const userId = req.user.userId; // extracted from auth middleware
 
-    const chats = await Chat.find({ userId }) // <-- Filter by userId
+    const chats = await Chat.find({ userId })
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -477,7 +475,6 @@ app.get("/api/chats", auth, async (req, res) => {
 // Get all available themes
 app.get("/api/themes", auth, async (req, res) => {
   try {
-    // 1. Fetch last 20 chat intents (sorted by creation time):contentReference[oaicite:4]{index=4}.
     const chats = await Chat.find({ userId: req.user.userId })
       .sort({ createdAt: -1 })
       .limit(20);
@@ -486,7 +483,6 @@ app.get("/api/themes", auth, async (req, res) => {
       .filter(Boolean)
       .join(", ");
 
-    // 2. Construct prompt for Gemini with required JSON schema.
     const prompt = `
 🎯 TASK:
 Generate a **minimum of 4** unique theme objects based on the user intents: ${intents}
@@ -550,12 +546,11 @@ Each theme must be a JSON object containing:
 If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme is repeated in concept or name, the entire response is invalid. Strictly adhere to all formatting, uniqueness, and script rules.
 `;
 
-    // 3. Call Gemini to generate content. Use generateContent on a Gemini model.
     const aiResponse = await model.generateContent(prompt);
-    const text = aiResponse.response.text(); // the generated text response
+    const text = aiResponse.response.text(); 
     console.log("AI Response:", text);
 
-    // 4. Extract JSON from the response.
+    
     let jsonOutput = text.trim();
     if (jsonOutput.startsWith("```")) {
       jsonOutput = jsonOutput
@@ -564,16 +559,14 @@ If even ONE "shloka" is in Roman letters instead of Devanagari, or if ANY theme 
         .trim();
     }
 
-    // 5. Parse JSON (with error handling).
     let themes;
     try {
-      themes = JSON.parse(jsonOutput); // may throw if invalid JSON:contentReference[oaicite:5]{index=5}
+      themes = JSON.parse(jsonOutput); 
     } catch (parseErr) {
       throw new Error("Failed to parse JSON from Gemini: " + parseErr.message);
     }
 
-    // 6. Return the generated themes array.
-    //save to DB
+    
     for (const theme of themes) {
       const existingTheme = await Theme.findOne({
         name: { $regex: new RegExp(`^${theme.name}$`, "i") },
@@ -621,7 +614,7 @@ app.get("/api/themes/:id", auth, async (req, res) => {
       name: theme.name,
       description: theme.description,
       verses: theme.verses,
-      krishnaAdvice: generateKrishnaAdvice(theme), // We'll implement this function
+      krishnaAdvice: generateKrishnaAdvice(theme), 
     });
   } catch (error) {
     console.error("Error fetching theme details:", error);
@@ -646,7 +639,7 @@ app.get("/api/themes/search/:tag", auth, async (req, res) => {
     res.status(500).json({ error: "Failed to search themes" });
   }
 });
-// Enhanced delete endpoint with improved error handling
+
 app.delete("/api/chats/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;
@@ -689,7 +682,7 @@ app.delete("/api/chats/:id", auth, async (req, res) => {
   }
 });
 
-// Keep the original index-based delete method as a fallback
+
 app.delete("/api/chats/index/:index", auth, async (req, res) => {
   try {
     const index = parseInt(req.params.index);
@@ -741,7 +734,7 @@ app.put("/api/chats/:id/favorite", auth, async (req, res) => {
     const { isFavorite } = req.body;
 
     const updatedChat = await Chat.findOneAndUpdate(
-      { _id: id, userId: req.user.userId }, // match document with ID and user ownership
+      { _id: id, userId: req.user.userId }, 
       { isFavorite: isFavorite }, // update isFavorite field
       { new: true } 
     );
@@ -795,7 +788,6 @@ app.get("/api/favorites", auth, async (req, res) => {
   }
 });
 
-// Share Chat - Updated to include Hindi translation option
 app.get("/api/share/:chatId", auth, async (req, res) => {
   console.log("Received share request for chatId:", req.params.chatId);
   try {
@@ -839,7 +831,7 @@ app.get("/api/share/:chatId", auth, async (req, res) => {
   }
 });
 
-// Modified endpoint to get response in a specific language
+
 app.get("/api/chats/:id/language/:language", auth, async (req, res) => {
   try {
     const { id, language } = req.params;
@@ -896,7 +888,7 @@ app.listen(PORT, "0.0.0.0", async () => {
   await initializeThemes();
 });
 
-// Sidebar Navigation Endpoint - Get Chat Titles
+
 app.get("/api/sidebar", auth, async (req, res) => {
   try {
     // Fetch only the necessary fields for sidebar navigation
@@ -920,15 +912,14 @@ app.get("/api/sidebar", auth, async (req, res) => {
 
       // Ensure _id is properly converted to string to avoid serialization issues
       return {
-        _id: chat._id.toString(), // Use _id consistently - this matches your other endpoints
-        id: chat._id.toString(), // Include id for frontend compatibility
+        _id: chat._id.toString(), 
+        id: chat._id.toString(), 
         title: title,
         timestamp: chat.createdAt,
         isFavorite: Boolean(chat.isFavorite), // Ensure boolean type
       };
     });
 
-    // Return a proper JSON response
     return res.status(200).json(formattedItems);
   } catch (error) {
     console.error("Error fetching sidebar data:", error);

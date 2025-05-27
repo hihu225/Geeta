@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // ADD THIS - bcrypt was missing!
+const bcrypt = require('bcryptjs'); 
 const User = require('./models/usermodels');
 const auth = require('./middleware/auth');
 const router = express.Router();
@@ -303,7 +303,6 @@ router.post('/verify-reset-otp', async (req, res) => {
   }
 });
 
-// Fixed reset-password route
 router.post('/reset-password', async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -347,7 +346,6 @@ router.post('/send-otp', async (req, res) => {
       expiresAt: Date.now() + 15 * 60 * 1000, // expires in 15 minutes
     });
 
-    // send email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
