@@ -85,22 +85,19 @@ const Login = () => {
         navigate("/chat");
       }
     } catch (error) {
-      if (error.response?.data?.message) {
-        const message = error.response.data.message;
-        if (message.includes("email") || message.includes("user")) {
-          setErrors({ email: "Email not found" });
-          toast.error("Email not found");
-        } else if (message.includes("password")) {
-          setErrors({ password: "Incorrect password" });
-          toast.error("Incorrect password");
-        } else {
-          setErrors({ general: message });
-          toast.error(message);
-        }
-      } else {
-        setErrors({ general: "Something went wrong. Please try again." });
-        toast.error("Something went wrong. Please try again.");
-      }
+        if (error.response?.data?.message) {
+  const message = error.response.data.message.toLowerCase();
+
+  if (message === "email not found") {
+  setErrors({ email: "Email not found" });
+  toast.error("Email not found");
+} else if (message === "incorrect password") {
+  setErrors({ password: "Incorrect password" });
+  toast.error("Incorrect password");
+}
+}
+
+
     } finally {
       setLoading(false);
     }

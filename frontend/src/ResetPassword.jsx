@@ -152,26 +152,36 @@ const ResetPassword = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="otp">OTP Code</label>
-            <div className="input-wrapper">
-              <input
-                type="text"
-                id="otp"
-                value={otp}
-                onChange={e => handleChange('otp', e.target.value)}
-                className={errors.otp ? "error" : ""}
-                placeholder="Enter OTP from your email"
-                disabled={loading}
-                maxLength="6"
-              />
-            </div>
-            {errors.otp && (
-              <span className="error-text">
-                <span className="error-icon">❌</span>
-                {errors.otp}
-              </span>
-            )}
-          </div>
+  <label htmlFor="otp">OTP Code</label>
+  <div className="input-wrapper">
+    <input
+      type="text"
+      id="otp"
+      value={otp}
+      onChange={e => handleChange('otp', e.target.value)}
+      className={errors.otp ? "error" : ""}
+      placeholder="Enter OTP from your email"
+      disabled={loading}
+      maxLength="6"
+    />
+  </div>
+
+  {/* Error message if any */}
+  {errors.otp && (
+    <span className="error-text">
+      <span className="error-icon">❌</span>
+      {errors.otp}
+    </span>
+  )}
+
+  {/* Spam folder note */}
+  {!errors.otp && (
+    <span className="info-text" style={{ color: 'gray', fontSize: '0.85rem' }}>
+      📩 Didn't get the OTP? Check your <b>Spam</b> or <b>Promotions</b> folder.
+    </span>
+  )}
+</div>
+
 
           <div className="form-group">
             <label htmlFor="newPassword">New Password</label>

@@ -1,10 +1,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs'); // ADD THIS - bcrypt was missing!
 const User = require('./models/usermodels');
-const auth = require('./middleware/auth'); // We'll create this middleware
+const auth = require('./middleware/auth');
 const router = express.Router();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const OTPModel = require('./models/otp-models');
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -15,9 +17,16 @@ const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 // @access  Public
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp, skipOTP } = req.body;
 
-    // Check if user already exists
+    // Check if it's a demo signup (skipOTP = true)
+    if (!skipOTP && !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP is required'
+      });
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
@@ -26,46 +35,63 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Create new user
+    // Only verify OTP if not a demo account
+    if (!skipOTP) {
+      // Find OTP
+      const otpRecord = await OTPModel.findOne({
+        email: email.toLowerCase(),
+        otp
+      });
+
+      if (!otpRecord || otpRecord.expiresAt < Date.now()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired OTP'
+        });
+      }
+
+      // OTP is valid — delete the OTP record
+      await OTPModel.deleteOne({ _id: otpRecord._id });
+    }
+
+    // Create the new user
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase(),
-      password
+      password, // User model should handle hashing via pre-save middleware
+      isDemo: skipOTP || false,
+      isVerified: true
     });
 
     await user.save();
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        userId: user._id,
-        email: user.email 
-      },
+      { userId: user._id, email: user.email },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRE }
     );
 
     res.status(201).json({
       success: true,
-      message: 'User created successfully',
+      message: skipOTP ? 'Demo account created successfully' : 'User created successfully',
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        isDemo: user.isDemo || false,
         createdAt: user.createdAt
       }
     });
 
   } catch (error) {
     console.error('Signup error:', error);
-    
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
         success: false,
-        message: messages[0] // Return first validation error
+        message: messages[0]
       });
     }
 
@@ -85,10 +111,11 @@ router.post('/login', async (req, res) => {
 
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
+
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Email not found'
       });
     }
 
@@ -97,7 +124,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Incorrect password'
       });
     }
 
@@ -212,6 +239,7 @@ router.put('/profile', auth, async (req, res) => {
     });
   }
 });
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
 
 router.post('/forgot-password', async (req, res) => {
@@ -253,7 +281,8 @@ router.post('/forgot-password', async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/verify-otp', async (req, res) => {
+
+router.post('/verify-reset-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
@@ -273,7 +302,6 @@ router.post('/verify-otp', async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // Fixed reset-password route
 router.post('/reset-password', async (req, res) => {
@@ -300,6 +328,71 @@ router.post('/reset-password', async (req, res) => {
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await OTPModel.findOneAndDelete({ email }); // clear any previous OTPs
+
+    await OTPModel.create({
+      email,
+      otp,
+      expiresAt: Date.now() + 15 * 60 * 1000, // expires in 15 minutes
+    });
+
+    // send email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Verify your email',
+      html: `<p>Your OTP is <b>${otp}</b>. It will expire in 15 minutes.</p>`
+    });
+
+    res.json({ success: true, message: 'OTP sent to email' });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/verify-signup-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) return res.status(400).json({ message: "Email and OTP are required" });
+
+    const record = await OTPModel.findOne({ email });
+
+    if (!record) return res.status(400).json({ message: "No OTP found. Please request again." });
+
+    if (record.otp !== otp) return res.status(400).json({ message: "Invalid OTP" });
+
+    if (Date.now() > record.expiresAt) {
+      await OTPModel.deleteOne({ email });
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    await OTPModel.deleteOne({ email });
+
+    res.json({ success: true, message: "OTP verified" });
+  } catch (error) {
+    console.error('Verify signup OTP error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

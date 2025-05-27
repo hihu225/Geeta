@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./signup.css";
 import { backend_url } from "./utils/backend";
+import Swal from "sweetalert2"; // Fixed import - was 'swal'
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDemoAccount, setIsDemoAccount] = useState(false); // Track if it's a demo account
 
   const navigate = useNavigate();
 
@@ -73,9 +75,31 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const generateRandomCredentials = () => {
+    const firstNames = ['Alex', 'Jordan', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn', 'Parker', 'Sage'];
+    const lastNames = ['Smith', 'Johnson', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
+    const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+    
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const timestamp = Date.now().toString().slice(-6);
+    const demoEmail = `demo_${randomNumber}_${timestamp}@example.com`;
+    
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let randomPassword = 'demo_';
+    for (let i = 0; i < 8; i++) {
+      randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    return { 
+      name: randomName,
+      email: demoEmail, 
+      password: randomPassword,
+      confirmPassword: randomPassword
+    };
+  };
 
+  // Handle demo account signup (bypass OTP)
+  const handleDemoSignup = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
@@ -84,23 +108,24 @@ const Signup = () => {
 
       const response = await axios.post(
         `${backend_url}/api/auth/signup`,
-        submitData
+        {
+          ...submitData,
+          skipOTP: true // Flag to bypass OTP verification
+        }
       );
 
       if (response.data.success) {
         if (response.data.token) {
-          // Store token in cookie (session cookie)
           Cookies.set("token", response.data.token, {
             sameSite: "strict",
             expires: 7,
           });
-          // Set axios default headers for future requests
           axios.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${response.data.token}`;
         }
 
-        toast.success("Account created successfully! Welcome aboard! 🎉");
+        toast.success("Demo account created successfully! Welcome aboard! 🎉");
         navigate("/chat");
       }
     } catch (error) {
@@ -120,44 +145,108 @@ const Signup = () => {
       setLoading(false);
     }
   };
-const generateRandomCredentials = () => {
-  
-  const firstNames = ['Alex', 'Jordan', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn', 'Parker', 'Sage'];
-  const lastNames = ['Smith', 'Johnson', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
-  const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
-  
-  
-  const randomNumber = Math.floor(Math.random() * 100000);
-  const timestamp = Date.now().toString().slice(-6);
-  const demoEmail = `demo_${randomNumber}_${timestamp}@example.com`;
-  
- 
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let randomPassword = 'demo_';
-  for (let i = 0; i < 8; i++) {
-    randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  
-  return { 
-    name: randomName,
-    email: demoEmail, 
-    password: randomPassword,
-    confirmPassword: randomPassword
-  };
-};
 
-const handleDemoFill = () => {
-  const { name, email, password, confirmPassword } = generateRandomCredentials();
-  setFormData({
-    name: name,
-    email: email,
-    password: password,
-    confirmPassword: confirmPassword,
-  });
-  // Clear any existing errors
-  setErrors({});
-  toast.info("Unique demo credentials generated! Ready to sign up.");
-};
+  // Handle regular OTP-based signup
+  const handleOTPSignup = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      // Step 1: Send OTP
+      const sendRes = await fetch(`${backend_url}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email.toLowerCase() }),
+      });
+
+      const sendData = await sendRes.json();
+
+      if (!sendRes.ok) {
+        toast.error(sendData.message || "Failed to send OTP");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Show SweetAlert to enter OTP
+          const { value: otp } = await Swal.fire({
+      title: 'Enter OTP',
+      input: 'text',
+      inputLabel: 'Check your email for the 6-digit OTP',
+      inputPlaceholder: 'Enter OTP here',
+      inputAttributes: {
+        maxlength: 6,
+        autocapitalize: 'off',
+        autocorrect: 'off',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Verify & Create Account',
+      cancelButtonText: 'Cancel',
+      footer: '<span style="color: gray;">Didn\'t see the email? Check your <b>Spam</b> or <b>Promotions</b> folder.</span>'
+    });
+
+
+      // Step 3: Final signup request with OTP
+      const signupRes = await fetch(`${backend_url}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email.toLowerCase(),
+          password: formData.password,
+          otp
+        }),
+      });
+
+      const signupData = await signupRes.json();
+
+      if (signupRes.ok) {
+        if (signupData.token) {
+          Cookies.set("token", signupData.token, {
+            sameSite: "strict",
+            expires: 7,
+          });
+          axios.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${signupData.token}`;
+        }
+        toast.success("Signup successful! Welcome aboard! 🎉");
+        navigate("/chat");
+      } else {
+        toast.error(signupData.message || "Signup failed");
+      }
+
+    } catch (err) {
+      console.error("Signup error:", err);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Main form submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (isDemoAccount) {
+      await handleDemoSignup();
+    } else {
+      await handleOTPSignup();
+    }
+  };
+
+  const handleDemoFill = () => {
+    const { name, email, password, confirmPassword } = generateRandomCredentials();
+    setFormData({
+      name: name,
+      email: email,
+      password: password,
+      confirmPassword: confirmPassword,
+    });
+    setIsDemoAccount(true); // Mark as demo account
+    setErrors({});
+    toast.info("Demo credentials generated! Click 'Create Account' to proceed without OTP.");
+  };
+
   return (
     <div className="signup-container">
       <div className="signup-background">
@@ -173,6 +262,12 @@ const handleDemoFill = () => {
           </div>
           <h2>Create Account</h2>
           <p>Join us today and start your journey!</p>
+          {isDemoAccount && (
+            <div className="demo-indicator">
+              <span className="demo-badge">🎭 Demo Account Mode</span>
+              <p className="demo-text">No OTP verification required</p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="signup-form">
@@ -291,16 +386,20 @@ const handleDemoFill = () => {
             )}
           </div>
 
-          <button type="submit" className="signup-btn" disabled={loading}>
+          <button 
+            type="submit" 
+            className="signup-btn" 
+            disabled={loading}
+          >
             {loading ? (
               <>
                 <span className="loading-spinner"></span>
-                Creating Account...
+                {isDemoAccount ? 'Creating Demo Account...' : 'Creating Account...'}
               </>
             ) : (
               <>
                 <span className="btn-icon">🚀</span>
-                Create Account
+                {isDemoAccount ? 'Create Demo Account' : 'Create Account'}
               </>
             )}
           </button>
@@ -314,6 +413,28 @@ const handleDemoFill = () => {
             <span className="btn-icon">🎭</span>
             Fill Demo Data
           </button>
+
+          {isDemoAccount && (
+            <button
+              type="button"
+              className="reset-btn"
+              onClick={() => {
+                setFormData({
+                  name: "",
+                  email: "",
+                  password: "",
+                  confirmPassword: "",
+                });
+                setIsDemoAccount(false);
+                setErrors({});
+                toast.info("Switched back to regular signup mode");
+              }}
+              disabled={loading}
+            >
+              <span className="btn-icon">🔄</span>
+              Switch to Regular Signup
+            </button>
+          )}
         </form>
 
         <div className="signup-footer">
