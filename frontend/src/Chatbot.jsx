@@ -32,6 +32,7 @@ import ThemeNavigation from "./ThemeNavigation.jsx";
 import ThemeDetails from "./ThemeDetails.jsx";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 const REACT_APP_API_URL = import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
@@ -111,233 +112,256 @@ const BhagavadGitaBot = () => {
     setEditingChatId(null);
     setEditText("");
   };
-  const handleExportAllChats = async () => {
-    try {
-      const doc = new jsPDF();
 
-      // Title
-      doc.setFontSize(24);
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 0, 0);
-      doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
+const handleExportAllChats = async () => {
+  try {
+    const doc = new jsPDF();
 
-      // Subtitle
-      doc.setFontSize(16);
-      doc.setTextColor(139, 69, 19);
-      doc.text("Collection of Wisdom", 105, 30, { align: "center" });
+    // Title
+    doc.setFontSize(24);
+    doc.setFont("times", "bold");
+    doc.setTextColor(139, 0, 0);
+    doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
 
-      // Decorative Line
+    // Subtitle
+    doc.setFontSize(16);
+    doc.setTextColor(139, 69, 19);
+    doc.text("Collection of Wisdom", 105, 30, { align: "center" });
+
+    // Decorative Line
+    doc.setLineWidth(0.8);
+    doc.setDrawColor(184, 134, 11);
+    doc.line(20, 35, 190, 35);
+
+    let currentY = 45;
+    let pageNumber = 1;
+
+    const chatsToExport = chats.slice(0, visibleChats || chats.length);
+
+    const addPageNumber = () => {
+      doc.setFontSize(10);
+      doc.setTextColor(102, 51, 0);
+      doc.text(`Page ${pageNumber}`, 105, 287, { align: "center" });
       doc.setLineWidth(0.8);
       doc.setDrawColor(184, 134, 11);
-      doc.line(20, 35, 190, 35);
+      doc.line(20, 275, 190, 275);
+    };
 
-      let currentY = 45;
-      let pageNumber = 1;
+    addPageNumber();
 
-      const chatsToExport = chats.slice(0, visibleChats || chats.length); // fallback if undefined
+    for (let index = 0; index < chatsToExport.length; index++) {
+      const chat = chatsToExport[index];
 
-      const addPageNumber = () => {
-        doc.setFontSize(10);
-        doc.setTextColor(102, 51, 0);
-        doc.text(`Page ${pageNumber}`, 105, 287, { align: "center" });
-        doc.setLineWidth(0.8);
-        doc.setDrawColor(184, 134, 11);
-        doc.line(20, 275, 190, 275);
-      };
-
-      addPageNumber();
-
-      for (let index = 0; index < chatsToExport.length; index++) {
-        const chat = chatsToExport[index];
-
-        if (currentY > 240) {
-          doc.addPage();
-          pageNumber++;
-          currentY = 20;
-          addPageNumber();
-        }
-
-        doc.setFont("times", "bold");
-        doc.setFontSize(14);
-        doc.setTextColor(139, 0, 0);
-        doc.text(`Conversation ${index + 1}:`, 20, currentY);
-        currentY += 8;
-
-        doc.setFontSize(10);
-        doc.setFont("times", "italic");
-        doc.setTextColor(102, 51, 0);
-        let dateText = "Date unavailable";
-        try {
-          const date = new Date(chat.createdAt);
-          if (!isNaN(date.getTime())) {
-            dateText = `${date.toLocaleDateString()} | ${date.toLocaleTimeString(
-              [],
-              { hour: "2-digit", minute: "2-digit" }
-            )}`;
-          }
-        } catch (_) {}
-        doc.text(dateText, 20, currentY);
-        currentY += 10;
-
-        doc.setFontSize(12);
-        doc.setFont("times", "bold");
-        doc.setTextColor(0, 100, 0);
-        doc.text("Your Question:", 20, currentY);
-        currentY += 7;
-
-        doc.setFont("times", "normal");
-        doc.setTextColor(0, 0, 0);
-        const userMessage = chat.userMessage || "No question recorded";
-        const splitQuestion = doc.splitTextToSize(userMessage, 160);
-        doc.text(splitQuestion, 30, currentY);
-        currentY += splitQuestion.length * 6 + 10;
-
-        if (currentY > 240) {
-          doc.addPage();
-          pageNumber++;
-          currentY = 20;
-          addPageNumber();
-        }
-
-        doc.setFont("times", "bold");
-        doc.setTextColor(139, 69, 19);
-        doc.setFontSize(12);
-        doc.text("Divine Guidance:", 20, currentY);
-        currentY += 7;
-
-        doc.setFont("times", "normal");
-        doc.setTextColor(0, 0, 0);
-        const botResponse = chat.botResponse || "No response available";
-        const splitResponse = doc.splitTextToSize(botResponse, 160);
-        doc.text(splitResponse, 30, currentY);
-        currentY += splitResponse.length * 6 + 10;
-
-        if (index < chatsToExport.length - 1) {
-          doc.setLineWidth(0.5);
-          doc.setDrawColor(184, 134, 11);
-          doc.line(40, currentY, 170, currentY);
-          currentY += 10;
-        }
-
-        if (currentY > 240) {
-          doc.addPage();
-          pageNumber++;
-          currentY = 20;
-          addPageNumber();
-        }
+      if (currentY > 240) {
+        doc.addPage();
+        pageNumber++;
+        currentY = 20;
+        addPageNumber();
       }
 
-      // Final Footer
+      doc.setFont("times", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(139, 0, 0);
+      doc.text(`Conversation ${index + 1}:`, 20, currentY);
+      currentY += 8;
+
       doc.setFontSize(10);
       doc.setFont("times", "italic");
-      doc.setTextColor(139, 0, 0);
-      doc.text("Generated from Bhagavad Gita Bot", 105, 280, {
-        align: "center",
+      doc.setTextColor(102, 51, 0);
+      let dateText = "Date unavailable";
+      try {
+        const date = new Date(chat.createdAt);
+        if (!isNaN(date.getTime())) {
+          dateText = `${date.toLocaleDateString()} | ${date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        }
+      } catch (_) {}
+      doc.text(dateText, 20, currentY);
+      currentY += 10;
+
+      doc.setFontSize(12);
+      doc.setFont("times", "bold");
+      doc.setTextColor(0, 100, 0);
+      doc.text("Your Question:", 20, currentY);
+      currentY += 7;
+
+      doc.setFont("times", "normal");
+      doc.setTextColor(0, 0, 0);
+      const userMessage = chat.userMessage || "No question recorded";
+      const splitQuestion = doc.splitTextToSize(userMessage, 160);
+      doc.text(splitQuestion, 30, currentY);
+      currentY += splitQuestion.length * 6 + 10;
+
+      if (currentY > 240) {
+        doc.addPage();
+        pageNumber++;
+        currentY = 20;
+        addPageNumber();
+      }
+
+      doc.setFont("times", "bold");
+      doc.setTextColor(139, 69, 19);
+      doc.setFontSize(12);
+      doc.text("Divine Guidance:", 20, currentY);
+      currentY += 7;
+
+      doc.setFont("times", "normal");
+      doc.setTextColor(0, 0, 0);
+      const botResponse = chat.botResponse || "No response available";
+      const splitResponse = doc.splitTextToSize(botResponse, 160);
+      doc.text(splitResponse, 30, currentY);
+      currentY += splitResponse.length * 6 + 10;
+
+      if (index < chatsToExport.length - 1) {
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(184, 134, 11);
+        doc.line(40, currentY, 170, currentY);
+        currentY += 10;
+      }
+
+      if (currentY > 240) {
+        doc.addPage();
+        pageNumber++;
+        currentY = 20;
+        addPageNumber();
+      }
+    }
+
+    // Final Footer
+    doc.setFontSize(10);
+    doc.setFont("times", "italic");
+    doc.setTextColor(139, 0, 0);
+    doc.text("Generated from Bhagavad Gita Bot", 105, 280, { align: "center" });
+
+    const today = new Date();
+    const fileName = `BhagavadGita_Wisdom_${today.toLocaleDateString().replace(/\//g, "-")}.pdf`;
+
+    if (
+      Capacitor.getPlatform() === "android" ||
+      Capacitor.getPlatform() === "ios"
+    ) {
+      const pdfOutput = doc.output("datauristring");
+      const base64 = pdfOutput.split(",")[1];
+
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents,
       });
 
-      const today = new Date();
-      const fileName = `BhagavadGita_Wisdom_${today
-        .toLocaleDateString()
-        .replace(/\//g, "-")}.pdf`;
+      await Swal.fire({
+        icon: 'success',
+        title: 'PDF Saved!',
+        text: 'Your conversation has been saved successfully in documents.',
+        timer: 3000,
+        showConfirmButton: false
+      });
 
-      if (
-        Capacitor.getPlatform() === "android" ||
-        Capacitor.getPlatform() === "ios"
-      ) {
-        const pdfOutput = doc.output("datauristring");
-        const base64 = pdfOutput.split(",")[1];
+      const fileUri = await Filesystem.getUri({
+        directory: Directory.Documents,
+        path: fileName,
+      });
 
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-        });
-        alert("PDF saved successfully!");
-        const fileUri = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName,
-        });
-        alert("PDF ready to share!");
-        await Share.share({
-          title: "Share Bhagavad Gita PDF",
-          text: "Here is your exported conversations from Geeta GPT",
-          url: fileUri.uri, // Use file URI here
-          dialogTitle: "Share PDF",
-        });
-      } else {
-        doc.save(fileName);
-      }
-    } catch (error) {
-      console.error("Error exporting all chats:", error);
-      alert("Failed to save/share PDF. Try again");
+      await Swal.fire({
+        icon: 'info',
+        title: 'Ready to Share',
+        text: 'You can now share your saved Bhagavad Gita PDF.',
+        timer: 2500,
+        showConfirmButton: false
+      });
+
+      await Share.share({
+        title: "Share Bhagavad Gita PDF",
+        text: "Here is your exported conversation from Geeta GPT",
+        url: fileUri.uri,
+        dialogTitle: "Share PDF",
+      });
+    } else {
+      doc.save(fileName);
     }
-  };
+  } catch (error) {
+    console.error("Error exporting all chats:", error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Export Failed',
+      text: 'Failed to save or share the PDF. Please try again.',
+    });
+  }
+};
 
   const handleSaveEdit = async (index) => {
-    if (!editText.trim()) return;
-    setLoading(true);
+  if (!editText.trim()) return;
+  setLoading(true);
 
-    try {
-      const chatToUpdate = chats[index];
+  try {
+    const chatToUpdate = chats[index];
 
-      // Create a new request with the edited message
-      const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
-        message: editText,
-        // Make sure we're sending the right chat history
-        // Only include chats that come before the current one being edited
-        chatHistory: chats.slice(0, index),
-      });
+    const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
+      message: editText,
+      chatHistory: chats.slice(0, index),
+    });
 
-      if (!res?.data) {
-        throw new Error("No response data received");
-      }
-
-      // Create updated chat object
-      const updatedChat = {
-        ...chatToUpdate,
-        userMessage: editText,
-        botResponse: res.data.botResponse,
-        hindiResponse: res.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
-        shloka: res.data.shloka || "",
-        translation: res.data.translation || "",
-        chapter: res.data.chapter || "",
-        verse: res.data.verse || "",
-        updatedAt: new Date(),
-      };
-
-      // Update the chats array
-      const newChats = [...chats];
-      newChats[index] = updatedChat;
-
-      // Remove all chats that come after this one since the context has changed
-      const truncatedChats = newChats;
-      setChats(truncatedChats);
-
-      // Update in favorites if present
-      if (favorites && favorites.length > 0) {
-        const favIndex = favorites.findIndex(
-          (fav) =>
-            (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
-            fav.userMessage === chatToUpdate.userMessage
-        );
-
-        if (favIndex !== -1) {
-          const newFavorites = [...favorites];
-          newFavorites[favIndex] = updatedChat;
-          setFavorites(newFavorites);
-        }
-      }
-
-      // Clear editing state
-      setEditingChatId(null);
-      setEditText("");
-    } catch (error) {
-      console.error("Error updating chat:", error);
-      alert(`Failed to update the chat: ${error.message || "Unknown error"}`);
-    } finally {
-      setLoading(false);
+    if (!res?.data) {
+      throw new Error("No response data received");
     }
-  };
+
+    const updatedChat = {
+      ...chatToUpdate,
+      userMessage: editText,
+      botResponse: res.data.botResponse,
+      hindiResponse: res.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
+      shloka: res.data.shloka || "",
+      translation: res.data.translation || "",
+      chapter: res.data.chapter || "",
+      verse: res.data.verse || "",
+      updatedAt: new Date(),
+    };
+
+    const newChats = [...chats];
+    newChats[index] = updatedChat;
+
+    const truncatedChats = newChats;
+    setChats(truncatedChats);
+
+    if (favorites && favorites.length > 0) {
+      const favIndex = favorites.findIndex(
+        (fav) =>
+          (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
+          fav.userMessage === chatToUpdate.userMessage
+      );
+
+      if (favIndex !== -1) {
+        const newFavorites = [...favorites];
+        newFavorites[favIndex] = updatedChat;
+        setFavorites(newFavorites);
+      }
+    }
+
+    setEditingChatId(null);
+    setEditText("");
+
+    await Swal.fire({
+      icon: "success",
+      title: "Updated",
+      text: "Chat updated successfully.",
+      confirmButtonColor: "#8B0000",
+    });
+
+  } catch (error) {
+    console.error("Error updating chat:", error);
+    await Swal.fire({
+      icon: "error",
+      title: "Update Failed",
+      text: error.message || "Unknown error occurred.",
+      confirmButtonColor: "#8B0000",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
   const [isOpen, setIsOpen] = useState(false);
   const SideNavigation = ({ chats, scrollToChat, theme }) => {
     // Helper function to check screen width safely
@@ -547,74 +571,82 @@ const BhagavadGitaBot = () => {
       </>
     );
   };
-  const handleDeleteSelected = async () => {
-    if (Object.keys(selectedChats).length === 0) {
-      alert("Please select at least one chat to delete");
-      return;
+  
+
+const handleDeleteSelected = async () => {
+  if (Object.keys(selectedChats).length === 0) {
+    await Swal.fire({
+      icon: 'info',
+      title: 'No chats selected',
+      text: 'Please select at least one chat to delete',
+    });
+    return;
+  }
+
+  const confirmDelete = await Swal.fire({
+    title: 'Delete Chats?',
+    text: `Are you sure you want to delete ${Object.keys(selectedChats).length} selected chat(s)?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete them',
+    cancelButtonText: 'Cancel'
+  });
+
+  if (!confirmDelete.isConfirmed) return;
+
+  setLoading(true);
+
+  try {
+    const chatIdsToDelete = Object.keys(selectedChats)
+      .filter((key) => selectedChats[key])
+      .map((key) => {
+        const isIndex = !isNaN(Number(key));
+        return isIndex ? chats[Number(key)]?._id : key;
+      })
+      .filter((id) => id);
+
+    for (const chatId of chatIdsToDelete) {
+      try {
+        await axios.delete(`${REACT_APP_API_URL}/api/chats/${chatId}`);
+      } catch (error) {
+        console.error(`Error deleting chat with ID ${chatId}:`, error);
+      }
     }
 
-    // Confirm deletion
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${
-        Object.keys(selectedChats).length
-      } selected chat(s)?`
+    setChats((prevChats) =>
+      prevChats.filter((chat, index) => !selectedChats[chat._id || index])
     );
-    if (!confirmDelete) return;
 
-    setLoading(true);
+    setFavorites((prevFavorites) =>
+      prevFavorites.filter((fav) => !chatIdsToDelete.includes(fav._id))
+    );
 
-    try {
-      // Create an array of chat IDs to delete
-      const chatIdsToDelete = Object.keys(selectedChats)
-        .filter((key) => selectedChats[key])
-        .map((key) => {
-          // Determine if key is a chat ID or an index
-          const isIndex = !isNaN(Number(key));
-          return isIndex ? chats[Number(key)]?._id : key;
-        })
-        .filter((id) => id); // Filter out undefined IDs
+    setSelectMode(false);
+    setSelectedChats({});
 
-      // Process deletions one by one
-      for (const chatId of chatIdsToDelete) {
-        try {
-          // Delete the chat by ID
-          await axios.delete(`${REACT_APP_API_URL}/api/chats/${chatId}`);
-        } catch (error) {
-          console.error(`Error deleting chat with ID ${chatId}:`, error);
-        }
-      }
-
-      // Update local state by filtering out deleted chats
-      setChats((prevChats) =>
-        prevChats.filter((chat, index) => !selectedChats[chat._id || index])
-      );
-
-      // Also update favorites if any deleted chats were favorites
-      setFavorites((prevFavorites) =>
-        prevFavorites.filter((fav) => !chatIdsToDelete.includes(fav._id))
-      );
-
-      // Clear selection mode and selected chats
-      setSelectMode(false);
-      setSelectedChats({});
-
-      // Adjust visible chats if needed
-      if (visibleChats > chats.length - Object.keys(selectedChats).length) {
-        setVisibleChats(
-          Math.max(1, chats.length - Object.keys(selectedChats).length)
-        );
-      }
-
-      alert(
-        `Successfully deleted ${Object.keys(selectedChats).length} chat(s)`
-      );
-    } catch (error) {
-      console.error("Error deleting selected chats:", error);
-      alert(`Error deleting chats: ${error.message || "Unknown error"}`);
-    } finally {
-      setLoading(false);
+    if (visibleChats > chats.length - Object.keys(selectedChats).length) {
+      setVisibleChats(Math.max(1, chats.length - Object.keys(selectedChats).length));
     }
-  };
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Deleted!',
+      text: `${Object.keys(selectedChats).length} chat(s) deleted successfully.`,
+    });
+  } catch (error) {
+    console.error("Error deleting selected chats:", error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Deletion Failed',
+      text: error.message || 'An unknown error occurred',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
   const chatRefs = useRef({});
 
   const scrollToChat = (index) => {
@@ -654,90 +686,121 @@ const BhagavadGitaBot = () => {
   };
 
   const handleExportPDF = async (chatId) => {
-    try {
-      const chatToExport =
-        chats.find((chat) => chat._id === chatId) ||
-        (typeof chatId === "number" ? chats[chatId] : null);
-      if (!chatToExport) {
-        console.error("Chat not found for export");
-        return;
-      }
-
-      const doc = new jsPDF();
-
-      doc.setFontSize(22);
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 0, 0);
-      doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
-
-      let currentY = 42;
-      doc.setFontSize(12);
-      doc.setFont("times", "normal");
-      doc.setTextColor(0, 0, 0);
-      doc.text(
-        `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
-        20,
-        currentY
-      );
-      currentY += 10;
-
-      doc.setFontSize(14);
-      doc.setTextColor(0, 100, 0);
-      doc.setFont("times", "bold");
-      doc.text("Your Question:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setFontSize(12);
-      const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
-      doc.text(splitQuestion, 20, currentY);
-      currentY += splitQuestion.length * 6 + 10;
-
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 69, 19);
-      doc.setFontSize(14);
-      doc.text("Divine Guidance:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setFontSize(12);
-      const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
-      doc.text(splitResponse, 20, currentY);
-      currentY += splitResponse.length * 6;
-
-      const base64 = doc.output("dataurlstring").split(",")[1];
-      const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
-
-      if (
-        Capacitor.getPlatform() === "android" ||
-        Capacitor.getPlatform() === "ios"
-      ) {
-        const saved = await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-        });
-        alert("PDF saved successfully!");
-        // Get actual file URI for sharing
-        const fileUri = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName,
-        });
-        alert("PDF ready to share!");
-        await Share.share({
-          title: "Share Bhagavad Gita PDF",
-          text: "Here is some divine wisdom from Geeta GPT",
-          url: fileUri.uri, // Use file URI here
-          dialogTitle: "Share PDF",
-        });
-      } else {
-        doc.save(fileName);
-      }
-    } catch (error) {
-      console.error("Error exporting to PDF:", error);
-      alert("Failed to save/share PDF. Try again");
+  try {
+    const chatToExport =
+      chats.find((chat) => chat._id === chatId) ||
+      (typeof chatId === "number" ? chats[chatId] : null);
+    if (!chatToExport) {
+      console.error("Chat not found for export");
+      await Swal.fire({
+        icon: "error",
+        title: "Export Failed",
+        text: "Chat not found for export.",
+        confirmButtonColor: "#8B0000",
+      });
+      return;
     }
-  };
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setFont("times", "bold");
+    doc.setTextColor(139, 0, 0);
+    doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
+
+    let currentY = 42;
+    doc.setFontSize(12);
+    doc.setFont("times", "normal");
+    doc.setTextColor(0, 0, 0);
+    doc.text(
+      `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
+      20,
+      currentY
+    );
+    currentY += 10;
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 100, 0);
+    doc.setFont("times", "bold");
+    doc.text("Your Question:", 20, currentY);
+    currentY += 7;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
+    doc.text(splitQuestion, 20, currentY);
+    currentY += splitQuestion.length * 6 + 10;
+
+    doc.setFont("times", "bold");
+    doc.setTextColor(139, 69, 19);
+    doc.setFontSize(14);
+    doc.text("Divine Guidance:", 20, currentY);
+    currentY += 7;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
+    doc.text(splitResponse, 20, currentY);
+    currentY += splitResponse.length * 6;
+
+    const base64 = doc.output("dataurlstring").split(",")[1];
+    const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
+
+    if (
+      Capacitor.getPlatform() === "android" ||
+      Capacitor.getPlatform() === "ios"
+    ) {
+      const saved = await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      await Swal.fire({
+        icon: "success",
+        title: "PDF Saved",
+        text: "PDF saved successfully!",
+        confirmButtonColor: "#8B0000",
+      });
+
+      const fileUri = await Filesystem.getUri({
+        directory: Directory.Documents,
+        path: fileName,
+      });
+
+      await Swal.fire({
+        icon: "success",
+        title: "PDF Ready",
+        text: "PDF ready to share!",
+        confirmButtonColor: "#8B0000",
+      });
+
+      await Share.share({
+        title: "Share Bhagavad Gita PDF",
+        text: "Here is some divine wisdom from Geeta GPT",
+        url: fileUri.uri,
+        dialogTitle: "Share PDF",
+      });
+    } else {
+      doc.save(fileName);
+      await Swal.fire({
+        icon: "success",
+        title: "PDF Downloaded",
+        text: "PDF has been downloaded successfully.",
+        confirmButtonColor: "#8B0000",
+      });
+    }
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    await Swal.fire({
+      icon: "error",
+      title: "Export Failed",
+      text: "Failed to save or share PDF. Please try again.",
+      confirmButtonColor: "#8B0000",
+    });
+  }
+};
+
   const handleThemeSelect = async (themeName) => {
     try {
       const response = await axios.get(
@@ -968,13 +1031,25 @@ const BhagavadGitaBot = () => {
           // Adjust visible chats
           setVisibleChats((prev) => Math.max(1, prev - 1));
         } else {
-          alert("Failed to delete the chat. Please try again.");
-        }
+              await Swal.fire({
+                icon: "error",
+                title: "Deletion Failed",
+                text: "Failed to delete the chat. Please try again.",
+                confirmButtonColor: "#8B0000"
+              });
+          }
+
       }
     } catch (error) {
-      console.error("Error deleting favorite chat:", error);
-      alert(`Error deleting chat: ${error.message || "Unknown error"}`);
-    } finally {
+  console.error("Error deleting favorite chat:", error);
+  await Swal.fire({
+    icon: "error",
+    title: "Error Deleting Chat",
+    text: `Error deleting chat: ${error.message || "Unknown error"}`,
+    confirmButtonColor: "#8B0000"
+  });
+}
+ finally {
       setLoading(false);
     }
   };
@@ -1020,9 +1095,15 @@ const BhagavadGitaBot = () => {
 
         console.log("Chat deleted successfully");
       } else {
-        console.error("Backend reported delete failure:", response.data);
-        alert("Failed to delete the chat. Please try again.");
-      }
+  console.error("Backend reported delete failure:", response.data);
+  await Swal.fire({
+    icon: "error",
+    title: "Delete Failed",
+    text: "Failed to delete the chat. Please try again.",
+    confirmButtonColor: "#8B0000"
+  });
+}
+
     } catch (error) {
       console.error("Error deleting chat:", error);
 
@@ -1041,12 +1122,25 @@ const BhagavadGitaBot = () => {
           setChats(refreshedChats.data);
           console.log("Chat deleted successfully (fallback method)");
         } else {
-          alert("Failed to delete the chat. Please try again.");
-        }
+  console.error("Backend reported delete failure:", response.data);
+  await Swal.fire({
+    icon: "error",
+    title: "Delete Failed",
+    text: "Failed to delete the chat. Please try again.",
+    confirmButtonColor: "#8B0000"
+  });
+}
+
       } catch (fallbackError) {
-        console.error("Fallback delete also failed:", fallbackError);
-        alert(`Error deleting chat: ${error.message || "Unknown error"}`);
-      }
+  console.error("Fallback delete also failed:", fallbackError);
+  await Swal.fire({
+    icon: "error",
+    title: "Error Deleting Chat",
+    text: fallbackError.message || "Unknown error",
+    confirmButtonColor: "#8B0000"
+  });
+}
+
     } finally {
       setLoading(false);
     }
@@ -1059,9 +1153,15 @@ const BhagavadGitaBot = () => {
       );
 
       if (chatsToShare.length === 0) {
-        alert("Please select at least one chat to share");
-        return;
-      }
+  await Swal.fire({
+    icon: "info",
+    title: "No Chats Selected",
+    text: "Please select at least one chat to share",
+    confirmButtonColor: "#8B0000"
+  });
+  return;
+}
+
 
       // Prepare the text content to share
       let shareText = "Divine Wisdom from Bhagavad Gita:\n\n";
@@ -1087,9 +1187,15 @@ const BhagavadGitaBot = () => {
           text: shareText,
         });
       } else {
-        navigator.clipboard.writeText(shareText);
-        alert("Multiple chats copied to clipboard!");
-      }
+  await navigator.clipboard.writeText(shareText);
+  await Swal.fire({
+    icon: "success",
+    title: "Copied!",
+    text: "Multiple chats copied to clipboard!",
+    confirmButtonColor: "#8B0000",
+  });
+}
+
 
       // Clear selections after sharing
       setSelectedChats({});
@@ -1201,9 +1307,14 @@ const BhagavadGitaBot = () => {
 
         const available = await SpeechRecognition.available();
         if (!available) {
-          alert("Speech recognition not available on this device.");
-          return;
-        }
+  await Swal.fire({
+    icon: "error",
+    title: "Oops...",
+    text: "Speech recognition not available on this device.",
+    confirmButtonColor: "#8B0000",
+  });
+  return;
+}
         SpeechRecognition.isListening().then((result) => {
           if (result) {
             setIsListening(true);
@@ -1248,9 +1359,15 @@ const BhagavadGitaBot = () => {
         const SpeechRecognitionWeb =
           window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognitionWeb) {
-          alert("Speech recognition is not supported in this browser.");
-          return;
-        }
+  await Swal.fire({
+    icon: "error",
+    title: "Unsupported",
+    text: "Speech recognition is not supported in this browser.",
+    confirmButtonColor: "#8B0000",
+  });
+  return;
+}
+
 
         const recognition = new SpeechRecognitionWeb();
         recognitionRef.current = recognition;
