@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./login.css";
 import { backend_url } from "./utils/backend";
+import swal from "sweetalert2";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -105,9 +106,59 @@ const Login = () => {
     }
   };
 
-  const handleForgotPassword = () => {
-    toast.info("Forgot password functionality will be implemented soon!");
-  };
+  const handleForgotPassword = async () => {
+  const { value: email } = await swal.fire({
+    title: 'Reset Your Password',
+    input: 'email',
+    inputLabel: 'Enter your email address',
+    inputPlaceholder: 'you@example.com',
+    confirmButtonText: 'Send OTP',
+    showCancelButton: true,
+    inputAttributes: {
+      autocapitalize: 'off',
+      autocorrect: 'off'
+    }
+  });
+
+  if (!email || !email.trim()) {
+    toast.error("Please enter a valid email address");
+    return;
+  }
+
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    toast.error("Please enter a valid email format");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await fetch(`${backend_url}/api/auth/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email: email.trim().toLowerCase() })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast.success("If an account with that email exists, an OTP has been sent to your email 📧");
+      navigate('/reset-password'); // Optional: only if needed now
+    } else {
+      toast.error(data.message || "Error sending OTP");
+    }
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    toast.error("Something went wrong. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="login-container">

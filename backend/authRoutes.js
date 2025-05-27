@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/usermodels');
 const auth = require('./middleware/auth'); // We'll create this middleware
 const router = express.Router();
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -208,6 +210,96 @@ router.put('/profile', auth, async (req, res) => {
       success: false,
       message: 'Server error'
     });
+  }
+});
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    const otp = generateOTP();
+    const otpExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    user.resetOTP = otp;
+    user.resetOTPExpire = otpExpire;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Your Password Reset OTP",
+      html: `<p>Your OTP for password reset is: <b>${otp}</b>. It is valid for 15 minutes.</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: "OTP sent to email" });
+
+  } catch (error) {
+    console.error("Send OTP error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP required" });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || user.resetOTP !== otp || Date.now() > user.resetOTPExpire) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    res.json({ success: true, message: "OTP verified" });
+
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// Fixed reset-password route
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || user.resetOTP !== otp || Date.now() > user.resetOTPExpire) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.password = newPassword;
+    user.resetOTP = undefined;
+    user.resetOTPExpire = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successfully" });
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

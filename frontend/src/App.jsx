@@ -14,7 +14,7 @@ import Layout from "./Layout";
 import Logout from "./Logout";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-
+import ResetPassword from "./ResetPassword";
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/logout" element={<Logout />} />
-
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Protected Routes wrapped in Layout */}
           <Route
             path="/dashboard"
