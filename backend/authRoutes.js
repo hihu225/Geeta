@@ -357,12 +357,91 @@ router.post('/send-otp', async (req, res) => {
       }
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Your OTP is <b>${otp}</b>. It will expire in 15 minutes.</p>`
-    });
+    await transporter.sendMail({ 
+  from: process.env.EMAIL_USER, 
+  to: email, 
+  subject: '🕉️ Welcome to Geeta GPT - Verify Your Email', 
+  html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verification - Geeta GPT</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); padding: 40px 30px; text-align: center;">
+                <div style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 8px;">
+                    🕉️ Geeta GPT
+                </div>
+                <div style="color: rgba(255,255,255,0.9); font-size: 16px;">
+                    Ancient Wisdom, Modern Intelligence
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div style="padding: 40px 30px;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px; font-size: 24px; text-align: center;">
+                    Welcome to Your Spiritual Journey! 🙏
+                </h2>
+                
+                <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                    Namaste! We're delighted to have you join the Geeta GPT community. You're just one step away from accessing timeless wisdom from the Bhagavad Gita.
+                </p>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+                    <p style="color: white; font-size: 18px; margin-bottom: 15px;">
+                        Your verification code is:
+                    </p>
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 20px; margin: 20px 0;">
+                        <span style="color: white; font-size: 32px; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+                            ${otp}
+                        </span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 15px;">
+                        ⏰ This code will expire in 15 minutes
+                    </p>
+                </div>
+                
+                <div style="background-color: #f8f9fa; border-left: 4px solid #ff6b35; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                    <h3 style="color: #2c3e50; margin-top: 0; font-size: 18px;">
+                        📚 What awaits you:
+                    </h3>
+                    <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                        <li>Personalized spiritual guidance from the Bhagavad Gita</li>
+                        <li>Daily wisdom and inspirational verses</li>
+                        <li>AI-powered insights into life's deeper questions</li>
+                        <li>A community of seekers on the path of knowledge</li>
+                    </ul>
+                </div>
+                
+                <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+                    If you didn't request this verification, you can safely ignore this email. The code will expire automatically.
+                </p>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #2c3e50; padding: 25px 30px; text-align: center;">
+                <p style="color: #bdc3c7; font-size: 14px; margin: 0 0 10px 0;">
+                    "You have the right to perform your actions, but you are not entitled to the fruits of your actions."
+                </p>
+                <p style="color: #95a5a6; font-size: 12px; margin: 0;">
+                    - Bhagavad Gita 2.47
+                </p>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #34495e;">
+                    <p style="color: #7f8c8d; font-size: 12px; margin: 0;">
+                        © 2024 Geeta GPT. Spreading wisdom, one verse at a time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  ` 
+});
 
     res.json({ success: true, message: 'OTP sent to email' });
   } catch (error) {
@@ -489,34 +568,62 @@ router.post('/send-delete-otp', auth, async (req, res) => {
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Account Deletion Confirmation - OTP Required",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #dc2626; text-align: center;">⚠️ Account Deletion Request</h2>
-          <p>Hello <strong>${user.name}</strong>,</p>
-          <p>You have requested to delete your account. To confirm this action, please use the OTP below:</p>
-          <div style="background-color: #fef2f2; border: 2px solid #fecaca; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-            <h3 style="color: #dc2626; font-size: 32px; margin: 0; letter-spacing: 4px;">${otp}</h3>
-          </div>
-          <p><strong>Important:</strong></p>
-          <ul style="color: #dc2626;">
-            <li>This OTP is valid for 15 minutes only</li>
-            <li>Account deletion is permanent and cannot be undone</li>
-            <li>All your chats and data will be permanently removed</li>
-          </ul>
-          <p>If you did not request account deletion, please ignore this email and your account will remain safe.</p>
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="font-size: 12px; color: #6b7280; text-align: center;">
-            This is an automated message. Please do not reply to this email.
-          </p>
+  from: process.env.EMAIL_USER,
+  to: user.email,
+  subject: "Farewell from Geeta GPT - Account Deletion Confirmation",
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      <!-- Header -->
+      <div style="background: white; border-radius: 10px 10px 0 0; padding: 30px; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 10px;">🕉️</div>
+        <h1 style="color: #333; margin: 0; font-size: 24px;">Geeta GPT</h1>
+        <h2 style="color: #dc2626; margin: 20px 0 10px 0;">⚠️ Account Deletion Request</h2>
+      </div>
+
+      <!-- Main Content -->
+      <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p>Hello <strong>${user.name}</strong>,</p>
+        <p>It is with a heavy heart that we process your request to delete your account. As the Gita teaches us about impermanence, we understand all journeys must end.</p>
+        
+        <p>To confirm this action, please use the OTP below:</p>
+        
+        <!-- OTP Section -->
+        <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px; padding: 25px; text-align: center; margin: 20px 0;">
+          <h3 style="color: #dc2626; font-size: 36px; margin: 0; letter-spacing: 4px; font-family: monospace;">${otp}</h3>
+          <p style="margin: 10px 0 0 0; color: #991b1b; font-size: 12px;">Valid for 15 minutes</p>
         </div>
-      `
-    };
 
-    await transporter.sendMail(mailOptions);
+        <!-- Warning -->
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong></p>
+          <ul style="color: #856404; margin: 10px 0 0 0;">
+            <li>Account deletion is permanent and cannot be undone</li>
+            <li>All your spiritual conversations will be permanently removed</li>
+            <li>Your personalized wisdom journey will end</li>
+          </ul>
+        </div>
 
+        <!-- Farewell -->
+        <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #1565c0; font-style: italic;">
+            🙏 <strong>Farewell Message:</strong> The wisdom we've shared remains eternal within you. May you find peace and enlightenment in all your future endeavors.
+          </p>
+          <p style="text-align: center; margin: 15px 0 0 0; color: #1976d2;"><strong>🕉️ Om Shanti 🕉️</strong></p>
+        </div>
+
+        <p style="font-size: 14px; color: #666;">If you did not request this deletion, please ignore this email and your account will remain safe.</p>
+        
+        <hr style="margin: 25px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
+          With gratitude, <strong>The Geeta GPT Team</strong><br>
+          This is an automated message. Please do not reply.
+        </p>
+      </div>
+    </div>
+  `
+};
+
+await transporter.sendMail(mailOptions);
     res.json({
       success: true,
       message: 'Account deletion OTP sent to your email'

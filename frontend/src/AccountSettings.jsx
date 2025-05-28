@@ -17,7 +17,7 @@ const AccountSettings = () => {
 
     header: {
       maxWidth: "800px",
-      margin: "0 auto 40px auto",
+      margin: "50px auto 40px auto",
       textAlign: "center",
     },
 
