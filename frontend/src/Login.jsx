@@ -20,9 +20,22 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  // Animation trigger
+  // Load saved credentials from cookies on component mount
   useEffect(() => {
     setMounted(true);
+    
+    // Check for saved credentials
+    const savedEmail = Cookies.get('saved_email');
+    const savedPassword = Cookies.get('saved_password');
+    const wasRemembered = Cookies.get('remember_me') === 'true';
+    
+    if (savedEmail && savedPassword && wasRemembered) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword,
+      });
+      setRememberMe(true);
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -58,6 +71,38 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const saveCredentials = () => {
+    if (rememberMe) {
+      // Save credentials for 30 days
+      Cookies.set('saved_email', formData.email, { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
+      Cookies.set('saved_password', formData.password, { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
+      Cookies.set('remember_me', 'true', { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
+    } else {
+      // Clear saved credentials if remember me is unchecked
+      Cookies.remove('saved_email');
+      Cookies.remove('saved_password');
+      Cookies.remove('remember_me');
+    }
+  };
+
+  const clearSavedCredentials = () => {
+    Cookies.remove('saved_email');
+    Cookies.remove('saved_password');
+    Cookies.remove('remember_me');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -71,6 +116,9 @@ const Login = () => {
       });
 
       if (response.data.success) {
+        // Save credentials if remember me is checked
+        saveCredentials();
+
         Cookies.set("token", response.data.token, {
           expires: rememberMe ? 30 : 7,
           sameSite: "strict",
@@ -80,85 +128,99 @@ const Login = () => {
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${response.data.token}`;
+        
         if (response.data.user) {
           localStorage.setItem("user", JSON.stringify(response.data.user));
         }
+        
         toast.success("Welcome back! Login successful! 🎉");
         localStorage.removeItem("loggedOut");
         navigate("/chat");
       }
     } catch (error) {
-        if (error.response?.data?.message) {
-  const message = error.response.data.message.toLowerCase();
+      if (error.response?.data?.message) {
+        const message = error.response.data.message.toLowerCase();
 
-  if (message === "email not found") {
-  setErrors({ email: "Email not found" });
-  toast.error("Email not found");
-} else if (message === "incorrect password") {
-  setErrors({ password: "Incorrect password" });
-  toast.error("Incorrect password");
-}
-}
-
-
+        if (message === "email not found") {
+          setErrors({ email: "Email not found" });
+          toast.error("Email not found");
+          // Clear saved credentials if email is not found
+          clearSavedCredentials();
+        } else if (message === "incorrect password") {
+          setErrors({ password: "Incorrect password" });
+          toast.error("Incorrect password");
+          // Clear saved credentials if password is incorrect
+          clearSavedCredentials();
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = async () => {
-  const { value: email } = await swal.fire({
-    title: 'Reset Your Password',
-    input: 'email',
-    inputLabel: 'Enter your email address',
-    inputPlaceholder: 'you@example.com',
-    confirmButtonText: 'Send OTP',
-    showCancelButton: true,
-    inputAttributes: {
-      autocapitalize: 'off',
-      autocorrect: 'off'
+  const handleRememberMeChange = (e) => {
+    const checked = e.target.checked;
+    setRememberMe(checked);
+    
+    // If unchecking remember me, clear saved credentials immediately
+    if (!checked) {
+      clearSavedCredentials();
     }
-  });
+  };
 
-  if (!email || !email.trim()) {
-    toast.error("Please enter a valid email address");
-    return;
-  }
-
-  // Basic email format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    toast.error("Please enter a valid email format");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await fetch(`${backend_url}/api/auth/forgot-password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email: email.trim().toLowerCase() })
+  const handleForgotPassword = async () => {
+    const { value: email } = await swal.fire({
+      title: 'Reset Your Password',
+      input: 'email',
+      inputLabel: 'Enter your email address',
+      inputPlaceholder: 'you@example.com',
+      inputValue: formData.email, // Pre-fill with current email if available
+      confirmButtonText: 'Send OTP',
+      showCancelButton: true,
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off'
+      }
     });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      toast.success("If an account with that email exists, an OTP has been sent to your email 📧");
-      navigate('/reset-password'); // Optional: only if needed now
-    } else {
-      toast.error(data.message || "Error sending OTP");
+    if (!email || !email.trim()) {
+      toast.error("Please enter a valid email address");
+      return;
     }
-  } catch (error) {
-    console.error("Forgot password error:", error);
-    toast.error("Something went wrong. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Please enter a valid email format");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${backend_url}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("If an account with that email exists, an OTP has been sent to your email 📧");
+        navigate('/reset-password'); // Optional: only if needed now
+      } else {
+        toast.error(data.message || "Error sending OTP");
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-container">
@@ -188,7 +250,6 @@ const Login = () => {
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <div className="input-wrapper">
-              
               <input
                 type="email"
                 id="email"
@@ -246,7 +307,7 @@ const Login = () => {
                 type="checkbox"
                 id="rememberMe"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={handleRememberMeChange}
                 disabled={loading}
               />
               <label htmlFor="rememberMe" className="checkbox-label">
