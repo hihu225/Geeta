@@ -5,7 +5,7 @@ const Chat = require('./index');
 const Theme = require('./index');
 const mongoose = require('mongoose');
 
-router.get('/cleanup', async (req, res) => {
+router.delete('/cleanup', async (req, res) => {
   try {
     // Get all unique userIds in Chat and Theme collections
     const [chatUserIds, themeUserIds] = await Promise.all([

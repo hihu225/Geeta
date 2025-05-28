@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./login.css";
 import { backend_url } from "./utils/backend";
 import swal from "sweetalert2";
-import { Preferences } from '@capacitor/preferences';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -20,121 +20,23 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  // Storage helper functions
-  const setStorageItem = async (key, value) => {
-    try {
-      await Preferences.set({
-        key: key,
-        value: JSON.stringify({
-          data: value,
-          timestamp: Date.now(),
-          expires: rememberMe ? Date.now() + (30 * 24 * 60 * 60 * 1000) : Date.now() + (7 * 24 * 60 * 60 * 1000) // 30 days or 7 days
-        })
-      });
-    } catch (error) {
-      console.error('Error saving to storage:', error);
-      // Fallback to localStorage for web
-      localStorage.setItem(key, JSON.stringify({
-        data: value,
-        timestamp: Date.now(),
-        expires: rememberMe ? Date.now() + (30 * 24 * 60 * 60 * 1000) : Date.now() + (7 * 24 * 60 * 60 * 1000)
-      }));
-    }
-  };
-
-  const getStorageItem = async (key) => {
-    try {
-      const { value } = await Preferences.get({ key: key });
-      if (value) {
-        const parsed = JSON.parse(value);
-        // Check if item has expired
-        if (parsed.expires && Date.now() > parsed.expires) {
-          await removeStorageItem(key);
-          return null;
-        }
-        return parsed.data;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error reading from storage:', error);
-      // Fallback to localStorage for web
-      try {
-        const item = localStorage.getItem(key);
-        if (item) {
-          const parsed = JSON.parse(item);
-          if (parsed.expires && Date.now() > parsed.expires) {
-            localStorage.removeItem(key);
-            return null;
-          }
-          return parsed.data;
-        }
-      } catch (e) {
-        console.error('Fallback storage error:', e);
-      }
-      return null;
-    }
-  };
-
-  const removeStorageItem = async (key) => {
-    try {
-      await Preferences.remove({ key: key });
-    } catch (error) {
-      console.error('Error removing from storage:', error);
-      // Fallback to localStorage for web
-      localStorage.removeItem(key);
-    }
-  };
-
-  const clearAllStorageItems = async () => {
-    const keys = ['saved_email', 'saved_password', 'remember_me', 'token', 'user'];
-    for (const key of keys) {
-      await removeStorageItem(key);
-    }
-  };
-
-  // Load saved credentials and check existing session
+  // Load saved credentials from cookies on component mount
   useEffect(() => {
-    const initializeAuth = async () => {
-      setMounted(true);
-      
-      // Check for existing valid session
-      const savedToken = await getStorageItem('token');
-      const savedUser = await getStorageItem('user');
-      
-      if (savedToken && savedUser) {
-        // Set axios default header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-        
-        // Verify token is still valid by making a test request
-        try {
-          const response = await axios.get(`${backend_url}/api/auth/verify-token`);
-          if (response.data.success) {
-            navigate('/chat');
-            return;
-          }
-        } catch (error) {
-          // Token is invalid, clear storage
-          console.log('Token expired or invalid, clearing storage');
-          await clearAllStorageItems();
-        }
-      }
-      
-      // Check for saved credentials
-      const savedEmail = await getStorageItem('saved_email');
-      const savedPassword = await getStorageItem('saved_password');
-      const wasRemembered = await getStorageItem('remember_me');
-      
-      if (savedEmail && savedPassword && wasRemembered) {
-        setFormData({
-          email: savedEmail,
-          password: savedPassword,
-        });
-        setRememberMe(true);
-      }
-    };
-
-    initializeAuth();
-  }, [navigate]);
+    setMounted(true);
+    
+    // Check for saved credentials
+    const savedEmail = Cookies.get('saved_email');
+    const savedPassword = Cookies.get('saved_password');
+    const wasRemembered = Cookies.get('remember_me') === 'true';
+    
+    if (savedEmail && savedPassword && wasRemembered) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword,
+      });
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -169,22 +71,36 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const saveCredentials = async () => {
+  const saveCredentials = () => {
     if (rememberMe) {
-      await setStorageItem('saved_email', formData.email);
-      await setStorageItem('saved_password', formData.password);
-      await setStorageItem('remember_me', true);
+      // Save credentials for 30 days
+      Cookies.set('saved_email', formData.email, { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
+      Cookies.set('saved_password', formData.password, { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
+      Cookies.set('remember_me', 'true', { 
+        expires: 30, 
+        sameSite: 'strict',
+        secure: true // Use secure flag for production HTTPS
+      });
     } else {
-      await removeStorageItem('saved_email');
-      await removeStorageItem('saved_password');
-      await removeStorageItem('remember_me');
+      // Clear saved credentials if remember me is unchecked
+      Cookies.remove('saved_email');
+      Cookies.remove('saved_password');
+      Cookies.remove('remember_me');
     }
   };
 
-  const clearSavedCredentials = async () => {
-    await removeStorageItem('saved_email');
-    await removeStorageItem('saved_password');
-    await removeStorageItem('remember_me');
+  const clearSavedCredentials = () => {
+    Cookies.remove('saved_email');
+    Cookies.remove('saved_password');
+    Cookies.remove('remember_me');
   };
 
   const handleSubmit = async (e) => {
@@ -201,18 +117,24 @@ const Login = () => {
 
       if (response.data.success) {
         // Save credentials if remember me is checked
-        await saveCredentials();
+        saveCredentials();
 
-        // Save token and user data
-        await setStorageItem('token', response.data.token);
-        if (response.data.user) {
-          await setStorageItem('user', response.data.user);
-        }
+        Cookies.set("token", response.data.token, {
+          expires: rememberMe ? 30 : 7,
+          sameSite: "strict",
+        });
 
         // Set default axios header for future requests
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.token}`;
+        
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
         
         toast.success("Welcome back! Login successful! 🎉");
+        localStorage.removeItem("loggedOut");
         navigate("/chat");
       }
     } catch (error) {
@@ -222,11 +144,13 @@ const Login = () => {
         if (message === "email not found") {
           setErrors({ email: "Email not found" });
           toast.error("Email not found");
-          await clearSavedCredentials();
+          // Clear saved credentials if email is not found
+          clearSavedCredentials();
         } else if (message === "incorrect password") {
           setErrors({ password: "Incorrect password" });
           toast.error("Incorrect password");
-          await clearSavedCredentials();
+          // Clear saved credentials if password is incorrect
+          clearSavedCredentials();
         }
       }
     } finally {
@@ -234,13 +158,13 @@ const Login = () => {
     }
   };
 
-  const handleRememberMeChange = async (e) => {
+  const handleRememberMeChange = (e) => {
     const checked = e.target.checked;
     setRememberMe(checked);
     
     // If unchecking remember me, clear saved credentials immediately
     if (!checked) {
-      await clearSavedCredentials();
+      clearSavedCredentials();
     }
   };
 
@@ -250,7 +174,7 @@ const Login = () => {
       input: 'email',
       inputLabel: 'Enter your email address',
       inputPlaceholder: 'you@example.com',
-      inputValue: formData.email,
+      inputValue: formData.email, // Pre-fill with current email if available
       confirmButtonText: 'Send OTP',
       showCancelButton: true,
       inputAttributes: {
@@ -264,6 +188,7 @@ const Login = () => {
       return;
     }
 
+    // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       toast.error("Please enter a valid email format");
@@ -285,7 +210,7 @@ const Login = () => {
 
       if (response.ok) {
         toast.success("If an account with that email exists, an OTP has been sent to your email 📧");
-        navigate('/reset-password');
+        navigate('/reset-password'); // Optional: only if needed now
       } else {
         toast.error(data.message || "Error sending OTP");
       }
