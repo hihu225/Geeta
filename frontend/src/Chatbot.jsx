@@ -1954,7 +1954,6 @@ const handleDeleteSelected = async () => {
     <button style={{
       ...styles.logoutbutton,
       position: "fixed",
-      zIndex: 1001,
       }} onClick={() => navigate("/account-settings")}>Account Settings</button>
           <h1 style={styles.title}>
             <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita

@@ -535,7 +535,6 @@ voiceButton : {
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
-              zIndex: 900,
               fontSize: '0.9rem',
               boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
   },
