@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./login.css";
 import { backend_url } from "./utils/backend";
+import { StorageService } from "./utils/storage";
 import swal from "sweetalert2";
 
 const Login = () => {
@@ -20,22 +20,30 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  // Load saved credentials from cookies on component mount
+  // Load saved credentials from storage on component mount
   useEffect(() => {
-    setMounted(true);
-    
-    // Check for saved credentials
-    const savedEmail = Cookies.get('saved_email');
-    const savedPassword = Cookies.get('saved_password');
-    const wasRemembered = Cookies.get('remember_me') === 'true';
-    
-    if (savedEmail && savedPassword && wasRemembered) {
-      setFormData({
-        email: savedEmail,
-        password: savedPassword,
-      });
-      setRememberMe(true);
-    }
+    const loadSavedCredentials = async () => {
+      setMounted(true);
+      
+      try {
+        // Check for saved credentials
+        const savedEmail = await StorageService.get('saved_email');
+        const savedPassword = await StorageService.get('saved_password');
+        const wasRemembered = await StorageService.get('remember_me');
+        
+        if (savedEmail && savedPassword && wasRemembered === 'true') {
+          setFormData({
+            email: savedEmail,
+            password: savedPassword,
+          });
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+      }
+    };
+
+    loadSavedCredentials();
   }, []);
 
   const handleChange = (e) => {
@@ -71,36 +79,42 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const saveCredentials = () => {
-    if (rememberMe) {
-      // Save credentials for 30 days
-      Cookies.set('saved_email', formData.email, { 
-        expires: 30, 
-        sameSite: 'strict',
-        secure: true // Use secure flag for production HTTPS
-      });
-      Cookies.set('saved_password', formData.password, { 
-        expires: 30, 
-        sameSite: 'strict',
-        secure: true // Use secure flag for production HTTPS
-      });
-      Cookies.set('remember_me', 'true', { 
-        expires: 30, 
-        sameSite: 'strict',
-        secure: true // Use secure flag for production HTTPS
-      });
-    } else {
-      // Clear saved credentials if remember me is unchecked
-      Cookies.remove('saved_email');
-      Cookies.remove('saved_password');
-      Cookies.remove('remember_me');
+  const saveCredentials = async () => {
+    try {
+      if (rememberMe) {
+        // Save credentials for 30 days
+        await StorageService.set('saved_email', formData.email, { 
+          expires: 30, 
+          sameSite: 'strict',
+          secure: window.location.protocol === 'https:' // Use secure flag for HTTPS
+        });
+        await StorageService.set('saved_password', formData.password, { 
+          expires: 30, 
+          sameSite: 'strict',
+          secure: window.location.protocol === 'https:'
+        });
+        await StorageService.set('remember_me', 'true', { 
+          expires: 30, 
+          sameSite: 'strict',
+          secure: window.location.protocol === 'https:'
+        });
+      } else {
+        // Clear saved credentials if remember me is unchecked
+        await clearSavedCredentials();
+      }
+    } catch (error) {
+      console.error('Error saving credentials:', error);
     }
   };
 
-  const clearSavedCredentials = () => {
-    Cookies.remove('saved_email');
-    Cookies.remove('saved_password');
-    Cookies.remove('remember_me');
+  const clearSavedCredentials = async () => {
+    try {
+      await StorageService.remove('saved_email');
+      await StorageService.remove('saved_password');
+      await StorageService.remove('remember_me');
+    } catch (error) {
+      console.error('Error clearing credentials:', error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -117,11 +131,13 @@ const Login = () => {
 
       if (response.data.success) {
         // Save credentials if remember me is checked
-        saveCredentials();
+        await saveCredentials();
 
-        Cookies.set("token", response.data.token, {
+        // Save token using our storage service
+        await StorageService.set("token", response.data.token, {
           expires: rememberMe ? 30 : 7,
           sameSite: "strict",
+          secure: window.location.protocol === 'https:'
         });
 
         // Set default axios header for future requests
@@ -145,12 +161,12 @@ const Login = () => {
           setErrors({ email: "Email not found" });
           toast.error("Email not found");
           // Clear saved credentials if email is not found
-          clearSavedCredentials();
+          await clearSavedCredentials();
         } else if (message === "incorrect password") {
           setErrors({ password: "Incorrect password" });
           toast.error("Incorrect password");
           // Clear saved credentials if password is incorrect
-          clearSavedCredentials();
+          await clearSavedCredentials();
         }
       }
     } finally {
@@ -158,13 +174,13 @@ const Login = () => {
     }
   };
 
-  const handleRememberMeChange = (e) => {
+  const handleRememberMeChange = async (e) => {
     const checked = e.target.checked;
     setRememberMe(checked);
     
     // If unchecking remember me, clear saved credentials immediately
     if (!checked) {
-      clearSavedCredentials();
+      await clearSavedCredentials();
     }
   };
 

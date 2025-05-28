@@ -5,7 +5,8 @@ import {
   Navigate,
   Link,
 } from "react-router-dom";
-import Cookies from "js-cookie";
+import { useState, useEffect } from "react";
+import { StorageService } from "./utils/storage";
 import Login from "./Login";
 import Signup from "./Signup";
 import BhagavadGitaBot from "./Chatbot";
@@ -16,6 +17,64 @@ import 'react-toastify/dist/ReactToastify.css';
 import ResetPassword from "./ResetPassword";
 import DeleteAccount from "./DeleteAccount";
 import AccountSettings from "./AccountSettings";
+
+// Component to handle async token checking for root route
+const RootRedirect = () => {
+  const [loading, setLoading] = useState(true);
+  const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await StorageService.get("token");
+        setHasToken(!!token);
+      } catch (error) {
+        console.error("Error checking token:", error);
+        setHasToken(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkToken();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '20px'
+        }}></div>
+        <p>Loading...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  return hasToken ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+};
 
 function App() {
   return (
@@ -29,6 +88,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/account-settings" element={<AccountSettings />} />
+          
           {/* Protected Routes wrapped in Layout */}
           <Route
             path="/dashboard"
@@ -47,17 +107,8 @@ function App() {
             }
           />
 
-          {/* Redirect based on token presence */}
-          <Route
-            path="/"
-            element={
-              Cookies.get("token") ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+          {/* Root route with async token checking */}
+          <Route path="/" element={<RootRedirect />} />
 
           {/* 404 */}
           <Route

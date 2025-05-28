@@ -5,7 +5,9 @@
     "@capacitor/cli": "^7.2.0",
     "@capacitor/core": "^7.2.0",
     "@capacitor/http": "^0.0.2",
+    "@capacitor/preferences": "^7.0.1",
     "bcryptjs": "^3.0.2",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
     "react-icons": "^5.5.0"

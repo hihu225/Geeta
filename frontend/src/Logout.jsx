@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+import { StorageService } from "./utils/storage";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -147,13 +147,35 @@ const Logout = () => {
     };
   }, []);
 
-  const handleLogout = () => {
-    Cookies.remove("token");
-    localStorage.setItem("loggedOut", "true"); 
+  const handleLogout = async () => {
+  try {
+    // Clear all stored data
+    await StorageService.remove("token");
+    await StorageService.remove("saved_email");
+    await StorageService.remove("saved_password");
+    await StorageService.remove("remember_me");
+    
+    // Clear localStorage data
+    localStorage.removeItem("user");
+    localStorage.setItem("loggedOut", "true");
+    
+    // Clear axios authorization header
     delete axios.defaults.headers.common["Authorization"];
+    
+    // Show success message
     toast.success("Logged out successfully! 👋");
+    
+    // Redirect to login page
     navigate("/login", { replace: true });
-  };
+    
+  } catch (error) {
+    console.error("Logout error:", error);
+    toast.error("Error during logout, but you've been logged out locally.");
+    
+    // Still redirect even if there's an error
+    navigate("/login", { replace: true });
+  }
+};
 
   const handleCancel = () => {
     navigate(-1);

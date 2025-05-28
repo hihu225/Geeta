@@ -5,6 +5,9 @@
   "plugins": {
     "SpeechRecognition": {
       "language": "en-IN"
+    },
+    "Preferences": {
+      "group": "GeetaGptApp"
     }
   }
 }

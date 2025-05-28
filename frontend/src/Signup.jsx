@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "./signup.css";
 import { backend_url } from "./utils/backend";
+import { StorageService } from "./utils/storage";
 import Swal from "sweetalert2"; 
 
 const Signup = () => {
@@ -19,7 +19,7 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isDemoAccount, setIsDemoAccount] = useState(false); // Track if it's a demo account
+  const [isDemoAccount, setIsDemoAccount] = useState(false);
 
   const navigate = useNavigate();
 
@@ -100,148 +100,155 @@ const Signup = () => {
 
   // Handle demo account signup (bypass OTP)
   const handleDemoSignup = async () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  setLoading(true);
-  try {
-    const { confirmPassword, ...submitData } = formData;
+    setLoading(true);
+    try {
+      const { confirmPassword, ...submitData } = formData;
 
-    const response = await axios.post(
-      `${backend_url}/api/auth/signup`,
-      {
-        ...submitData,
-        skipOTP: true // Flag to bypass OTP verification
-      }
-    );
-    
-    if (response.data.success) {
-      console.log("Demo signup response:", response.data);
+      const response = await axios.post(
+        `${backend_url}/api/auth/signup`,
+        {
+          ...submitData,
+          skipOTP: true // Flag to bypass OTP verification
+        }
+      );
       
-      // Set token in cookies first
-      if (response.data.token) {
-        Cookies.set("token", response.data.token, {
-          sameSite: "strict",
-          expires: 1 / 24 
-        });
+      if (response.data.success) {
+        console.log("Demo signup response:", response.data);
+        
+        // Set token using StorageService (works for both web and Capacitor)
+        if (response.data.token) {
+          await StorageService.set("token", response.data.token, {
+            expires: 1/24, // 1 hour for demo accounts
+            sameSite: "strict"
+          });
 
-        axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
-        console.log("Token set successfully");
-      }
-      
-      // Store user data in localStorage
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        console.log("User data stored:", response.data.user);
-      }
-      
-      // Show success message
-      toast.success("Demo account created successfully! Welcome aboard! 🎉");
-      
-      // Force navigation with window.location instead of navigate()
-      setTimeout(() => {
-        console.log("Force navigating to /chat");
-        window.location.href = "/chat"; // This will force a full page reload
-      }, 1000); // Increased delay
-      
-    } else {
-      console.error("Signup failed:", response.data);
-      toast.error(response.data.message || "Signup failed");
-    }
-  } catch (error) {
-    console.error("Demo signup error:", error);
-    
-    if (error.response?.data?.message) {
-      if (error.response.data.message.includes("email")) {
-        setErrors({ email: "Email already exists" });
-        toast.error("Email already exists");
+          axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+          console.log("Token set successfully");
+        }
+        
+        // Store user data in localStorage (works for both platforms)
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+          console.log("User data stored:", response.data.user);
+        }
+        
+        // Show success message
+        toast.success("Demo account created successfully! Welcome aboard! 🎉");
+        
+        // Navigate to chat
+        setTimeout(() => {
+          console.log("Navigating to /chat");
+          navigate("/chat", { replace: true });
+        }, 1000);
+        
       } else {
-        setErrors({ general: error.response.data.message });
-        toast.error(error.response.data.message);
+        console.error("Signup failed:", response.data);
+        toast.error(response.data.message || "Signup failed");
       }
-    } else {
-      setErrors({ general: "Something went wrong. Please try again." });
-      toast.error("Something went wrong. Please try again.");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-  const handleOTPSignup = async () => {
-  if (!validateForm()) return;
-
-  setLoading(true);
-  try {
-    const sendRes = await fetch(`${backend_url}/api/auth/send-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: formData.email.toLowerCase() }),
-    });
-
-    const sendData = await sendRes.json();
-
-    if (!sendRes.ok) {
-      toast.error(sendData.message || "Failed to send OTP");
+    } catch (error) {
+      console.error("Demo signup error:", error);
+      
+      if (error.response?.data?.message) {
+        if (error.response.data.message.includes("email")) {
+          setErrors({ email: "Email already exists" });
+          toast.error("Email already exists");
+        } else {
+          setErrors({ general: error.response.data.message });
+          toast.error(error.response.data.message);
+        }
+      } else {
+        setErrors({ general: "Something went wrong. Please try again." });
+        toast.error("Something went wrong. Please try again.");
+      }
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    const { value: otp } = await Swal.fire({
-      title: 'Enter OTP',
-      input: 'text',
-      inputLabel: 'Check your email for the 6-digit OTP',
-      inputPlaceholder: 'Enter OTP here',
-      inputAttributes: {
-        maxlength: 6,
-        autocapitalize: 'off',
-        autocorrect: 'off',
-      },
-      showCancelButton: true,
-      confirmButtonText: 'Verify & Create Account',
-      cancelButtonText: 'Cancel',
-      footer: '<span style="color: gray;">Didn\'t see the email? Check your <b>Spam</b> or <b>Promotions</b> folder.</span>'
-    });
+  const handleOTPSignup = async () => {
+    if (!validateForm()) return;
 
-    const signupRes = await fetch(`${backend_url}/api/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: formData.name,
-        email: formData.email.toLowerCase(),
-        password: formData.password,
-        otp
-      }),
-    });
+    setLoading(true);
+    try {
+      const sendRes = await fetch(`${backend_url}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email.toLowerCase() }),
+      });
 
-    const signupData = await signupRes.json();
+      const sendData = await sendRes.json();
 
-    if (signupRes.ok) {
-      if (signupData.token) {
-        Cookies.set("token", signupData.token, {
-          sameSite: "strict",
-          expires: 7,
-        });
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${signupData.token}`;
+      if (!sendRes.ok) {
+        toast.error(sendData.message || "Failed to send OTP");
+        setLoading(false);
+        return;
       }
-      // FIX: Change response.data.user to signupData.user
-      if (signupData.user) {
-        localStorage.setItem("user", JSON.stringify(signupData.user));
+
+      const { value: otp } = await Swal.fire({
+        title: 'Enter OTP',
+        input: 'text',
+        inputLabel: 'Check your email for the 6-digit OTP',
+        inputPlaceholder: 'Enter OTP here',
+        inputAttributes: {
+          maxlength: 6,
+          autocapitalize: 'off',
+          autocorrect: 'off',
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Verify & Create Account',
+        cancelButtonText: 'Cancel',
+        footer: '<span style="color: gray;">Didn\'t see the email? Check your <b>Spam</b> or <b>Promotions</b> folder.</span>'
+      });
+
+      if (!otp) {
+        setLoading(false);
+        return;
       }
-      toast.success("Signup successful! Welcome aboard! 🎉");
-      navigate("/chat");
-    } else {
-      toast.error(signupData.message || "Signup failed");
+
+      const signupRes = await fetch(`${backend_url}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email.toLowerCase(),
+          password: formData.password,
+          otp
+        }),
+      });
+
+      const signupData = await signupRes.json();
+
+      if (signupRes.ok) {
+        // Set token using StorageService
+        if (signupData.token) {
+          await StorageService.set("token", signupData.token, {
+            expires: 7, // 7 days for regular accounts
+            sameSite: "strict"
+          });
+          
+          axios.defaults.headers.common["Authorization"] = `Bearer ${signupData.token}`;
+        }
+        
+        // Store user data in localStorage
+        if (signupData.user) {
+          localStorage.setItem("user", JSON.stringify(signupData.user));
+        }
+        
+        toast.success("Signup successful! Welcome aboard! 🎉");
+        navigate("/chat");
+      } else {
+        toast.error(signupData.message || "Signup failed");
+      }
+
+    } catch (err) {
+      console.error("Signup error:", err);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-  } catch (err) {
-    console.error("Signup error:", err);
-    toast.error("Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

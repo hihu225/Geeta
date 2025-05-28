@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+
 import axios from "axios";
 import { toast } from "react-toastify";
 import { backend_url } from "./utils/backend";
+import { StorageService } from "./utils/storage";
 
 const DeleteAccount = () => {
   const navigate = useNavigate();
@@ -301,8 +302,8 @@ const DeleteAccount = () => {
   const handleSendOtp = async () => {
     setIsSendingOtp(true);
     try {
-      const token = Cookies.get("token");
-      
+      const token = await StorageService.get("token");
+
       await axios.post(`${backend_url}/api/auth/send-delete-otp`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -338,7 +339,7 @@ const DeleteAccount = () => {
     setIsDeleting(true);
 
     try {
-      const token = Cookies.get("token");
+      const token = await StorageService.get("token");
       let endpoint, payload;
 
       if (deleteMethod === "password") {
@@ -356,8 +357,11 @@ const DeleteAccount = () => {
       });
 
       // Clear all user data
-      Cookies.remove("token");
-      localStorage.clear();
+await StorageService.remove("token");
+await StorageService.remove("saved_email");
+await StorageService.remove("saved_password");
+await StorageService.remove("remember_me");
+localStorage.clear();
       delete axios.defaults.headers.common["Authorization"];
       
       toast.success("Account deleted successfully");
@@ -376,7 +380,7 @@ const DeleteAccount = () => {
     // If OTP was sent, cancel the delete request
     if (otpSent) {
       try {
-        const token = Cookies.get("token");
+        const token = await StorageService.get("token");
         await axios.post(`${backend_url}/api/auth/cancel-delete-request`, {}, {
           headers: {
             Authorization: `Bearer ${token}`,
