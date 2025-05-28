@@ -6,7 +6,6 @@ import {
   Link,
 } from "react-router-dom";
 import Cookies from "js-cookie";
-
 import Login from "./Login";
 import Signup from "./Signup";
 import BhagavadGitaBot from "./Chatbot";
@@ -15,6 +14,8 @@ import Logout from "./Logout";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import ResetPassword from "./ResetPassword";
+import DeleteAccount from "./DeleteAccount";
+import AccountSettings from "./AccountSettings";
 
 function App() {
   return (
@@ -26,6 +27,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
           {/* Protected Routes wrapped in Layout */}
           <Route
             path="/dashboard"

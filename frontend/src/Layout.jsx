@@ -12,10 +12,9 @@ const Layout = ({ children }) => {
  useEffect(() => {
   const checkAuth = async () => {
     const token = Cookies.get("token");
-    const loggedOut = localStorage.getItem("loggedOut");
 
     // 🔒 Don't proceed if user had logged out previously
-    if (!token || loggedOut === "true") {
+    if (!token) {
       setIsAuthenticated(false);
       setLoading(false);
       return;

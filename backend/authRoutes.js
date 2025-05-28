@@ -10,7 +10,7 @@ const OTPModel = require('./models/otp-models');
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
+const JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 
 // @route   POST /api/auth/signup
 // @desc    Register new user
@@ -18,6 +18,8 @@ const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, otp, skipOTP } = req.body;
+    
+    console.log('Signup request:', { name, email, skipOTP }); // Debug log
 
     // Check if it's a demo signup (skipOTP = true)
     if (!skipOTP && !otp) {
@@ -59,15 +61,17 @@ router.post('/signup', async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase(),
       password, // User model should handle hashing via pre-save middleware
-      isDemo: skipOTP || false,
-      isVerified: true
+      isDemo: Boolean(skipOTP), // Fix: Ensure proper boolean conversion
+      isVerified: true,
+      demoExpiresAt: skipOTP ? new Date(Date.now() + 60 * 60 * 1000) : null // 1 hour for demo accounts
     });
 
     await user.save();
+    console.log('User created:', { id: user._id, isDemo: user.isDemo }); // Debug log
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, isDemo: user.isDemo }, // Include isDemo in token
       JWT_SECRET,
       { expiresIn: JWT_EXPIRE }
     );
@@ -80,7 +84,7 @@ router.post('/signup', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        isDemo: user.isDemo || false,
+        isDemo: user.isDemo, // This should now be true for demo accounts
         createdAt: user.createdAt
       }
     });
@@ -101,7 +105,6 @@ router.post('/signup', async (req, res) => {
     });
   }
 });
-
 // @route   POST /api/auth/login
 // @desc    Login user
 // @access  Public
@@ -132,7 +135,7 @@ router.post('/login', async (req, res) => {
     await user.updateLastLogin();
 
     // Generate JWT token with different expiry based on rememberMe
-    const tokenExpiry = rememberMe ? '30d' : '1d';
+    const tokenExpiry = rememberMe ? '30d' : '7d';
     const token = jwt.sign(
       { 
         userId: user._id,
@@ -391,6 +394,267 @@ router.post('/verify-signup-otp', async (req, res) => {
   } catch (error) {
     console.error('Verify signup OTP error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+// @route   POST /api/auth/delete-account
+// @desc    Delete user account and all associated data
+// @access  Private
+router.post('/delete-account', auth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.userId;
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password for security (skip for demo accounts)
+    if (!user.isDemo) {
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password is required to delete account'
+        });
+      }
+
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Incorrect password'
+        });
+      }
+    }
+
+    // Delete all user's chats
+    const Chat = require('mongoose').model('Chat');
+    await Chat.deleteMany({ userId: userId });
+
+    // Delete any remaining OTP records for this user
+    await OTPModel.deleteMany({ email: user.email });
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.json({
+      success: true,
+      message: 'Account and all associated data deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.'
+    });
+  }
+});
+// @route   POST /api/auth/send-delete-otp
+// @desc    Send OTP for account deletion (when password is forgotten)
+// @access  Private
+router.post('/send-delete-otp', auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    // Store OTP in user record for account deletion
+    user.deleteOTP = otp;
+    user.deleteOTPExpire = otpExpire;
+    await user.save();
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Account Deletion Confirmation - OTP Required",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #dc2626; text-align: center;">⚠️ Account Deletion Request</h2>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>You have requested to delete your account. To confirm this action, please use the OTP below:</p>
+          <div style="background-color: #fef2f2; border: 2px solid #fecaca; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+            <h3 style="color: #dc2626; font-size: 32px; margin: 0; letter-spacing: 4px;">${otp}</h3>
+          </div>
+          <p><strong>Important:</strong></p>
+          <ul style="color: #dc2626;">
+            <li>This OTP is valid for 15 minutes only</li>
+            <li>Account deletion is permanent and cannot be undone</li>
+            <li>All your chats and data will be permanently removed</li>
+          </ul>
+          <p>If you did not request account deletion, please ignore this email and your account will remain safe.</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+          <p style="font-size: 12px; color: #6b7280; text-align: center;">
+            This is an automated message. Please do not reply to this email.
+          </p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({
+      success: true,
+      message: 'Account deletion OTP sent to your email'
+    });
+
+  } catch (error) {
+    console.error('Send delete OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.'
+    });
+  }
+});
+
+// @route   POST /api/auth/verify-delete-otp
+// @desc    Verify OTP and delete account
+// @access  Private
+router.post('/verify-delete-otp', auth, async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const userId = req.user.userId;
+
+    if (!otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP is required'
+      });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify OTP
+    if (!user.deleteOTP || user.deleteOTP !== otp || Date.now() > user.deleteOTPExpire) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired OTP'
+      });
+    }
+
+    // Delete all user's chats
+    const Chat = require('mongoose').model('Chat');
+    await Chat.deleteMany({ userId: userId });
+
+    // Delete any OTP records for this user
+    await OTPModel.deleteMany({ email: user.email });
+
+    // Store user email for confirmation message before deletion
+    const userEmail = user.email;
+    const userName = user.name;
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    // Send confirmation email (optional)
+    try {
+      const transporter = nodemailer.createTransporter({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: userEmail,
+        subject: "Account Successfully Deleted",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #059669; text-align: center;">✅ Account Deleted Successfully</h2>
+            <p>Hello <strong>${userName}</strong>,</p>
+            <p>Your account has been successfully deleted from our system.</p>
+            <p>All your data, including chats and personal information, has been permanently removed.</p>
+            <p>Thank you for using our service. We're sorry to see you go!</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+            <p style="font-size: 12px; color: #6b7280; text-align: center;">
+              This is an automated message. Please do not reply to this email.
+            </p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Confirmation email error:', emailError);
+      // Continue even if email fails
+    }
+
+    res.json({
+      success: true,
+      message: 'Account and all associated data deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Verify delete OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.'
+    });
+  }
+});
+
+// @route   POST /api/auth/cancel-delete-request
+// @desc    Cancel account deletion request (clear delete OTP)
+// @access  Private
+router.post('/cancel-delete-request', auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Clear delete OTP fields
+    user.deleteOTP = undefined;
+    user.deleteOTPExpire = undefined;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Account deletion request cancelled successfully'
+    });
+
+  } catch (error) {
+    console.error('Cancel delete request error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 });
 

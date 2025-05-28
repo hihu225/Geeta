@@ -6,6 +6,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 //import routes
 const authRoutes = require("./authRoutes");
 const auth = require("./middleware/auth");
+const cronRoutes = require("./cronRoutes");
+
 // const users = require("./models/usermodels");
 const app = express();
 const corsOptions = {
@@ -56,6 +58,7 @@ const chatSchema = new mongoose.Schema({
 });
 
 const Chat = mongoose.model("Chat", chatSchema);
+module.exports = Chat;
 // Theme Schema & Model
 const themeSchema = new mongoose.Schema({
   name: String,
@@ -80,13 +83,14 @@ const themeSchema = new mongoose.Schema({
 });
 
 const Theme = mongoose.model("Theme", themeSchema);
+module.exports = Theme;
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 //routes
 app.use("/api/auth", authRoutes); 
-
+app.use("/api/cron", cronRoutes); 
 // Health check endpoint
 app.get("/", (req, res) => {
   res.json({

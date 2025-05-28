@@ -80,7 +80,9 @@ const Login = () => {
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${response.data.token}`;
-
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
         toast.success("Welcome back! Login successful! 🎉");
         localStorage.removeItem("loggedOut");
         navigate("/chat");

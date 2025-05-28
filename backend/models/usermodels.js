@@ -29,16 +29,33 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // ADD THESE MISSING FIELDS:
+  isDemo: {
+    type: Boolean,
+    default: false
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
   lastLogin: {
     type: Date
   },
   resetOTP: String,
-resetOTPExpire: Date,
-
+  resetOTPExpire: Date,
+  deleteOTP: {
+    type: String,
+    default: undefined
+  },
+  deleteOTPExpire: {
+    type: Date,
+    default: undefined
+  },
+  demoExpiresAt: { type: Date, default: null }
 }, {
   timestamps: true
 });
-
+userSchema.index({ demoExpiresAt: 1 }, { expireAfterSeconds: 0 });
 // Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
@@ -69,6 +86,16 @@ userSchema.methods.toJSON = function() {
   delete user.password;
   return user;
 };
+userSchema.pre("findOneAndDelete", async function (next) {
+  const user = await this.model.findOne(this.getFilter());
+  if (user) {
+    await Promise.all([
+      mongoose.model("Chat").deleteMany({ userId: user._id }),
+      mongoose.model("Theme").deleteMany({ userId: user._id })
+    ]);
+  }
+  next();
+});
 
 const User = mongoose.model('User', userSchema);
 
