@@ -16,13 +16,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import ResetPassword from "./ResetPassword";
 import DeleteAccount from "./DeleteAccount";
 import AccountSettings from "./AccountSettings";
-import AppInitializer from "./components/AppInitializer";
 
 function App() {
   return (
     <>
       <Router>
-        <AppInitializer>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -80,7 +78,6 @@ function App() {
             }
           />
         </Routes>
-        </AppInitializer>
       </Router>
       <ToastContainer position="top-right" autoClose={3000} />
     </>
