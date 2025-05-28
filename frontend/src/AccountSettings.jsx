@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
 
   // Enhanced styles
   const styles = {
@@ -196,6 +197,79 @@ const AccountSettings = () => {
       borderRadius: "50%",
       animation: "spin 1s linear infinite",
     },
+
+    // Popup styles
+    popupOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+      padding: "20px",
+    },
+
+    popupContainer: {
+      backgroundColor: "#ffffff",
+      borderRadius: "16px",
+      padding: "32px",
+      maxWidth: "420px",
+      width: "100%",
+      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      border: "1px solid #e5e7eb",
+      textAlign: "center",
+    },
+
+    popupIcon: {
+      fontSize: "48px",
+      marginBottom: "16px",
+    },
+
+    popupTitle: {
+      fontSize: "20px",
+      fontWeight: "700",
+      color: "#1f2937",
+      marginBottom: "12px",
+    },
+
+    popupMessage: {
+      fontSize: "15px",
+      color: "#6b7280",
+      lineHeight: "1.5",
+      marginBottom: "24px",
+    },
+
+    popupButtons: {
+      display: "flex",
+      gap: "12px",
+      justifyContent: "center",
+    },
+
+    popupButton: {
+      padding: "12px 24px",
+      borderRadius: "8px",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      border: "1px solid",
+    },
+
+    popupButtonPrimary: {
+      backgroundColor: "#3b82f6",
+      borderColor: "#3b82f6",
+      color: "white",
+    },
+
+    popupButtonSecondary: {
+      backgroundColor: "#ffffff",
+      borderColor: "#d1d5db",
+      color: "#374151",
+    },
   };
 
   // Add CSS animations
@@ -230,6 +304,16 @@ const AccountSettings = () => {
       .action-btn:active {
         transform: translateY(0) !important;
       }
+
+      .popup-btn-primary:hover {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+      }
+
+      .popup-btn-secondary:hover {
+        background-color: #f9fafb !important;
+        border-color: #9ca3af !important;
+      }
     `;
     document.head.appendChild(styleElement);
 
@@ -240,32 +324,31 @@ const AccountSettings = () => {
 
   // Get user info from localStorage or make API call
   useEffect(() => {
-  const getUserInfo = () => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        // Fallback if nothing is stored
+    const getUserInfo = () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          // Fallback if nothing is stored
+          setUser({
+            name: "User",
+            email: "user@example.com",
+            isDemo: false
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing user info from localStorage:', error);
         setUser({
           name: "User",
           email: "user@example.com",
           isDemo: false
         });
       }
-    } catch (error) {
-      console.error('Error parsing user info from localStorage:', error);
-      setUser({
-        name: "User",
-        email: "user@example.com",
-        isDemo: false
-      });
-    }
-  };
+    };
 
-  getUserInfo();
-}, []);
-
+    getUserInfo();
+  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -276,7 +359,21 @@ const AccountSettings = () => {
   };
 
   const handleDeleteAccount = () => {
-    navigate('/delete-account');
+    // Check if user email ends with @example.com (demo account)
+    if (user && user.email.endsWith('@example.com')) {
+      setShowDemoPopup(true);
+    } else {
+      navigate('/delete-account');
+    }
+  };
+
+  const handleDemoPopupLogout = () => {
+    setShowDemoPopup(false);
+    handleLogout();
+  };
+
+  const handleDemoPopupClose = () => {
+    setShowDemoPopup(false);
   };
 
   const getInitials = (name) => {
@@ -376,6 +473,42 @@ const AccountSettings = () => {
           </div>
         </div>
       </div>
+
+      {/* Demo Account Popup */}
+      {showDemoPopup && (
+        <div style={styles.popupOverlay} onClick={handleDemoPopupClose}>
+          <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.popupIcon}>ℹ️</div>
+            <h3 style={styles.popupTitle}>Demo Account</h3>
+            <p style={styles.popupMessage}>
+              No need to delete your demo account. It will be automatically deleted in 1 hour. 
+              You can logout instead.
+            </p>
+            <div style={styles.popupButtons}>
+              <button
+                onClick={handleDemoPopupLogout}
+                style={{
+                  ...styles.popupButton,
+                  ...styles.popupButtonPrimary,
+                }}
+                className="popup-btn-primary"
+              >
+                Logout
+              </button>
+              <button
+                onClick={handleDemoPopupClose}
+                style={{
+                  ...styles.popupButton,
+                  ...styles.popupButtonSecondary,
+                }}
+                className="popup-btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
