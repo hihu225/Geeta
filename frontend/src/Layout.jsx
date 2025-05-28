@@ -9,36 +9,40 @@ const Layout = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = Cookies.get("token");
-      if (!token) {
-        setIsAuthenticated(false);
-        setLoading(false);
-        return;
-      }
+ useEffect(() => {
+  const checkAuth = async () => {
+    const token = Cookies.get("token");
+    const loggedOut = localStorage.getItem("loggedOut");
 
-      try {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        const response = await axios.get(`${backend_url}/api/auth/me`);
-        if (response.data.success) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-          Cookies.remove("token");
-          delete axios.defaults.headers.common["Authorization"];
-        }
-      } catch (error) {
+    // 🔒 Don't proceed if user had logged out previously
+    if (!token || loggedOut === "true") {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      const response = await axios.get(`${backend_url}/api/auth/me`);
+      if (response.data.success) {
+        setIsAuthenticated(true);
+      } else {
         setIsAuthenticated(false);
         Cookies.remove("token");
         delete axios.defaults.headers.common["Authorization"];
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      setIsAuthenticated(false);
+      Cookies.remove("token");
+      delete axios.defaults.headers.common["Authorization"];
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    checkAuth();
-  }, []);
+  checkAuth();
+}, []);
+
 
   if (loading) {
     return (

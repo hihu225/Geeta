@@ -149,6 +149,7 @@ const Logout = () => {
 
   const handleLogout = () => {
     Cookies.remove("token");
+    localStorage.setItem("loggedOut", "true"); 
     delete axios.defaults.headers.common["Authorization"];
     toast.success("Logged out successfully! 👋");
     navigate("/login", { replace: true });

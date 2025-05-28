@@ -82,6 +82,7 @@ const Login = () => {
         ] = `Bearer ${response.data.token}`;
 
         toast.success("Welcome back! Login successful! 🎉");
+        localStorage.removeItem("loggedOut");
         navigate("/chat");
       }
     } catch (error) {
