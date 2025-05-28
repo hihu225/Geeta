@@ -764,5 +764,10 @@ router.post('/cancel-delete-request', auth, async (req, res) => {
     });
   }
 });
-
+router.get('/verify-token', authenticateToken, (req, res) => {
+  res.json({ 
+    success: true, 
+    user: req.user 
+  });
+});
 module.exports = router;
