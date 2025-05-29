@@ -71,9 +71,37 @@ const BhagavadGitaBot = () => {
     );
   };
 
-  const handleShare = async (chatId) => {
-    try {
-      console.log("Chat ID being shared:", chatId);
+ const handleShare = async (chatId) => {
+  try {
+    const isTempId = chatId.length !== 24; // UUIDs are not 24 chars
+
+    if (isTempId) {
+      const tempChat = chats.find((chat) => chat._id === chatId);
+      if (!tempChat) {
+        alert("Chat not found.");
+        return;
+      }
+
+      // Replicate backend share text logic here
+      const responseText = tempChat.hindiResponse || tempChat.botResponse;
+      let shlokaInfo = tempChat.shloka || "";
+      if (tempChat.translation) {
+        shlokaInfo += `\n${tempChat.translation}`;
+      }
+      if (tempChat.chapter && tempChat.verse) {
+        shlokaInfo += `\n(Bhagavad Gita ${tempChat.chapter}:${tempChat.verse})`;
+      }
+
+      const shareText = `🕉️ Bhagavad Gita Wisdom 🕉️\n\n✨ ${responseText}\n\n📖 Shloka: ${shlokaInfo}\n\n🔗 via Bhagavad Gita Bot`;
+
+      await Share.share({
+        title: "Bhagavad Gita Wisdom",
+        text: shareText,
+        dialogTitle: "Share via",
+      });
+
+    } else {
+      // For permanent ID, use backend logic
       const res = await axios.get(`${REACT_APP_API_URL}/api/share/${chatId}`);
       const shareText = res.data.shareText;
 
@@ -82,10 +110,13 @@ const BhagavadGitaBot = () => {
         text: shareText,
         dialogTitle: "Share via",
       });
-    } catch (error) {
-      console.error("Error sharing chat:", error);
     }
-  };
+
+  } catch (error) {
+    console.error("Error sharing chat:", error);
+  }
+};
+
   const scrollToTop = () => {
     window.scrollTo({ top: 500, behavior: "smooth" });
   };
