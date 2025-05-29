@@ -537,6 +537,7 @@ voiceButton : {
               cursor: 'pointer',
               fontSize: '0.9rem',
               boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+              zIndex: 900,
   },
   Set:{
     backgroundColor: theme === "light" ? '#8B0000' : '#B22222',

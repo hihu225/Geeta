@@ -2803,7 +2803,7 @@ const handleDeleteSelected = async () => {
               <span>Made with</span> <FaHeart color="#8B0000" />{" "}
               <span>and ancient wisdom.</span>
             </p>
-            <p><em>Contact Support if facing any issue.</em></p>
+            <p><em><a href="mailto:vanshika.tripathi14072001@gmail.com">Contact Support</a> if facing any issue.</em></p>
             <p className="text-sm italic text-gray-500">
               <em>
                 Disclaimer: This chatbot may occasionally generate incorrect

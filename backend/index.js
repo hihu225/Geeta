@@ -793,21 +793,30 @@ app.get("/api/favorites", auth, async (req, res) => {
 });
 
 app.get("/api/share/:chatId", auth, async (req, res) => {
-  console.log("Received share request for chatId:", req.params.chatId);
   try {
     const { chatId } = req.params;
     const { language = "english" } = req.query;
 
     console.log("➡️ Request for chatId:", chatId);
 
-    const chat = await Chat.findById(chatId);
-    if (chat.userId.toString() !== req.user.userId) {
-      console.log("❌ Unauthorized access to chat");
-      return res.status(403).json({ error: "Unauthorized access to chat" });
+    let chat;
+
+    // Check if it's a valid ObjectId (for saved chats)
+    if (mongoose.Types.ObjectId.isValid(chatId)) {
+      chat = await Chat.findById(chatId);
+    } else {
+      // Otherwise, look for a chat with tempId
+      chat = await Chat.findOne({ tempId: chatId });
     }
+
     if (!chat) {
       console.log("❌ Chat not found");
       return res.status(404).json({ error: "Chat not found" });
+    }
+
+    if (!chat.userId || chat.userId.toString() !== req.user.userId) {
+      console.log("❌ Unauthorized access to chat");
+      return res.status(403).json({ error: "Unauthorized access to chat" });
     }
 
     console.log("✅ Chat found:", chat);
