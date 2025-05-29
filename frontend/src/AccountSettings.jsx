@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { ArrowLeft } from 'lucide-react';
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -30,7 +30,7 @@ const AccountSettings = () => {
     container: {
       minHeight: "100vh",
       background: "linear-gradient(135deg, #fef7ed 0%, #fff7ed 100%)",
-      padding: "20px",
+      padding: "20px 10px 20px 10px",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     },
 
@@ -552,7 +552,7 @@ const AccountSettings = () => {
         style={styles.backButton}
         className="back-btn"
       >
-        <span>←</span>
+        <ArrowLeft size={20} className="icon" />
         Back
       </button>
 

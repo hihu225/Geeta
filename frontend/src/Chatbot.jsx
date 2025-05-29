@@ -1715,6 +1715,20 @@ const handleDeleteSelected = async () => {
   // Add ref for auto-scrolling
   const messagesEndRef = useRef(null);
   useEffect(() => {
+  const fetchChats = async () => {
+    try {
+      const response = await axios.get(`${REACT_APP_API_URL}/api/chats`);
+      setChats(response.data);
+      setVisibleChats(Math.min(3, response.data.length)); // Ensure visibleChats doesn't exceed total chats
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+      alert("Failed to load chats. Please try again later.");
+    }
+  };
+  fetchChats();
+  }, []);
+
+  useEffect(() => {
     axios
       .get(`${REACT_APP_API_URL}/api/chats`)
       .then((res) => {
@@ -1725,7 +1739,9 @@ const handleDeleteSelected = async () => {
       });
     getRandomQuote();
   }, []);
-
+  const loadMoreChats = () => {
+    setVisibleChats((prev) => Math.min(prev + 3, chats.length));  
+  };
   // Add new useEffect for auto-scrolling (line 65)
   useEffect(() => {
     if (messagesEndRef.current) {
