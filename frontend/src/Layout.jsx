@@ -86,7 +86,16 @@ const Layout = ({ children }) => {
           animation: 'spin 1s linear infinite',
           marginBottom: '20px'
         }}></div>
-        <p>Checking authentication...</p>
+        <div style={{
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+  textAlign: 'center',
+}}>
+  <p>Checking authentication... Please wait</p>
+</div>
+
         <style>{`
           @keyframes spin {
             0% { transform: rotate(0deg); }
