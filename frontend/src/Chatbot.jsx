@@ -720,253 +720,290 @@ const BhagavadGitaBot = () => {
   };
 
   const handleExportPDF = async (chatId) => {
-    try {
-      const chatToExport =
-        chats.find((chat) => chat._id === chatId) ||
-        (typeof chatId === "number" ? chats[chatId] : null);
-      if (!chatToExport) {
-        console.error("Chat not found for export");
-        await Swal.fire({
-          icon: "error",
-          title: "Export Failed",
-          html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        The selected chat could not be found or is no longer available for export.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-          <path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/>
-        </svg>
-        <small style="font-weight: 500;">Chat is not accessible</small>
-      </div>
-      <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; margin: 15px 0;">
-        <div style="font-size: 13px; color: #495057;">
-          <strong>Possible reasons:</strong><br>
-          • The chat may have been deleted<br>
-          • Chat data could be corrupted<br>
-          • You may not have access to this chat<br>
-          • There might be a temporary sync issue
-        </div>
-      </div>
-      <div style="font-size: 13px; color: #888; margin-top: 15px;">
-        <strong>What you can try:</strong><br>
-        • Select a different chat to export<br>
-        • Refresh the page and try again<br>
-        • Check if the chat still exists in your list
-      </div>
-    </div>
-  `,
-          showConfirmButton: true,
-          confirmButtonText: "Select Another Chat",
-          confirmButtonColor: "#8B0000",
-          showCancelButton: true,
-          cancelButtonText: "Close",
-          reverseButtons: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-          customClass: {
-            popup: "animate__animated animate__fadeInDown animate__faster",
-            confirmButton: "swal2-confirm-button-custom",
-            cancelButton: "swal2-cancel-button-custom",
-          },
-          buttonsStyling: true,
-        });
-        return;
-      }
-
-      const doc = new jsPDF();
-
-      doc.setFontSize(22);
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 0, 0);
-      doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
-
-      let currentY = 42;
-      doc.setFontSize(12);
-      doc.setFont("times", "normal");
-      doc.setTextColor(0, 0, 0);
-      doc.text(
-        `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
-        20,
-        currentY
-      );
-      currentY += 10;
-
-      doc.setFontSize(14);
-      doc.setTextColor(0, 100, 0);
-      doc.setFont("times", "bold");
-      doc.text("Your Question:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setFontSize(12);
-      const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
-      doc.text(splitQuestion, 20, currentY);
-      currentY += splitQuestion.length * 6 + 10;
-
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 69, 19);
-      doc.setFontSize(14);
-      doc.text("Divine Guidance:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setFontSize(12);
-      const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
-      doc.text(splitResponse, 20, currentY);
-      currentY += splitResponse.length * 6;
-
-      const base64 = doc.output("dataurlstring").split(",")[1];
-      const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
-
-      if (
-        Capacitor.getPlatform() === "android" ||
-        Capacitor.getPlatform() === "ios"
-      ) {
-        const saved = await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-        });
-
-        await Swal.fire({
-          icon: "success",
-          title: "PDF Saved Successfully",
-          text: "Your PDF has been generated and saved to your device.",
-          confirmButtonText: "Great!",
-          confirmButtonColor: "#22c55e",
-          background: "#ffffff",
-          color: "#374151",
-          showClass: {
-            popup: "animate__animated animate__fadeInDown animate__faster",
-          },
-          hideClass: {
-            popup: "animate__animated animate__fadeOutUp animate__faster",
-          },
-          customClass: {
-            confirmButton:
-              "px-6 py-2 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200",
-            title: "text-xl font-bold text-gray-800",
-            htmlContainer: "text-gray-600",
-          },
-          buttonsStyling: false,
-          timer: 3000,
-          timerProgressBar: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-        });
-
-        const fileUri = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName,
-        });
-
-        await Swal.fire({
-          icon: "success",
-          title: "PDF Ready to Share",
-          text: "Your PDF has been generated and is ready to be shared with others.",
-          confirmButtonText: "Awesome!",
-          confirmButtonColor: "#10b981",
-          background: "#ffffff",
-          showClass: {
-            popup: "animate__animated animate__bounceIn animate__faster",
-          },
-          hideClass: {
-            popup: "animate__animated animate__fadeOut animate__faster",
-          },
-          customClass: {
-            confirmButton:
-              "px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105",
-            title: "text-2xl font-bold text-gray-800 mb-2",
-            htmlContainer: "text-gray-600 text-lg",
-          },
-          buttonsStyling: false,
-          timer: 4000,
-          timerProgressBar: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-          backdrop: `
-    rgba(0,0,0,0.4)
-    left top
-    no-repeat
-  `,
-        });
-
-        await Share.share({
-          title: "Share Bhagavad Gita PDF",
-          text: "Here is some divine wisdom from Geeta GPT",
-          url: fileUri.uri,
-          dialogTitle: "Share PDF",
-        });
-      } else {
-        doc.save(fileName);
-        await Swal.fire({
-          icon: "success",
-          title: "PDF Downloaded Successfully",
-          text: "Your PDF has been saved to your Downloads folder.",
-          confirmButtonText: "Perfect!",
-          confirmButtonColor: "#059669",
-          showClass: {
-            popup: "animate__animated animate__slideInDown animate__faster",
-          },
-          hideClass: {
-            popup: "animate__animated animate__slideOutUp animate__faster",
-          },
-          customClass: {
-            confirmButton:
-              "px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105",
-            title: "text-xl font-bold text-gray-800",
-            htmlContainer: "text-gray-600",
-          },
-          buttonsStyling: false,
-          timer: 3500,
-          timerProgressBar: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error exporting to PDF:", error);
+  try {
+    const chatToExport =
+      chats.find((chat) => chat._id === chatId) ||
+      (typeof chatId === "number" ? chats[chatId] : null);
+    if (!chatToExport) {
+      console.error("Chat not found for export");
       await Swal.fire({
         icon: "error",
         title: "Export Failed",
-        text: "Unable to save or share your PDF. Please check your connection and try again.",
-        showClass: {
-          popup: "animate__animated animate__shakeX animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOut animate__faster",
-        },
-        buttonsStyling: false,
+        html: `
+          <div style="text-align: center; margin-top: 10px;">
+            <p style="color: #666; margin-bottom: 15px;">
+              The selected chat could not be found or is no longer available for export.
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                <path d="M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z"/>
+              </svg>
+              <small style="font-weight: 500;">Chat is not accessible</small>
+            </div>
+            <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; margin: 15px 0;">
+              <div style="font-size: 13px; color: #495057;">
+                <strong>Possible reasons:</strong><br>
+                • The chat may have been deleted<br>
+                • Chat data could be corrupted<br>
+                • You may not have access to this chat<br>
+                • There might be a temporary sync issue
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #888; margin-top: 15px;">
+              <strong>What you can try:</strong><br>
+              • Select a different chat to export<br>
+              • Refresh the page and try again<br>
+              • Check if the chat still exists in your list
+            </div>
+          </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: "Select Another Chat",
+        confirmButtonColor: "#8B0000",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+        reverseButtons: true,
         allowOutsideClick: true,
         allowEscapeKey: true,
-        backdrop: `
-    rgba(0,0,0,0.5)
-    left top
-    no-repeat
-  `,
+        customClass: {
+          popup: "animate__animated animate__fadeInDown animate__faster",
+          confirmButton: "swal2-confirm-button-custom",
+          cancelButton: "swal2-cancel-button-custom",
+        },
+        buttonsStyling: true,
+      });
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setFont("times", "bold");
+    doc.setTextColor(139, 0, 0);
+    doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
+
+    let currentY = 42;
+    doc.setFontSize(12);
+    doc.setFont("times", "normal");
+    doc.setTextColor(0, 0, 0);
+    doc.text(
+      `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
+      20,
+      currentY
+    );
+    currentY += 10;
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 100, 0);
+    doc.setFont("times", "bold");
+    doc.text("Your Question:", 20, currentY);
+    currentY += 7;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
+    doc.text(splitQuestion, 20, currentY);
+    currentY += splitQuestion.length * 6 + 10;
+
+    doc.setFont("times", "bold");
+    doc.setTextColor(139, 69, 19);
+    doc.setFontSize(14);
+    doc.text("Divine Guidance:", 20, currentY);
+    currentY += 7;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
+    doc.text(splitResponse, 20, currentY);
+    currentY += splitResponse.length * 6;
+
+    const base64 = doc.output("dataurlstring").split(",")[1];
+    const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
+
+    if (
+      Capacitor.getPlatform() === "android" ||
+      Capacitor.getPlatform() === "ios"
+    ) {
+      // Save PDF first
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      // Show success message
+      await Swal.fire({
+        icon: "success",
+        title: "PDF Saved Successfully!",
+        html: `
+          <div style="text-align: center; margin-top: 10px;">
+            <p style="color: #666; margin-bottom: 15px;">
+              Your conversation has been saved to your documents folder.
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.293 4L10 .707A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 10.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 12a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/>
+              </svg>
+              <small style="font-weight: 500;">Ready to view or share</small>
+            </div>
+          </div>
+        `,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        customClass: {
+          popup: "animate__animated animate__fadeInDown animate__faster",
+          icon: "animate__animated animate__bounceIn animate__delay-1s",
+        },
+      });
+
+      // Show share options
+      const result = await Swal.fire({
+        icon: "question",
+        title: "Share PDF?",
+        html: `
+          <div style="text-align: center; margin-top: 10px;">
+            <p style="color: #666; margin-bottom: 15px;">
+              Would you like to share your Bhagavad Gita PDF with others?
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+              </svg>
+              <small style="font-weight: 500;">Share with friends & family</small>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Share',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+          popup: "animate__animated animate__fadeInUp animate__faster",
+          icon: "animate__animated animate__pulse animate__delay-1s",
+        },
+      });
+
+      // Handle user's choice
+      if (result.isConfirmed) {
+        try {
+          const fileUri = await Filesystem.getUri({
+            directory: Directory.Documents,
+            path: fileName,
+          });
+
+          await Share.share({
+            title: "Share Bhagavad Gita PDF",
+            text: "Here is some divine wisdom from Geeta GPT",
+            url: fileUri.uri,
+            dialogTitle: "Share PDF",
+          });
+        } catch (shareError) {
+          console.error("Error sharing PDF:", shareError);
+          await Swal.fire({
+            icon: "error",
+            title: "Share Failed",
+            html: `
+              <div style="text-align: center; margin-top: 10px;">
+                <p style="color: #666; margin-bottom: 15px;">
+                  We couldn't share your PDF at this moment.
+                </p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                  </svg>
+                  <small style="font-weight: 500;">Sharing failed</small>
+                </div>
+                <div style="font-size: 13px; color: #888;">
+                  <strong>Your PDF is still saved!</strong><br>
+                  You can find it in your documents folder.
+                </div>
+              </div>
+            `,
+            timer: 4000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+          });
+        }
+      }
+      // If cancelled, do nothing - PDF is already saved
+    } else {
+      // For web platform
+      doc.save(fileName);
+      
+      // Show success message for web
+      await Swal.fire({
+        icon: "success",
+        title: "PDF Downloaded!",
+        html: `
+          <div style="text-align: center; margin-top: 10px;">
+            <p style="color: #666; margin-bottom: 15px;">
+              Your Bhagavad Gita conversation has been downloaded successfully.
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              <small style="font-weight: 500;">Check your downloads folder</small>
+            </div>
+          </div>
+        `,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
       });
     }
-  };
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    await Swal.fire({
+      icon: "error",
+      title: "Export Failed",
+      html: `
+        <div style="text-align: center; margin-top: 10px;">
+          <p style="color: #666; margin-bottom: 15px;">
+            We couldn't save your PDF at this moment.
+          </p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+            </svg>
+            <small style="font-weight: 500;">This is usually temporary</small>
+          </div>
+          <div style="font-size: 13px; color: #888;">
+            <strong>What you can try:</strong><br>
+            • Check your internet connection<br>
+            • Refresh the page and try again<br>
+          </div>
+        </div>
+      `,
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+    });
+  }
+};
 
   const handleThemeSelect = async (themeName) => {
-    try {
-      const response = await axios.get(
-        `${REACT_APP_API_URL}/api/themes/${themeName}`
-      );
-      setThemeData(response.data);
-      setSelectedTheme(themeName);
-      setShowThemeSection(true);
-    } catch (error) {
-      console.error("Error fetching theme details:", error);
-    }
-  };
+  try {
+    const response = await axios.get(
+      `${REACT_APP_API_URL}/api/themes/${themeName}`
+    );
+    setThemeData(response.data);
+    setSelectedTheme(themeName);
+    // Don't change showThemeSection here - keep it true to stay in theme section
+  } catch (error) {
+    console.error("Error fetching theme details:", error);
+  }
+};
+
   const handleCloseThemeDetails = () => {
-    setShowThemeSection(false);
-    setSelectedTheme(null);
-  };
+  // Reset theme data and selected theme to go back to theme navigation
+  setSelectedTheme(null);
+  setThemeData(null);
+  // Keep showThemeSection true to stay in the theme section
+};
   const handleFav = async (chat) => {
     console.log("handleFav called with chat:", chat._id);
     console.log(
@@ -1984,15 +2021,18 @@ const BhagavadGitaBot = () => {
                   justifyContent: "center",
                 }}
               >
-                <ThemeNavigation onSelectTheme={handleThemeSelect} />
-              </div>
-              {themeData && (
+                <div style={{ display: selectedTheme ? 'none' : 'block' }}>
+        <ThemeNavigation onSelectTheme={handleThemeSelect} />
+      </div>
+
+            
+              {selectedTheme && themeData && (
                 <ThemeDetails
                   themeData={themeData}
                   onClose={handleCloseThemeDetails}
                 />
               )}
-            </div>
+            </div></div>
           )}
           <div style={styles.chatContainer}>
             {/* Header with Favorites + Select/Share buttons */}

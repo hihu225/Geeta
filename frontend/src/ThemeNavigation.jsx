@@ -7,7 +7,6 @@ const ThemeNavigation = ({ onSelectTheme }) => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedThemeId, setSelectedThemeId] = useState(null); // <-- new state
 
   useEffect(() => {
     const fetchThemes = async () => {
@@ -34,10 +33,7 @@ const ThemeNavigation = ({ onSelectTheme }) => {
   }, []);
 
   const handleThemeSelect = (themeId) => {
-    if (themeId !== selectedThemeId) {
-      setSelectedThemeId(themeId); // Update current theme
-      onSelectTheme(themeId);      // Notify parent
-    }
+    onSelectTheme(themeId);
   };
 
   const handleKeyPress = (event, themeId) => {
@@ -74,7 +70,7 @@ const ThemeNavigation = ({ onSelectTheme }) => {
             {themes.map((theme) => (
               <div 
                 key={theme._id} 
-                className={`theme-card ${selectedThemeId === theme._id ? 'selected' : ''}`}
+                className="theme-card"
                 onClick={() => handleThemeSelect(theme._id)}
                 onKeyPress={(e) => handleKeyPress(e, theme._id)}
                 tabIndex={0}

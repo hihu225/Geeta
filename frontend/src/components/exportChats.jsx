@@ -5,8 +5,7 @@ import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import Swal from "sweetalert2";
 
-
-const exportChats = ({ chats,visibleChats }) => {
+const exportChats = ({ chats, visibleChats }) => {
   const handleExportAllChats = async () => {
     try {
       const doc = new jsPDF();
@@ -146,95 +145,136 @@ const exportChats = ({ chats,visibleChats }) => {
         const pdfOutput = doc.output("datauristring");
         const base64 = pdfOutput.split(",")[1];
 
+        // Save PDF to device
         await Filesystem.writeFile({
           path: fileName,
           data: base64,
           directory: Directory.Documents,
         });
 
+        // Show success message first
         await Swal.fire({
           icon: "success",
           title: "PDF Saved Successfully!",
           html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        Your conversation has been saved to your documents folder.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.293 4L10 .707A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 10.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 12a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/>
-        </svg>
-        <small style="font-weight: 500;">Ready to view or share</small>
-      </div>
-    </div>
-  `,
-          timer: 4000,
+            <div style="text-align: center; margin-top: 10px;">
+              <p style="color: #666; margin-bottom: 15px;">
+                Your conversation has been saved to your documents folder.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.293 4L10 .707A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 10.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 12a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/>
+                </svg>
+                <small style="font-weight: 500;">Ready to view or share</small>
+              </div>
+            </div>
+          `,
+          timer: 3000,
           timerProgressBar: true,
           showConfirmButton: false,
-          toast: false,
-          position: "center",
-          backdrop: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
           customClass: {
             popup: "animate__animated animate__fadeInDown animate__faster",
             icon: "animate__animated animate__bounceIn animate__delay-1s",
           },
-          didOpen: (toast) => {
-            // Add subtle hover effect to pause timer
-            toast.addEventListener("mouseenter", Swal.stopTimer);
-            toast.addEventListener("mouseleave", Swal.resumeTimer);
-          },
         });
 
-        const fileUri = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName,
-        });
-
-        await Swal.fire({
-          icon: "info",
-          title: "Ready to Share",
+        // Show share options after success message
+        const result = await Swal.fire({
+          icon: "question",
+          title: "Share PDF?",
           html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        Your Bhagavad Gita PDF is ready to be shared with others.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
-        </svg>
-        <small style="font-weight: 500;">Share with friends & family</small>
-      </div>
-    </div>
-  `,
-          timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          toast: false,
-          position: "center",
-          backdrop: true,
-          allowOutsideClick: true,
-          allowEscapeKey: true,
+            <div style="text-align: center; margin-top: 10px;">
+              <p style="color: #666; margin-bottom: 15px;">
+                Would you like to share your Bhagavad Gita PDF with others?
+              </p>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+                </svg>
+                <small style="font-weight: 500;">Share with friends & family</small>
+              </div>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Share',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#6c757d',
           customClass: {
             popup: "animate__animated animate__fadeInUp animate__faster",
             icon: "animate__animated animate__pulse animate__delay-1s",
           },
-          didOpen: (toast) => {
-            // Add subtle hover effect to pause timer
-            toast.addEventListener("mouseenter", Swal.stopTimer);
-            toast.addEventListener("mouseleave", Swal.resumeTimer);
-          },
         });
 
-        await Share.share({
-          title: "Share Bhagavad Gita PDF",
-          text: "Here is your exported conversation from Geeta GPT",
-          url: fileUri.uri,
-          dialogTitle: "Share PDF",
-        });
+        // Handle user's choice
+        if (result.isConfirmed) {
+          try {
+            const fileUri = await Filesystem.getUri({
+              directory: Directory.Documents,
+              path: fileName,
+            });
+
+            await Share.share({
+              title: "Share Bhagavad Gita PDF",
+              text: "Here is your exported conversation from Geeta GPT",
+              url: fileUri.uri,
+              dialogTitle: "Share PDF",
+            });
+          } catch (shareError) {
+            console.error("Error sharing PDF:", shareError);
+            await Swal.fire({
+              icon: "error",
+              title: "Share Failed",
+              html: `
+                <div style="text-align: center; margin-top: 10px;">
+                  <p style="color: #666; margin-bottom: 15px;">
+                    We couldn't share your PDF at this moment.
+                  </p>
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    <small style="font-weight: 500;">Sharing failed</small>
+                  </div>
+                  <div style="font-size: 13px; color: #888;">
+                    <strong>Your PDF is still saved!</strong><br>
+                    You can find it in your documents folder.
+                  </div>
+                </div>
+              `,
+              timer: 4000,
+              timerProgressBar: true,
+              showConfirmButton: false,
+            });
+          }
+        }
+        // If cancelled, do nothing - PDF is already saved
       } else {
+        // For web platform
         doc.save(fileName);
+        
+        // Show success message for web
+        await Swal.fire({
+          icon: "success",
+          title: "PDF Downloaded!",
+          html: `
+            <div style="text-align: center; margin-top: 10px;">
+              <p style="color: #666; margin-bottom: 15px;">
+                Your Bhagavad Gita conversation has been downloaded successfully.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                <small style="font-weight: 500;">Check your downloads folder</small>
+              </div>
+            </div>
+          `,
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
       }
     } catch (error) {
       console.error("Error exporting all chats:", error);
@@ -242,26 +282,27 @@ const exportChats = ({ chats,visibleChats }) => {
         icon: "error",
         title: "Export Failed",
         html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        We couldn't save or share your PDF at this moment.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-        </svg>
-        <small style="font-weight: 500;">This is usually temporary</small>
-      </div>
-      <div style="font-size: 13px; color: #888;">
-        <strong>What you can try:</strong><br>
-        • Check your internet connection<br>
-        • Refresh the page and try again<br>
-      </div>
-    </div>
-  `,
+          <div style="text-align: center; margin-top: 10px;">
+            <p style="color: #666; margin-bottom: 15px;">
+              We couldn't save your PDF at this moment.
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+              </svg>
+              <small style="font-weight: 500;">This is usually temporary</small>
+            </div>
+            <div style="font-size: 13px; color: #888;">
+              <strong>What you can try:</strong><br>
+              • Check your internet connection<br>
+              • Refresh the page and try again<br>
+            </div>
+          </div>
+        `,
       });
     }
   };
+
   return (
     <>
       <button onClick={handleExportAllChats}>
