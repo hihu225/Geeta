@@ -1733,6 +1733,9 @@ const handleDeleteSelected = async () => {
       .get(`${REACT_APP_API_URL}/api/chats`)
       .then((res) => {
         setChats(res.data);
+        setFavorites(
+          res.data.filter((chat) => chat.isFavorite)
+        );
       })
       .catch((err) => {
         alert(err);
