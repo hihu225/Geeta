@@ -1692,7 +1692,7 @@ const handleDeleteSelected = async () => {
   };
 
   const [showFavorites, setShowFavorites] = useState(false);
-  const [visibleChats, setVisibleChats] = useState(3);
+  const [visibleChats, setVisibleChats] = useState(0);
   const [input, setInput] = useState("");
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1720,6 +1720,10 @@ const handleDeleteSelected = async () => {
       const response = await axios.get(`${REACT_APP_API_URL}/api/chats`);
       setChats(response.data);
       setVisibleChats(Math.min(3, response.data.length)); // Ensure visibleChats doesn't exceed total chats
+      setFavorites(
+          response.data.filter((chat) => chat.isFavorite)
+        );
+        getRandomQuote();
     } catch (error) {
       console.error("Error fetching chats:", error);
       alert("Failed to load chats. Please try again later.");
@@ -1728,20 +1732,6 @@ const handleDeleteSelected = async () => {
   fetchChats();
   }, []);
 
-  useEffect(() => {
-    axios
-      .get(`${REACT_APP_API_URL}/api/chats`)
-      .then((res) => {
-        setChats(res.data);
-        setFavorites(
-          res.data.filter((chat) => chat.isFavorite)
-        );
-      })
-      .catch((err) => {
-        alert(err);
-      });
-    getRandomQuote();
-  }, []);
   const loadMoreChats = () => {
     setVisibleChats((prev) => Math.min(prev + 3, chats.length));  
   };
@@ -1980,6 +1970,11 @@ const handleDeleteSelected = async () => {
   useEffect(() => {
     setStyles(getStyles(theme, fontSize, isOpen, isListening));
   }, [theme, fontSize, isOpen, isListening]);
+  useEffect(() => {
+    if(favorites.length ===0 ){
+      setShowFavorites(false);
+    }
+  }, [favorites]);
   return (
     <div>
       <SideNavigation
