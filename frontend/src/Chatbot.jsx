@@ -17,6 +17,7 @@ import React, {
   createContext,
   useReducer,
 } from "react";
+import ExportChats from "./components/exportChats.jsx";
 import { FaRegPaperPlane, FaOm, FaBookOpen, FaHeart } from "react-icons/fa";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
@@ -32,7 +33,7 @@ import ThemeNavigation from "./ThemeNavigation.jsx";
 import ThemeDetails from "./ThemeDetails.jsx";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 const REACT_APP_API_URL = import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
@@ -71,51 +72,49 @@ const BhagavadGitaBot = () => {
     );
   };
 
- const handleShare = async (chatId) => {
-  try {
-    const isTempId = chatId.length !== 24; // UUIDs are not 24 chars
+  const handleShare = async (chatId) => {
+    try {
+      const isTempId = chatId.length !== 24; // UUIDs are not 24 chars
 
-    if (isTempId) {
-      const tempChat = chats.find((chat) => chat._id === chatId);
-      if (!tempChat) {
-        alert("Chat not found.");
-        return;
+      if (isTempId) {
+        const tempChat = chats.find((chat) => chat._id === chatId);
+        if (!tempChat) {
+          alert("Chat not found.");
+          return;
+        }
+
+        // Replicate backend share text logic here
+        const responseText = tempChat.hindiResponse || tempChat.botResponse;
+        let shlokaInfo = tempChat.shloka || "";
+        if (tempChat.translation) {
+          shlokaInfo += `\n${tempChat.translation}`;
+        }
+        if (tempChat.chapter && tempChat.verse) {
+          shlokaInfo += `\n(Bhagavad Gita ${tempChat.chapter}:${tempChat.verse})`;
+        }
+
+        const shareText = `🕉️ Bhagavad Gita Wisdom 🕉️\n\n✨ ${responseText}\n\n📖 Shloka: ${shlokaInfo}\n\n🔗 via Bhagavad Gita Bot`;
+
+        await Share.share({
+          title: "Bhagavad Gita Wisdom",
+          text: shareText,
+          dialogTitle: "Share via",
+        });
+      } else {
+        // For permanent ID, use backend logic
+        const res = await axios.get(`${REACT_APP_API_URL}/api/share/${chatId}`);
+        const shareText = res.data.shareText;
+
+        await Share.share({
+          title: "Bhagavad Gita Wisdom",
+          text: shareText,
+          dialogTitle: "Share via",
+        });
       }
-
-      // Replicate backend share text logic here
-      const responseText = tempChat.hindiResponse || tempChat.botResponse;
-      let shlokaInfo = tempChat.shloka || "";
-      if (tempChat.translation) {
-        shlokaInfo += `\n${tempChat.translation}`;
-      }
-      if (tempChat.chapter && tempChat.verse) {
-        shlokaInfo += `\n(Bhagavad Gita ${tempChat.chapter}:${tempChat.verse})`;
-      }
-
-      const shareText = `🕉️ Bhagavad Gita Wisdom 🕉️\n\n✨ ${responseText}\n\n📖 Shloka: ${shlokaInfo}\n\n🔗 via Bhagavad Gita Bot`;
-
-      await Share.share({
-        title: "Bhagavad Gita Wisdom",
-        text: shareText,
-        dialogTitle: "Share via",
-      });
-
-    } else {
-      // For permanent ID, use backend logic
-      const res = await axios.get(`${REACT_APP_API_URL}/api/share/${chatId}`);
-      const shareText = res.data.shareText;
-
-      await Share.share({
-        title: "Bhagavad Gita Wisdom",
-        text: shareText,
-        dialogTitle: "Share via",
-      });
+    } catch (error) {
+      console.error("Error sharing chat:", error);
     }
-
-  } catch (error) {
-    console.error("Error sharing chat:", error);
-  }
-};
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 500, behavior: "smooth" });
@@ -144,310 +143,61 @@ const BhagavadGitaBot = () => {
     setEditText("");
   };
 
-const handleExportAllChats = async () => {
-  try {
-    const doc = new jsPDF();
-
-    // Title
-    doc.setFontSize(24);
-    doc.setFont("times", "bold");
-    doc.setTextColor(139, 0, 0);
-    doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
-
-    // Subtitle
-    doc.setFontSize(16);
-    doc.setTextColor(139, 69, 19);
-    doc.text("Collection of Wisdom", 105, 30, { align: "center" });
-
-    // Decorative Line
-    doc.setLineWidth(0.8);
-    doc.setDrawColor(184, 134, 11);
-    doc.line(20, 35, 190, 35);
-
-    let currentY = 45;
-    let pageNumber = 1;
-
-    const chatsToExport = chats.slice(0, visibleChats || chats.length);
-
-    const addPageNumber = () => {
-      doc.setFontSize(10);
-      doc.setTextColor(102, 51, 0);
-      doc.text(`Page ${pageNumber}`, 105, 287, { align: "center" });
-      doc.setLineWidth(0.8);
-      doc.setDrawColor(184, 134, 11);
-      doc.line(20, 275, 190, 275);
-    };
-
-    addPageNumber();
-
-    for (let index = 0; index < chatsToExport.length; index++) {
-      const chat = chatsToExport[index];
-
-      if (currentY > 240) {
-        doc.addPage();
-        pageNumber++;
-        currentY = 20;
-        addPageNumber();
-      }
-
-      doc.setFont("times", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(139, 0, 0);
-      doc.text(`Conversation ${index + 1}:`, 20, currentY);
-      currentY += 8;
-
-      doc.setFontSize(10);
-      doc.setFont("times", "italic");
-      doc.setTextColor(102, 51, 0);
-      let dateText = "Date unavailable";
-      try {
-        const date = new Date(chat.createdAt);
-        if (!isNaN(date.getTime())) {
-          dateText = `${date.toLocaleDateString()} | ${date.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`;
-        }
-      } catch (_) {}
-      doc.text(dateText, 20, currentY);
-      currentY += 10;
-
-      doc.setFontSize(12);
-      doc.setFont("times", "bold");
-      doc.setTextColor(0, 100, 0);
-      doc.text("Your Question:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setTextColor(0, 0, 0);
-      const userMessage = chat.userMessage || "No question recorded";
-      const splitQuestion = doc.splitTextToSize(userMessage, 160);
-      doc.text(splitQuestion, 30, currentY);
-      currentY += splitQuestion.length * 6 + 10;
-
-      if (currentY > 240) {
-        doc.addPage();
-        pageNumber++;
-        currentY = 20;
-        addPageNumber();
-      }
-
-      doc.setFont("times", "bold");
-      doc.setTextColor(139, 69, 19);
-      doc.setFontSize(12);
-      doc.text("Divine Guidance:", 20, currentY);
-      currentY += 7;
-
-      doc.setFont("times", "normal");
-      doc.setTextColor(0, 0, 0);
-      const botResponse = chat.botResponse || "No response available";
-      const splitResponse = doc.splitTextToSize(botResponse, 160);
-      doc.text(splitResponse, 30, currentY);
-      currentY += splitResponse.length * 6 + 10;
-
-      if (index < chatsToExport.length - 1) {
-        doc.setLineWidth(0.5);
-        doc.setDrawColor(184, 134, 11);
-        doc.line(40, currentY, 170, currentY);
-        currentY += 10;
-      }
-
-      if (currentY > 240) {
-        doc.addPage();
-        pageNumber++;
-        currentY = 20;
-        addPageNumber();
-      }
-    }
-
-    // Final Footer
-    doc.setFontSize(10);
-    doc.setFont("times", "italic");
-    doc.setTextColor(139, 0, 0);
-    doc.text("Generated from Bhagavad Gita Bot", 105, 280, { align: "center" });
-
-    const today = new Date();
-    const fileName = `BhagavadGita_Wisdom_${today.toLocaleDateString().replace(/\//g, "-")}.pdf`;
-
-    if (
-      Capacitor.getPlatform() === "android" ||
-      Capacitor.getPlatform() === "ios"
-    ) {
-      const pdfOutput = doc.output("datauristring");
-      const base64 = pdfOutput.split(",")[1];
-
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
-
-      await Swal.fire({
-  icon: 'success',
-  title: 'PDF Saved Successfully!',
-  html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        Your conversation has been saved to your documents folder.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.293 4L10 .707A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 10.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4.5 12a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/>
-        </svg>
-        <small style="font-weight: 500;">Ready to view or share</small>
-      </div>
-    </div>
-  `,
-  timer: 4000,
-  timerProgressBar: true,
-  showConfirmButton: false,
-  toast: false,
-  position: 'center',
-  backdrop: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__fadeInDown animate__faster',
-    icon: 'animate__animated animate__bounceIn animate__delay-1s'
-  },
-  didOpen: (toast) => {
-    // Add subtle hover effect to pause timer
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
-
-      const fileUri = await Filesystem.getUri({
-        directory: Directory.Documents,
-        path: fileName,
-      });
-
-      await Swal.fire({
-  icon: 'info',
-  title: 'Ready to Share',
-  html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        Your Bhagavad Gita PDF is ready to be shared with others.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #17a2b8;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
-        </svg>
-        <small style="font-weight: 500;">Share with friends & family</small>
-      </div>
-    </div>
-  `,
-  timer: 3000,
-  timerProgressBar: true,
-  showConfirmButton: false,
-  toast: false,
-  position: 'center',
-  backdrop: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__fadeInUp animate__faster',
-    icon: 'animate__animated animate__pulse animate__delay-1s'
-  },
-  didOpen: (toast) => {
-    // Add subtle hover effect to pause timer
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
-
-      await Share.share({
-        title: "Share Bhagavad Gita PDF",
-        text: "Here is your exported conversation from Geeta GPT",
-        url: fileUri.uri,
-        dialogTitle: "Share PDF",
-      });
-    } else {
-      doc.save(fileName);
-    }
-  } catch (error) {
-    console.error("Error exporting all chats:", error);
-    await Swal.fire({
-  icon: 'error',
-  title: 'Export Failed',
-  html: `
-    <div style="text-align: center; margin-top: 10px;">
-      <p style="color: #666; margin-bottom: 15px;">
-        We couldn't save or share your PDF at this moment.
-      </p>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-        </svg>
-        <small style="font-weight: 500;">This is usually temporary</small>
-      </div>
-      <div style="font-size: 13px; color: #888;">
-        <strong>What you can try:</strong><br>
-        • Check your internet connection<br>
-        • Refresh the page and try again<br>
-      </div>
-    </div>
-  `,
-});
-  }
-};
-
   const handleSaveEdit = async (index) => {
-  if (!editText.trim()) return;
-  setLoading(true);
+    if (!editText.trim()) return;
+    setLoading(true);
 
-  try {
-    const chatToUpdate = chats[index];
+    try {
+      const chatToUpdate = chats[index];
 
-    const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
-      message: editText,
-      chatHistory: chats.slice(0, index),
-    });
+      const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
+        message: editText,
+        chatHistory: chats.slice(0, index),
+      });
 
-    if (!res?.data) {
-      throw new Error("No response data received");
-    }
-
-    const updatedChat = {
-      ...chatToUpdate,
-      userMessage: editText,
-      botResponse: res.data.botResponse,
-      hindiResponse: res.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
-      shloka: res.data.shloka || "",
-      translation: res.data.translation || "",
-      chapter: res.data.chapter || "",
-      verse: res.data.verse || "",
-      updatedAt: new Date(),
-    };
-
-    const newChats = [...chats];
-    newChats[index] = updatedChat;
-
-    const truncatedChats = newChats;
-    setChats(truncatedChats);
-
-    if (favorites && favorites.length > 0) {
-      const favIndex = favorites.findIndex(
-        (fav) =>
-          (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
-          fav.userMessage === chatToUpdate.userMessage
-      );
-
-      if (favIndex !== -1) {
-        const newFavorites = [...favorites];
-        newFavorites[favIndex] = updatedChat;
-        setFavorites(newFavorites);
+      if (!res?.data) {
+        throw new Error("No response data received");
       }
-    }
 
-    setEditingChatId(null);
-    setEditText("");
+      const updatedChat = {
+        ...chatToUpdate,
+        userMessage: editText,
+        botResponse: res.data.botResponse,
+        hindiResponse: res.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
+        shloka: res.data.shloka || "",
+        translation: res.data.translation || "",
+        chapter: res.data.chapter || "",
+        verse: res.data.verse || "",
+        updatedAt: new Date(),
+      };
 
-    await Swal.fire({
-  icon: 'success',
-  title: 'Chat Updated Successfully!',
-  html: `
+      const newChats = [...chats];
+      newChats[index] = updatedChat;
+
+      const truncatedChats = newChats;
+      setChats(truncatedChats);
+
+      if (favorites && favorites.length > 0) {
+        const favIndex = favorites.findIndex(
+          (fav) =>
+            (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
+            fav.userMessage === chatToUpdate.userMessage
+        );
+
+        if (favIndex !== -1) {
+          const newFavorites = [...favorites];
+          newFavorites[favIndex] = updatedChat;
+          setFavorites(newFavorites);
+        }
+      }
+
+      setEditingChatId(null);
+      setEditText("");
+
+      await Swal.fire({
+        icon: "success",
+        title: "Chat Updated Successfully!",
+        html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
         Your changes have been saved and applied to the conversation.
@@ -461,29 +211,29 @@ const handleExportAllChats = async () => {
       </div>
     </div>
   `,
-  timer: 2500,
-  timerProgressBar: true,
-  showConfirmButton: true,
-  confirmButtonText: 'Continue',
-  confirmButtonColor: '#8B0000',
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__fadeIn animate__faster',
-    icon: 'animate__animated animate__bounceIn animate__delay-1s'
-  },
-  didOpen: (toast) => {
-    // Add hover effect to pause timer
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
-  } catch (error) {
-    console.error("Error updating chat:", error);
-    await Swal.fire({
-  icon: 'error',
-  title: 'Update Failed',
-  html: `
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: "Continue",
+        confirmButtonColor: "#8B0000",
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        customClass: {
+          popup: "animate__animated animate__fadeIn animate__faster",
+          icon: "animate__animated animate__bounceIn animate__delay-1s",
+        },
+        didOpen: (toast) => {
+          // Add hover effect to pause timer
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+    } catch (error) {
+      console.error("Error updating chat:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
         We couldn't save your changes to the chat.
@@ -494,11 +244,14 @@ const handleExportAllChats = async () => {
         </svg>
         <small style="font-weight: 500;">Your changes weren't saved</small>
       </div>
-      ${error.message && error.message !== "Unknown error occurred." ? 
-        `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
+      ${
+        error.message && error.message !== "Unknown error occurred."
+          ? `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
           <strong style="color: #721c24;">Error Details:</strong><br>
           <code style="color: #6c757d; font-size: 12px;">${error.message}</code>
-        </div>` : ''}
+        </div>`
+          : ""
+      }
       <div style="font-size: 13px; color: #888; margin-top: 15px;">
         <strong>What you can try:</strong><br>
         • Check your internet connection<br>
@@ -507,15 +260,15 @@ const handleExportAllChats = async () => {
       </div>
     </div>
   `,
-  reverseButtons: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  buttonsStyling: true
-});
-  } finally {
-    setLoading(false);
-  }
-};
+        reverseButtons: true,
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        buttonsStyling: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const SideNavigation = ({ chats, scrollToChat, theme }) => {
@@ -726,14 +479,13 @@ const handleExportAllChats = async () => {
       </>
     );
   };
-  
 
-const handleDeleteSelected = async () => {
-  if (Object.keys(selectedChats).length === 0) {
-    await Swal.fire({
-  icon: 'info',
-  title: 'No Chats Selected',
-  html: `
+  const handleDeleteSelected = async () => {
+    if (Object.keys(selectedChats).length === 0) {
+      await Swal.fire({
+        icon: "info",
+        title: "No Chats Selected",
+        html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
         Please select at least one chat to delete before proceeding.
@@ -755,82 +507,90 @@ const handleDeleteSelected = async () => {
       </div>
     </div>
   `,
-  timer: 4000,
-  timerProgressBar: true,
-  showConfirmButton: true,
-  confirmButtonText: 'Got it',
-  confirmButtonColor: '#17a2b8',
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__fadeInDown animate__faster',
-    icon: 'animate__animated animate__bounce animate__delay-1s'
-  },
-  didOpen: (toast) => {
-    // Add hover effect to pause timer
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
-    return;
-  }
+        timer: 4000,
+        timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: "Got it",
+        confirmButtonColor: "#17a2b8",
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        customClass: {
+          popup: "animate__animated animate__fadeInDown animate__faster",
+          icon: "animate__animated animate__bounce animate__delay-1s",
+        },
+        didOpen: (toast) => {
+          // Add hover effect to pause timer
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+      return;
+    }
 
-  const confirmDelete = await Swal.fire({
-    title: 'Delete Chats?',
-    text: `Are you sure you want to delete ${Object.keys(selectedChats).length} selected chat(s)?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete them',
-    cancelButtonText: 'Cancel'
-  });
+    const confirmDelete = await Swal.fire({
+      title: "Delete Chats?",
+      text: `Are you sure you want to delete ${
+        Object.keys(selectedChats).length
+      } selected chat(s)?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete them",
+      cancelButtonText: "Cancel",
+    });
 
-  if (!confirmDelete.isConfirmed) return;
+    if (!confirmDelete.isConfirmed) return;
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const chatIdsToDelete = Object.keys(selectedChats)
-      .filter((key) => selectedChats[key])
-      .map((key) => {
-        const isIndex = !isNaN(Number(key));
-        return isIndex ? chats[Number(key)]?._id : key;
-      })
-      .filter((id) => id);
+    try {
+      const chatIdsToDelete = Object.keys(selectedChats)
+        .filter((key) => selectedChats[key])
+        .map((key) => {
+          const isIndex = !isNaN(Number(key));
+          return isIndex ? chats[Number(key)]?._id : key;
+        })
+        .filter((id) => id);
 
-    for (const chatId of chatIdsToDelete) {
-      try {
-        await axios.delete(`${REACT_APP_API_URL}/api/chats/${chatId}`);
-      } catch (error) {
-        console.error(`Error deleting chat with ID ${chatId}:`, error);
+      for (const chatId of chatIdsToDelete) {
+        try {
+          await axios.delete(`${REACT_APP_API_URL}/api/chats/${chatId}`);
+        } catch (error) {
+          console.error(`Error deleting chat with ID ${chatId}:`, error);
+        }
       }
-    }
 
-    setChats((prevChats) =>
-      prevChats.filter((chat, index) => !selectedChats[chat._id || index])
-    );
+      setChats((prevChats) =>
+        prevChats.filter((chat, index) => !selectedChats[chat._id || index])
+      );
 
-    setFavorites((prevFavorites) =>
-      prevFavorites.filter((fav) => !chatIdsToDelete.includes(fav._id))
-    );
+      setFavorites((prevFavorites) =>
+        prevFavorites.filter((fav) => !chatIdsToDelete.includes(fav._id))
+      );
 
-    setSelectMode(false);
-    setSelectedChats({});
+      setSelectMode(false);
+      setSelectedChats({});
 
-    if (visibleChats > chats.length - Object.keys(selectedChats).length) {
-      setVisibleChats(Math.max(1, chats.length - Object.keys(selectedChats).length));
-    }
+      if (visibleChats > chats.length - Object.keys(selectedChats).length) {
+        setVisibleChats(
+          Math.max(1, chats.length - Object.keys(selectedChats).length)
+        );
+      }
 
-    await Swal.fire({
-  icon: 'success',
-  title: 'Chats Deleted Successfully!',
-  html: `
+      await Swal.fire({
+        icon: "success",
+        title: "Chats Deleted Successfully!",
+        html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
-        ${Object.keys(selectedChats).length === 1 ? 
-          'Your selected chat has been permanently removed.' : 
-          `All ${Object.keys(selectedChats).length} selected chats have been permanently removed.`}
+        ${
+          Object.keys(selectedChats).length === 1
+            ? "Your selected chat has been permanently removed."
+            : `All ${
+                Object.keys(selectedChats).length
+              } selected chats have been permanently removed.`
+        }
       </p>
       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #28a745; margin-bottom: 15px;">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -838,7 +598,11 @@ const handleDeleteSelected = async () => {
           <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
         </svg>
         <small style="font-weight: 500;">
-          ${Object.keys(selectedChats).length === 1 ? '1 chat removed' : `${Object.keys(selectedChats).length} chats removed`}
+          ${
+            Object.keys(selectedChats).length === 1
+              ? "1 chat removed"
+              : `${Object.keys(selectedChats).length} chats removed`
+          }
         </small>
       </div>
       <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 10px; margin: 15px 0;">
@@ -849,46 +613,55 @@ const handleDeleteSelected = async () => {
       </div>
     </div>
   `,
-  timer: 3000,
-  timerProgressBar: true,
-  showConfirmButton: true,
-  confirmButtonText: 'Continue',
-  confirmButtonColor: '#28a745',
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__zoomIn animate__faster',
-    icon: 'animate__animated animate__bounceIn animate__delay-1s'
-  },
-  didOpen: (toast) => {
-    // Add hover effect to pause timer
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
-  } catch (error) {
-    console.error("Error deleting selected chats:", error);
-    await Swal.fire({
-  icon: 'error',
-  title: 'Deletion Failed',
-  html: `
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: "Continue",
+        confirmButtonColor: "#28a745",
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        customClass: {
+          popup: "animate__animated animate__zoomIn animate__faster",
+          icon: "animate__animated animate__bounceIn animate__delay-1s",
+        },
+        didOpen: (toast) => {
+          // Add hover effect to pause timer
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting selected chats:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Deletion Failed",
+        html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
-        We couldn't delete the selected ${Object.keys(selectedChats).length === 1 ? 'chat' : 'chats'} at this time.
+        We couldn't delete the selected ${
+          Object.keys(selectedChats).length === 1 ? "chat" : "chats"
+        } at this time.
       </p>
       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #dc3545; margin-bottom: 15px;">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M11.46.146A.5.5 0 0 0 11.107 0H4.893a.5.5 0 0 0-.353.146L.146 4.54A.5.5 0 0 0 0 4.893v6.214a.5.5 0 0 0 .146.353l4.394 4.394a.5.5 0 0 0 .353.146h6.214a.5.5 0 0 0 .353-.146l4.394-4.394a.5.5 0 0 0 .146-.353V4.893a.5.5 0 0 0-.146-.353L11.46.146zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
         </svg>
         <small style="font-weight: 500;">
-          ${Object.keys(selectedChats).length === 1 ? 'Chat remains in your list' : 'Chats remain in your list'}
+          ${
+            Object.keys(selectedChats).length === 1
+              ? "Chat remains in your list"
+              : "Chats remain in your list"
+          }
         </small>
       </div>
-      ${error.message && error.message !== "An unknown error occurred" ? 
-        `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
+      ${
+        error.message && error.message !== "An unknown error occurred"
+          ? `<div style="background: #f8f9fa; border-left: 3px solid #dc3545; padding: 10px; margin: 15px 0; text-align: left; border-radius: 4px;">
           <strong style="color: #721c24;">Error Details:</strong><br>
           <code style="color: #6c757d; font-size: 12px;">${error.message}</code>
-        </div>` : ''}
+        </div>`
+          : ""
+      }
       <div style="font-size: 13px; color: #888; margin-top: 15px;">
         <strong>What you can try:</strong><br>
         • Check your internet connection<br>
@@ -898,15 +671,15 @@ const handleDeleteSelected = async () => {
       </div>
     </div>
   `,
-  reverseButtons: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  buttonsStyling: true
-});
-  } finally {
-    setLoading(false);
-  }
-};
+        reverseButtons: true,
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        buttonsStyling: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const chatRefs = useRef({});
 
@@ -947,16 +720,16 @@ const handleDeleteSelected = async () => {
   };
 
   const handleExportPDF = async (chatId) => {
-  try {
-    const chatToExport =
-      chats.find((chat) => chat._id === chatId) ||
-      (typeof chatId === "number" ? chats[chatId] : null);
-    if (!chatToExport) {
-      console.error("Chat not found for export");
-      await Swal.fire({
-  icon: 'error',
-  title: 'Export Failed',
-  html: `
+    try {
+      const chatToExport =
+        chats.find((chat) => chat._id === chatId) ||
+        (typeof chatId === "number" ? chats[chatId] : null);
+      if (!chatToExport) {
+        console.error("Chat not found for export");
+        await Swal.fire({
+          icon: "error",
+          title: "Export Failed",
+          html: `
     <div style="text-align: center; margin-top: 10px;">
       <p style="color: #666; margin-bottom: 15px;">
         The selected chat could not be found or is no longer available for export.
@@ -985,195 +758,198 @@ const handleDeleteSelected = async () => {
       </div>
     </div>
   `,
-  showConfirmButton: true,
-  confirmButtonText: 'Select Another Chat',
-  confirmButtonColor: '#8B0000',
-  showCancelButton: true,
-  cancelButtonText: 'Close',
-  reverseButtons: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  customClass: {
-    popup: 'animate__animated animate__fadeInDown animate__faster',
-    confirmButton: 'swal2-confirm-button-custom',
-    cancelButton: 'swal2-cancel-button-custom'
-  },
-  buttonsStyling: true
-});
-      return;
-    }
+          showConfirmButton: true,
+          confirmButtonText: "Select Another Chat",
+          confirmButtonColor: "#8B0000",
+          showCancelButton: true,
+          cancelButtonText: "Close",
+          reverseButtons: true,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          customClass: {
+            popup: "animate__animated animate__fadeInDown animate__faster",
+            confirmButton: "swal2-confirm-button-custom",
+            cancelButton: "swal2-cancel-button-custom",
+          },
+          buttonsStyling: true,
+        });
+        return;
+      }
 
-    const doc = new jsPDF();
+      const doc = new jsPDF();
 
-    doc.setFontSize(22);
-    doc.setFont("times", "bold");
-    doc.setTextColor(139, 0, 0);
-    doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
+      doc.setFontSize(22);
+      doc.setFont("times", "bold");
+      doc.setTextColor(139, 0, 0);
+      doc.text("Divine Wisdom: Bhagavad Gita", 105, 20, { align: "center" });
 
-    let currentY = 42;
-    doc.setFontSize(12);
-    doc.setFont("times", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.text(
-      `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
-      20,
-      currentY
-    );
-    currentY += 10;
+      let currentY = 42;
+      doc.setFontSize(12);
+      doc.setFont("times", "normal");
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        `Date: ${new Date(chatToExport.createdAt).toLocaleString()}`,
+        20,
+        currentY
+      );
+      currentY += 10;
 
-    doc.setFontSize(14);
-    doc.setTextColor(0, 100, 0);
-    doc.setFont("times", "bold");
-    doc.text("Your Question:", 20, currentY);
-    currentY += 7;
+      doc.setFontSize(14);
+      doc.setTextColor(0, 100, 0);
+      doc.setFont("times", "bold");
+      doc.text("Your Question:", 20, currentY);
+      currentY += 7;
 
-    doc.setFont("times", "normal");
-    doc.setFontSize(12);
-    const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
-    doc.text(splitQuestion, 20, currentY);
-    currentY += splitQuestion.length * 6 + 10;
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      const splitQuestion = doc.splitTextToSize(chatToExport.userMessage, 170);
+      doc.text(splitQuestion, 20, currentY);
+      currentY += splitQuestion.length * 6 + 10;
 
-    doc.setFont("times", "bold");
-    doc.setTextColor(139, 69, 19);
-    doc.setFontSize(14);
-    doc.text("Divine Guidance:", 20, currentY);
-    currentY += 7;
+      doc.setFont("times", "bold");
+      doc.setTextColor(139, 69, 19);
+      doc.setFontSize(14);
+      doc.text("Divine Guidance:", 20, currentY);
+      currentY += 7;
 
-    doc.setFont("times", "normal");
-    doc.setFontSize(12);
-    const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
-    doc.text(splitResponse, 20, currentY);
-    currentY += splitResponse.length * 6;
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      const splitResponse = doc.splitTextToSize(chatToExport.botResponse, 170);
+      doc.text(splitResponse, 20, currentY);
+      currentY += splitResponse.length * 6;
 
-    const base64 = doc.output("dataurlstring").split(",")[1];
-    const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
+      const base64 = doc.output("dataurlstring").split(",")[1];
+      const fileName = `BhagavadGita_Wisdom_${Date.now()}.pdf`;
 
-    if (
-      Capacitor.getPlatform() === "android" ||
-      Capacitor.getPlatform() === "ios"
-    ) {
-      const saved = await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
+      if (
+        Capacitor.getPlatform() === "android" ||
+        Capacitor.getPlatform() === "ios"
+      ) {
+        const saved = await Filesystem.writeFile({
+          path: fileName,
+          data: base64,
+          directory: Directory.Documents,
+        });
 
-      await Swal.fire({
-  icon: "success",
-  title: "PDF Saved Successfully",
-  text: "Your PDF has been generated and saved to your device.",
-  confirmButtonText: "Great!",
-  confirmButtonColor: "#22c55e",
-  background: "#ffffff",
-  color: "#374151",
-  showClass: {
-    popup: 'animate__animated animate__fadeInDown animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOutUp animate__faster'
-  },
-  customClass: {
-    confirmButton: 'px-6 py-2 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200',
-    title: 'text-xl font-bold text-gray-800',
-    htmlContainer: 'text-gray-600'
-  },
-  buttonsStyling: false,
-  timer: 3000,
-  timerProgressBar: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true
-});
+        await Swal.fire({
+          icon: "success",
+          title: "PDF Saved Successfully",
+          text: "Your PDF has been generated and saved to your device.",
+          confirmButtonText: "Great!",
+          confirmButtonColor: "#22c55e",
+          background: "#ffffff",
+          color: "#374151",
+          showClass: {
+            popup: "animate__animated animate__fadeInDown animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOutUp animate__faster",
+          },
+          customClass: {
+            confirmButton:
+              "px-6 py-2 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200",
+            title: "text-xl font-bold text-gray-800",
+            htmlContainer: "text-gray-600",
+          },
+          buttonsStyling: false,
+          timer: 3000,
+          timerProgressBar: true,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+        });
 
-      const fileUri = await Filesystem.getUri({
-        directory: Directory.Documents,
-        path: fileName,
-      });
+        const fileUri = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: fileName,
+        });
 
-      await Swal.fire({
-  icon: "success",
-  title: "PDF Ready to Share",
-  text: "Your PDF has been generated and is ready to be shared with others.",
-  confirmButtonText: "Awesome!",
-  confirmButtonColor: "#10b981",
-  background: "#ffffff",
-  showClass: {
-    popup: 'animate__animated animate__bounceIn animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  customClass: {
-    confirmButton: 'px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105',
-    title: 'text-2xl font-bold text-gray-800 mb-2',
-    htmlContainer: 'text-gray-600 text-lg'
-  },
-  buttonsStyling: false,
-  timer: 4000,
-  timerProgressBar: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  backdrop: `
+        await Swal.fire({
+          icon: "success",
+          title: "PDF Ready to Share",
+          text: "Your PDF has been generated and is ready to be shared with others.",
+          confirmButtonText: "Awesome!",
+          confirmButtonColor: "#10b981",
+          background: "#ffffff",
+          showClass: {
+            popup: "animate__animated animate__bounceIn animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOut animate__faster",
+          },
+          customClass: {
+            confirmButton:
+              "px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105",
+            title: "text-2xl font-bold text-gray-800 mb-2",
+            htmlContainer: "text-gray-600 text-lg",
+          },
+          buttonsStyling: false,
+          timer: 4000,
+          timerProgressBar: true,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          backdrop: `
     rgba(0,0,0,0.4)
     left top
     no-repeat
-  `
-});
+  `,
+        });
 
-      await Share.share({
-        title: "Share Bhagavad Gita PDF",
-        text: "Here is some divine wisdom from Geeta GPT",
-        url: fileUri.uri,
-        dialogTitle: "Share PDF",
-      });
-    } else {
-      doc.save(fileName);
+        await Share.share({
+          title: "Share Bhagavad Gita PDF",
+          text: "Here is some divine wisdom from Geeta GPT",
+          url: fileUri.uri,
+          dialogTitle: "Share PDF",
+        });
+      } else {
+        doc.save(fileName);
+        await Swal.fire({
+          icon: "success",
+          title: "PDF Downloaded Successfully",
+          text: "Your PDF has been saved to your Downloads folder.",
+          confirmButtonText: "Perfect!",
+          confirmButtonColor: "#059669",
+          showClass: {
+            popup: "animate__animated animate__slideInDown animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__slideOutUp animate__faster",
+          },
+          customClass: {
+            confirmButton:
+              "px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105",
+            title: "text-xl font-bold text-gray-800",
+            htmlContainer: "text-gray-600",
+          },
+          buttonsStyling: false,
+          timer: 3500,
+          timerProgressBar: true,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
       await Swal.fire({
-  icon: "success",
-  title: "PDF Downloaded Successfully",
-  text: "Your PDF has been saved to your Downloads folder.",
-  confirmButtonText: "Perfect!",
-  confirmButtonColor: "#059669",
-  showClass: {
-    popup: 'animate__animated animate__slideInDown animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__slideOutUp animate__faster'
-  },
-  customClass: {
-    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105',
-    title: 'text-xl font-bold text-gray-800',
-    htmlContainer: 'text-gray-600'
-  },
-  buttonsStyling: false,
-  timer: 3500,
-  timerProgressBar: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true
-});
-    }
-  } catch (error) {
-    console.error("Error exporting to PDF:", error);
-    await Swal.fire({
-  icon: "error",
-  title: "Export Failed",
-  text: "Unable to save or share your PDF. Please check your connection and try again.",
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  buttonsStyling: false,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  backdrop: `
+        icon: "error",
+        title: "Export Failed",
+        text: "Unable to save or share your PDF. Please check your connection and try again.",
+        showClass: {
+          popup: "animate__animated animate__shakeX animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOut animate__faster",
+        },
+        buttonsStyling: false,
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        backdrop: `
     rgba(0,0,0,0.5)
     left top
     no-repeat
-  `
-});
-  }
-};
+  `,
+      });
+    }
+  };
 
   const handleThemeSelect = async (themeName) => {
     try {
@@ -1227,7 +1003,6 @@ const handleDeleteSelected = async () => {
             },
           }
         );
-
 
         const updatedChat = response.data;
         console.log("Backend response:", updatedChat);
@@ -1405,53 +1180,53 @@ const handleDeleteSelected = async () => {
           // Adjust visible chats
           setVisibleChats((prev) => Math.max(1, prev - 1));
         } else {
-              await Swal.fire({
-  icon: "error",
-  title: "Deletion Failed",
-  text: "Unable to delete the chat. Please check your connection and try again.",
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  buttonsStyling: false,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  backdrop: `
+          await Swal.fire({
+            icon: "error",
+            title: "Deletion Failed",
+            text: "Unable to delete the chat. Please check your connection and try again.",
+            showClass: {
+              popup: "animate__animated animate__shakeX animate__faster",
+            },
+            hideClass: {
+              popup: "animate__animated animate__fadeOut animate__faster",
+            },
+            buttonsStyling: false,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            backdrop: `
     rgba(0,0,0,0.5)
     left top
     no-repeat
-  `
-});
-          }
-
+  `,
+          });
+        }
       }
     } catch (error) {
-  console.error("Error deleting favorite chat:", error);
-  await Swal.fire({
-  icon: "error",
-  title: "Error Deleting Chat",
-  html: `
+      console.error("Error deleting favorite chat:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error Deleting Chat",
+        html: `
     <p class="text-gray-600 mb-3">Unable to delete the chat due to the following error:</p>
     <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-      <code class="text-sm text-red-700 font-mono">${error.message || "Unknown error occurred"}</code>
+      <code class="text-sm text-red-700 font-mono">${
+        error.message || "Unknown error occurred"
+      }</code>
     </div>
     <p class="text-sm text-gray-500">Please try again or contact support if the issue persists.</p>
   `,
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  buttonsStyling: false,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  width: '500px'
-});
-}
- finally {
+        showClass: {
+          popup: "animate__animated animate__shakeX animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOut animate__faster",
+        },
+        buttonsStyling: false,
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        width: "500px",
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -1497,27 +1272,26 @@ const handleDeleteSelected = async () => {
 
         console.log("Chat deleted successfully");
       } else {
-  console.error("Backend reported delete failure:", response.data);
-  await Swal.fire({
-  icon: "error",
-  title: "Delete Failed",
-  text: "Unable to delete the chat. Please check your connection and try again.",
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  backdrop: `
+        console.error("Backend reported delete failure:", response.data);
+        await Swal.fire({
+          icon: "error",
+          title: "Delete Failed",
+          text: "Unable to delete the chat. Please check your connection and try again.",
+          showClass: {
+            popup: "animate__animated animate__shakeX animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOut animate__faster",
+          },
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          backdrop: `
     rgba(0,0,0,0.5)
     left top
     no-repeat
-  `
-});
-}
-
+  `,
+        });
+      }
     } catch (error) {
       console.error("Error deleting chat:", error);
 
@@ -1536,55 +1310,56 @@ const handleDeleteSelected = async () => {
           setChats(refreshedChats.data);
           console.log("Chat deleted successfully (fallback method)");
         } else {
-  console.error("Backend reported delete failure:", response.data);
-  await Swal.fire({
-  icon: "error",
-  title: "Delete Failed",
-  text: "Unable to delete the chat. Please check your connection and try again.",
-  confirmButtonText: "Retry",
-  confirmButtonColor: "#dc2626",
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  customClass: {
-    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300',
-    title: 'text-xl font-bold text-gray-800',
-    htmlContainer: 'text-gray-600'
-  },
-  buttonsStyling: false,
-  allowOutsideClick: true,
-  allowEscapeKey: true
-});
-}
-
+          console.error("Backend reported delete failure:", response.data);
+          await Swal.fire({
+            icon: "error",
+            title: "Delete Failed",
+            text: "Unable to delete the chat. Please check your connection and try again.",
+            confirmButtonText: "Retry",
+            confirmButtonColor: "#dc2626",
+            showClass: {
+              popup: "animate__animated animate__shakeX animate__faster",
+            },
+            hideClass: {
+              popup: "animate__animated animate__fadeOut animate__faster",
+            },
+            customClass: {
+              confirmButton:
+                "px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300",
+              title: "text-xl font-bold text-gray-800",
+              htmlContainer: "text-gray-600",
+            },
+            buttonsStyling: false,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+          });
+        }
       } catch (fallbackError) {
-  console.error("Fallback delete also failed:", fallbackError);
-  await Swal.fire({
-  icon: "error",
-  title: "Error Deleting Chat",
-  html: `
+        console.error("Fallback delete also failed:", fallbackError);
+        await Swal.fire({
+          icon: "error",
+          title: "Error Deleting Chat",
+          html: `
     <p class="text-gray-600 mb-3">Unable to delete the chat due to an error:</p>
     <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-      <code class="text-sm text-red-700 font-mono">${fallbackError.message || "Unknown error occurred"}</code>
+      <code class="text-sm text-red-700 font-mono">${
+        fallbackError.message || "Unknown error occurred"
+      }</code>
     </div>
     <p class="text-sm text-gray-500">Please try again or refresh the page if the issue persists.</p>
   `,
-  showClass: {
-    popup: 'animate__animated animate__shakeX animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  buttonsStyling: false,
-  allowOutsideClick: true,
-  allowEscapeKey: true,
-  width: '500px'
-});
-}
-
+          showClass: {
+            popup: "animate__animated animate__shakeX animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOut animate__faster",
+          },
+          buttonsStyling: false,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          width: "500px",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -1597,32 +1372,32 @@ const handleDeleteSelected = async () => {
       );
 
       if (chatsToShare.length === 0) {
-  await Swal.fire({
-  icon: "info",
-  title: "No Chats Selected",
-  text: "Please select at least one chat before sharing.",
-  confirmButtonText: "Got it",
-  confirmButtonColor: "#3b82f6",
-  showClass: {
-    popup: 'animate__animated animate__fadeInDown animate__faster'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut animate__faster'
-  },
-  customClass: {
-    confirmButton: 'px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300',
-    title: 'text-xl font-bold text-gray-800',
-    htmlContainer: 'text-gray-600'
-  },
-  buttonsStyling: false,
-  timer: 4000,
-  timerProgressBar: true,
-  allowOutsideClick: true,
-  allowEscapeKey: true
-});
-  return;
-}
-
+        await Swal.fire({
+          icon: "info",
+          title: "No Chats Selected",
+          text: "Please select at least one chat before sharing.",
+          confirmButtonText: "Got it",
+          confirmButtonColor: "#3b82f6",
+          showClass: {
+            popup: "animate__animated animate__fadeInDown animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOut animate__faster",
+          },
+          customClass: {
+            confirmButton:
+              "px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300",
+            title: "text-xl font-bold text-gray-800",
+            htmlContainer: "text-gray-600",
+          },
+          buttonsStyling: false,
+          timer: 4000,
+          timerProgressBar: true,
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+        });
+        return;
+      }
 
       // Prepare the text content to share
       let shareText = "Divine Wisdom from Bhagavad Gita:\n\n";
@@ -1648,26 +1423,25 @@ const handleDeleteSelected = async () => {
           text: shareText,
         });
       } else {
-  await navigator.clipboard.writeText(shareText);
-  await Swal.fire({
-  icon: "success",
-  title: "Successfully Copied!",
-  text: "Multiple chats have been copied to your clipboard",
-  timer: 2500,
-  timerProgressBar: true,
-  showConfirmButton: false,
-  toast: true,
-  position: 'top-end',
-  customClass: {
-    popup: 'colored-toast'
-  },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
-}
-
+        await navigator.clipboard.writeText(shareText);
+        await Swal.fire({
+          icon: "success",
+          title: "Successfully Copied!",
+          text: "Multiple chats have been copied to your clipboard",
+          timer: 2500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: "top-end",
+          customClass: {
+            popup: "colored-toast",
+          },
+          didOpen: (toast) => {
+            toast.addEventListener("mouseenter", Swal.stopTimer);
+            toast.addEventListener("mouseleave", Swal.resumeTimer);
+          },
+        });
+      }
 
       // Clear selections after sharing
       setSelectedChats({});
@@ -1715,25 +1489,23 @@ const handleDeleteSelected = async () => {
   // Add ref for auto-scrolling
   const messagesEndRef = useRef(null);
   useEffect(() => {
-  const fetchChats = async () => {
-    try {
-      const response = await axios.get(`${REACT_APP_API_URL}/api/chats`);
-      setChats(response.data);
-      setVisibleChats(Math.min(3, response.data.length)); // Ensure visibleChats doesn't exceed total chats
-      setFavorites(
-          response.data.filter((chat) => chat.isFavorite)
-        );
+    const fetchChats = async () => {
+      try {
+        const response = await axios.get(`${REACT_APP_API_URL}/api/chats`);
+        setChats(response.data);
+        setVisibleChats(Math.min(3, response.data.length)); // Ensure visibleChats doesn't exceed total chats
+        setFavorites(response.data.filter((chat) => chat.isFavorite));
         getRandomQuote();
-    } catch (error) {
-      console.error("Error fetching chats:", error);
-      alert("Failed to load chats. Please try again later.");
-    }
-  };
-  fetchChats();
+      } catch (error) {
+        console.error("Error fetching chats:", error);
+        alert("Failed to load chats. Please try again later.");
+      }
+    };
+    fetchChats();
   }, []);
 
   const loadMoreChats = () => {
-    setVisibleChats((prev) => Math.min(prev + 3, chats.length));  
+    setVisibleChats((prev) => Math.min(prev + 3, chats.length));
   };
   // Add new useEffect for auto-scrolling (line 65)
   useEffect(() => {
@@ -1741,7 +1513,6 @@ const handleDeleteSelected = async () => {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chats]);
-  
 
   const getRandomQuote = () => {
     const vedicQuotes = [
@@ -1788,10 +1559,10 @@ const handleDeleteSelected = async () => {
 
         const available = await SpeechRecognition.available();
         if (!available) {
-  await Swal.fire({
-  icon: "warning",
-  title: "Speech Recognition Unavailable",
-  html: `
+          await Swal.fire({
+            icon: "warning",
+            title: "Speech Recognition Unavailable",
+            html: `
     <p>Speech recognition isn't supported on this device or browser.</p>
     <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border-radius: 4px; font-size: 14px;">
       <strong>Alternatives:</strong><br>
@@ -1799,16 +1570,16 @@ const handleDeleteSelected = async () => {
       • Check if microphone permissions are enabled
     </div>
   `,
-  confirmButtonText: "I understand",
-  confirmButtonColor: "#3b82f6",
-  customClass: {
-    popup: 'swal2-warning-modern',
-    htmlContainer: 'text-left'
-  },
-  allowOutsideClick: true
-});
-  return;
-}
+            confirmButtonText: "I understand",
+            confirmButtonColor: "#3b82f6",
+            customClass: {
+              popup: "swal2-warning-modern",
+              htmlContainer: "text-left",
+            },
+            allowOutsideClick: true,
+          });
+          return;
+        }
         SpeechRecognition.isListening().then((result) => {
           if (result) {
             setIsListening(true);
@@ -1853,25 +1624,24 @@ const handleDeleteSelected = async () => {
         const SpeechRecognitionWeb =
           window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognitionWeb) {
-  await Swal.fire({
-  icon: "info",
-  title: "Switch to Chrome, Edge, or Safari for speech recognition",
-  toast: true,
-  position: 'top',
-  showConfirmButton: false,
-  timer: 4000,
-  timerProgressBar: true,
-  customClass: {
-    popup: 'browser-compat-toast'
-  },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
-  return;
-}
-
+          await Swal.fire({
+            icon: "info",
+            title: "Switch to Chrome, Edge, or Safari for speech recognition",
+            toast: true,
+            position: "top",
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            customClass: {
+              popup: "browser-compat-toast",
+            },
+            didOpen: (toast) => {
+              toast.addEventListener("mouseenter", Swal.stopTimer);
+              toast.addEventListener("mouseleave", Swal.resumeTimer);
+            },
+          });
+          return;
+        }
 
         const recognition = new SpeechRecognitionWeb();
         recognitionRef.current = recognition;
@@ -1932,7 +1702,7 @@ const handleDeleteSelected = async () => {
       responseSound.play();
 
       const newChat = {
-        _id: res?.data._id ,
+        _id: res?.data._id,
         userMessage: input,
         botResponse: res?.data.botResponse,
         hindiResponse: res?.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
@@ -1971,7 +1741,7 @@ const handleDeleteSelected = async () => {
     setStyles(getStyles(theme, fontSize, isOpen, isListening));
   }, [theme, fontSize, isOpen, isListening]);
   useEffect(() => {
-    if(favorites.length ===0 ){
+    if (favorites.length === 0) {
       setShowFavorites(false);
     }
   }, [favorites]);
@@ -1987,10 +1757,15 @@ const handleDeleteSelected = async () => {
 
       <div style={styles.container}>
         <div style={styles.paper}>
-    <button style={{
-      ...styles.logoutbutton,
-      position: "fixed",
-      }} onClick={() => navigate("/account-settings")}>Account Settings</button>
+          <button
+            style={{
+              ...styles.logoutbutton,
+              position: "fixed",
+            }}
+            onClick={() => navigate("/account-settings")}
+          >
+            Account Settings
+          </button>
           <h1 style={styles.title}>
             <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
           </h1>
@@ -2203,11 +1978,13 @@ const handleDeleteSelected = async () => {
           </div>
           {showThemeSection && (
             <div className="themes-section">
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-              }}>
-              <ThemeNavigation onSelectTheme={handleThemeSelect} />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <ThemeNavigation onSelectTheme={handleThemeSelect} />
               </div>
               {themeData && (
                 <ThemeDetails
@@ -2669,36 +2446,40 @@ const handleDeleteSelected = async () => {
                     >
                       <FaEdit />
                     </button>
-                    {loading? (<></>
-                    ):(<><button
-                      onClick={() => {
-                        console.log("Button clicked for chat:", chat._id);
-                        console.log("Chat object:", chat);
-                        console.log("Favorites before click:", favorites);
-                        handleFav(chat);
-                      }}
-                      style={{
-                        ...styles.favoriteButton,
-                        color: (() => {
-                          const isFavorited = favorites.some(
-                            (fav) => fav._id === chat._id
-                          );
-                          console.log(
-                            `Chat ${chat._id} is favorited:`,
-                            isFavorited
-                          );
-                          return isFavorited ? "#FFD700" : "#8B4513";
-                        })(),
-                      }}
-                      title={
-                        favorites.some((fav) => fav._id === chat._id)
-                          ? "Remove from favorites"
-                          : "Add to favorites"
-                      }
-                    >
-                      <FaStar />
-                    </button></>)}
-                    
+                    {loading ? (
+                      <></>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            console.log("Button clicked for chat:", chat._id);
+                            console.log("Chat object:", chat);
+                            console.log("Favorites before click:", favorites);
+                            handleFav(chat);
+                          }}
+                          style={{
+                            ...styles.favoriteButton,
+                            color: (() => {
+                              const isFavorited = favorites.some(
+                                (fav) => fav._id === chat._id
+                              );
+                              console.log(
+                                `Chat ${chat._id} is favorited:`,
+                                isFavorited
+                              );
+                              return isFavorited ? "#FFD700" : "#8B4513";
+                            })(),
+                          }}
+                          title={
+                            favorites.some((fav) => fav._id === chat._id)
+                              ? "Remove from favorites"
+                              : "Add to favorites"
+                          }
+                        >
+                          <FaStar />
+                        </button>
+                      </>
+                    )}
 
                     <p style={{ ...styles.timestamp }}>
                       {formatTimestamp(chat.createdAt)}
@@ -2829,18 +2610,20 @@ const handleDeleteSelected = async () => {
               </button>
             )}
           </div>
-          {chats.length > 0 && (
-            <button onClick={handleExportAllChats}>
-              <FaBookOpen style={{ marginRight: "8px" }} /> Export All
-              Conversations
-            </button>
-          )}
+          {chats.length > 0 && <ExportChats chats={chats} visibleChats={visibleChats}/>}
           <div style={styles.footer}>
             <p>
               <span>Made with</span> <FaHeart color="#8B0000" />{" "}
               <span>and ancient wisdom.</span>
             </p>
-            <p><em><a href="mailto:vanshika.tripathi14072001@gmail.com">Contact Support</a> if facing any issue.</em></p>
+            <p>
+              <em>
+                <a href="mailto:vanshika.tripathi14072001@gmail.com">
+                  Contact Support
+                </a>{" "}
+                if facing any issue.
+              </em>
+            </p>
             <p className="text-sm italic text-gray-500">
               <em>
                 Disclaimer: This chatbot may occasionally generate incorrect
