@@ -1942,7 +1942,7 @@ const handleDeleteSelected = async () => {
       responseSound.play();
 
       const newChat = {
-        _id: res?.data.chatId || tempId,
+        _id: res?.data._id ,
         userMessage: input,
         botResponse: res?.data.botResponse,
         hindiResponse: res?.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
