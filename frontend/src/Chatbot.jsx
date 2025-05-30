@@ -144,23 +144,24 @@ const BhagavadGitaBot = () => {
   };
 
   const handleSaveEdit = async (index) => {
-    if (!editText.trim()) return;
-    setLoading(true);
+  if (!editText.trim()) return;
+  setLoading(true);
 
-    try {
-      const chatToUpdate = chats[index];
+  try {
+    const chatToUpdate = chats[index];
 
-      const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
-        message: editText,
-        chatHistory: chats.slice(0, index),
-      });
+    // 1. Get new response
+    const res = await axios.post(`${REACT_APP_API_URL}/api/generate-response`, {
+      message: editText,
+      chatHistory: chats.slice(0, index),
+    });
 
-      if (!res?.data) {
-        throw new Error("No response data received");
-      }
+    if (!res?.data) throw new Error("No response data received");
 
-      const updatedChat = {
-        ...chatToUpdate,
+    // 2. Update chat in DB
+    const updatedChatRes = await axios.put(
+      `${REACT_APP_API_URL}/api/chats/${chatToUpdate._id}`,
+      {
         userMessage: editText,
         botResponse: res.data.botResponse,
         hindiResponse: res.data.hindiResponse || "हिंदी अनुवाद उपलब्ध नहीं है",
@@ -168,31 +169,33 @@ const BhagavadGitaBot = () => {
         translation: res.data.translation || "",
         chapter: res.data.chapter || "",
         verse: res.data.verse || "",
-        updatedAt: new Date(),
-      };
-
-      const newChats = [...chats];
-      newChats[index] = updatedChat;
-
-      const truncatedChats = newChats;
-      setChats(truncatedChats);
-
-      if (favorites && favorites.length > 0) {
-        const favIndex = favorites.findIndex(
-          (fav) =>
-            (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
-            fav.userMessage === chatToUpdate.userMessage
-        );
-
-        if (favIndex !== -1) {
-          const newFavorites = [...favorites];
-          newFavorites[favIndex] = updatedChat;
-          setFavorites(newFavorites);
-        }
       }
+    );
 
-      setEditingChatId(null);
-      setEditText("");
+    const updatedChat = updatedChatRes.data;
+
+    // 3. Update local state
+    const newChats = [...chats];
+    newChats[index] = updatedChat;
+    setChats(newChats);
+
+    // 4. Update favorites if necessary
+    if (favorites && favorites.length > 0) {
+      const favIndex = favorites.findIndex(
+        (fav) =>
+          (fav._id && chatToUpdate._id && fav._id === chatToUpdate._id) ||
+          fav.userMessage === chatToUpdate.userMessage
+      );
+
+      if (favIndex !== -1) {
+        const newFavorites = [...favorites];
+        newFavorites[favIndex] = updatedChat;
+        setFavorites(newFavorites);
+      }
+    }
+
+    setEditingChatId(null);
+    setEditText("");
 
       await Swal.fire({
         icon: "success",
@@ -1282,7 +1285,8 @@ const BhagavadGitaBot = () => {
       }
 
       // Show loading state
-      setLoading(true);
+      setLoadingStates((prev) => ({ ...prev, [index]: true }));
+
 
       // Send the delete request to the backend using the chat ID (preferred)
       const response = await axios.delete(
@@ -1398,7 +1402,8 @@ const BhagavadGitaBot = () => {
         });
       }
     } finally {
-      setLoading(false);
+      setLoadingStates((prev) => ({ ...prev, [index]: false }));
+
     }
   };
   const handleShareSelected = async () => {
@@ -1522,7 +1527,7 @@ const BhagavadGitaBot = () => {
   const [showThemeSection, setShowThemeSection] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [themeData, setThemeData] = useState(null);
-
+  const [loadingStates, setLoadingStates] = useState({});
   // Add ref for auto-scrolling
   const messagesEndRef = useRef(null);
   useEffect(() => {
@@ -2465,10 +2470,10 @@ const BhagavadGitaBot = () => {
                     <button
                       onClick={() => handleDeleteChat(index)}
                       style={styles.deleteButton}
-                      disabled={loading}
+                      disabled={loadingStates[index]}
                       title="Delete this conversation"
                     >
-                      {loading ? (
+                      {loadingStates[index] ? (
                         <FaSpinner
                           style={{ animation: "spin 2s linear infinite" }}
                         />
@@ -2522,8 +2527,9 @@ const BhagavadGitaBot = () => {
                     )}
 
                     <p style={{ ...styles.timestamp }}>
-                      {formatTimestamp(chat.createdAt)}
-                    </p>
+  {formatTimestamp(chat.updatedAt || chat.createdAt)}
+</p>
+
 
                     <p style={styles.userMessage}>
                       <strong>Your Question:</strong> {chat.userMessage}
