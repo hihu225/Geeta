@@ -1958,15 +1958,6 @@ const handleDeleteSelected = async () => {
         return prevChats.map((chat) => (chat._id === tempId ? newChat : chat));
       });
 
-      // IMPORTANT: Update favorites if this temp chat was favorited
-      if (res?.data.chatId && res.data.chatId !== tempId) {
-        setFavorites((prevFavorites) => {
-          return prevFavorites.map((fav) =>
-            fav._id === tempId ? { ...fav, _id: res.data.chatId } : fav
-          );
-        });
-      }
-
       // Other stuff
       if (res?.data.themeData) {
         setThemeData(res.data.themeData);
@@ -2683,8 +2674,8 @@ const handleDeleteSelected = async () => {
                     >
                       <FaEdit />
                     </button>
-
-                    <button
+                    {loading? (<></>
+                    ):(<><button
                       onClick={() => {
                         console.log("Button clicked for chat:", chat._id);
                         console.log("Chat object:", chat);
@@ -2711,7 +2702,8 @@ const handleDeleteSelected = async () => {
                       }
                     >
                       <FaStar />
-                    </button>
+                    </button></>)}
+                    
 
                     <p style={{ ...styles.timestamp }}>
                       {formatTimestamp(chat.createdAt)}
