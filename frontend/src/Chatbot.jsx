@@ -174,10 +174,14 @@ const BhagavadGitaBot = () => {
 
     const updatedChat = updatedChatRes.data;
 
-    // 3. Update local state
+    // 3. Move updated chat to top and update local state
     const newChats = [...chats];
-    newChats[index] = updatedChat;
+    newChats.splice(index, 1); // Remove from current position
+    newChats.unshift(updatedChat); // Add to beginning
     setChats(newChats);
+
+    // Reset visible chats to 3 to show the updated chat at the top
+    setVisibleChats(3);
 
     // 4. Update favorites if necessary
     if (favorites && favorites.length > 0) {
@@ -1209,9 +1213,7 @@ const BhagavadGitaBot = () => {
             console.error("Failed to refresh data:", refreshError);
 
             // Fallback: Remove locally only the deleted chat
-            setChats((prevChats) =>
-              prevChats.filter((c) => c._id !== chat._id)
-            );
+            setChats((prevChats) => prevChats.filter((c) => c._id !== chat._id));
             setFavorites((prevFavorites) =>
               prevFavorites.filter((fav) => fav._id !== chat._id)
             );
@@ -1306,10 +1308,12 @@ const BhagavadGitaBot = () => {
           prevFavorites.filter((fav) => fav._id !== chatToDelete._id)
         );
 
-        // Adjust visible chats if needed
-        if (visibleChats > chats.length - 1) {
-          setVisibleChats(Math.max(1, chats.length - 1));
-        }
+        // Adjust visible chats after deletion
+        setVisibleChats((prev) => {
+          const newChatCount = chats.length - 1;
+          // Ensure we show at least 3 chats if available, but not more than total
+          return Math.min(Math.max(3, prev), newChatCount);
+        });
 
         console.log("Chat deleted successfully");
       } else {
@@ -1508,7 +1512,7 @@ const BhagavadGitaBot = () => {
   };
 
   const [showFavorites, setShowFavorites] = useState(false);
-  const [visibleChats, setVisibleChats] = useState(0);
+  const [visibleChats, setVisibleChats] = useState(3);
   const [input, setInput] = useState("");
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1535,7 +1539,8 @@ const BhagavadGitaBot = () => {
       try {
         const response = await axios.get(`${REACT_APP_API_URL}/api/chats`);
         setChats(response.data);
-        setVisibleChats(Math.min(3, response.data.length)); // Ensure visibleChats doesn't exceed total chats
+        // Always show 3 chats initially, or less if there are fewer than 3 total chats
+        setVisibleChats(Math.min(3, response.data.length));
         setFavorites(response.data.filter((chat) => chat.isFavorite));
         getRandomQuote();
       } catch (error) {
@@ -1686,7 +1691,7 @@ const BhagavadGitaBot = () => {
         }
 
         const recognition = new SpeechRecognitionWeb();
-        recognitionRef.current = recognition;
+               recognitionRef.current = recognition;
 
         recognition.lang = "en-IN";
         recognition.maxAlternatives = 1;
@@ -1725,16 +1730,18 @@ const BhagavadGitaBot = () => {
     sendSound.play();
     setLoading(true);
     setShowSkeleton(true);
-    const tempId = uuidv4(); // Temporary ID for new chat
+    const tempId = uuidv4();
 
-    // Add chat locally immediately with tempId
     const tempChat = {
       _id: tempId,
       userMessage: input,
       botResponse: "...loading...",
       createdAt: new Date(),
     };
-    setChats([tempChat, ...chats]); // Show loading chat
+    setChats([tempChat, ...chats]);
+    
+    // Reset to show only 3 latest chats when new message comes
+    setVisibleChats(3);
 
     try {
       const res = await axios.post(`${REACT_APP_API_URL}/api/message`, {
@@ -1760,6 +1767,9 @@ const BhagavadGitaBot = () => {
         return prevChats.map((chat) => (chat._id === tempId ? newChat : chat));
       });
 
+      // Keep visibleChats at 3 to show only latest 3 chats
+      setVisibleChats(3);
+
       // Other stuff
       if (res?.data.themeData) {
         setThemeData(res.data.themeData);
@@ -1770,6 +1780,10 @@ const BhagavadGitaBot = () => {
       setInput("");
     } catch (error) {
       console.error(error);
+      // Remove the temp chat if there was an error
+      setChats((prevChats) => prevChats.filter(chat => chat._id !== tempId));
+      // Reset to 3 or current length - 1, whichever is smaller
+      setVisibleChats(Math.min(3, chats.length));
     }
     setLoading(false);
     setShowSkeleton(false);
