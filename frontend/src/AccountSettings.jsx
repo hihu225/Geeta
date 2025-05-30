@@ -8,7 +8,10 @@ const AccountSettings = () => {
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState('🕉️');
-
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
   // Avatar options inspired by Bhagavad Gita and Hindu philosophy
   const avatarOptions = [
     { icon: '🕉️', name: 'Om' },
@@ -373,6 +376,91 @@ const AccountSettings = () => {
       borderColor: "#fed7aa",
       color: "#9a3412",
     },
+    aboutButton: {
+  borderColor: "#fed7aa",
+  backgroundColor: "#fff7ed",
+  color: "#9a3412",
+},
+
+supportSection: {
+  backgroundColor: "#ffffff",
+  borderRadius: "16px",
+  padding: "24px",
+  marginBottom: "32px",
+  boxShadow: "0 4px 12px rgba(154, 52, 18, 0.08)",
+  border: "1px solid #fed7aa",
+},
+
+supportGrid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+  gap: "16px",
+  marginTop: "16px",
+},
+
+supportCard: {
+  padding: "16px",
+  borderRadius: "12px",
+  border: "1px solid #fed7aa",
+  backgroundColor: "#fff7ed",
+  textAlign: "center",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+},
+
+supportIcon: {
+  fontSize: "32px",
+  marginBottom: "12px",
+  display: "block",
+},
+
+supportTitle: {
+  fontSize: "16px",
+  fontWeight: "600",
+  color: "#9a3412",
+  marginBottom: "8px",
+},
+
+supportDescription: {
+  fontSize: "14px",
+  color: "#c2410c",
+  lineHeight: "1.4",
+},
+
+modalContent: {
+  maxHeight: "70vh",
+  overflowY: "auto",
+  textAlign: "left",
+},
+
+modalText: {
+  fontSize: "15px",
+  color: "#c2410c",
+  lineHeight: "1.6",
+  marginBottom: "16px",
+},
+
+feedbackTextarea: {
+  width: "100%",
+  minHeight: "120px",
+  padding: "12px",
+  borderRadius: "8px",
+  border: "1px solid #fed7aa",
+  fontSize: "14px",
+  fontFamily: "inherit",
+  resize: "vertical",
+  marginBottom: "16px",
+},
+
+verse: {
+  fontStyle: "italic",
+  color: "#9a3412",
+  backgroundColor: "#fff7ed",
+  padding: "16px",
+  borderRadius: "8px",
+  borderLeft: "4px solid #f97316",
+  marginBottom: "16px",
+},
   };
 
   // Add CSS animations
@@ -426,6 +514,15 @@ const AccountSettings = () => {
       .popup-btn-secondary:hover {
         background-color: #fff7ed !important;
         border-color: #fb923c !important;
+      }
+      .support-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 16px rgba(154, 52, 18, 0.15) !important;
+        background-color: #fed7aa !important;
+      }
+
+      .support-card:active {
+        transform: translateY(0) !important;
       }
     `;
     document.head.appendChild(styleElement);
@@ -534,7 +631,40 @@ const AccountSettings = () => {
       .toUpperCase()
       .substring(0, 2);
   };
+  const handleAboutClick = () => {
+  setShowAboutModal(true);
+};
 
+const handlePrivacyClick = () => {
+  setShowPrivacyModal(true);
+};
+
+const handleFeedbackClick = () => {
+  setShowFeedbackModal(true);
+};
+
+const handleContactSupport = () => {
+  window.location.href = 'mailto:vanshika.tripathi14072001@gmail.com?subject=Spiritual Guidance Chatbot - Support Request';
+};
+
+const handleSubmitFeedback = () => {
+  if (feedbackText.trim()) {
+    // Send feedback via email
+    const subject = encodeURIComponent('Spiritual Guidance Chatbot - User Feedback');
+    const body = encodeURIComponent(`User: ${user?.name || 'Anonymous'}\nEmail: ${user?.email || 'Not provided'}\n\nFeedback:\n${feedbackText}`);
+    window.location.href = `mailto:hihu2005ag@gmail.com?subject=${subject}&body=${body}`;
+    
+    toast?.("Thank you for your valuable feedback! 🙏", { type: 'success' });
+    setFeedbackText('');
+    setShowFeedbackModal(false);
+  } else {
+    toast?.("Please share your thoughts before submitting.", { type: 'warning' });
+  }
+};
+
+const handleCloseModal = (setter) => {
+  setter(false);
+};
   if (!user) {
     return (
       <div style={styles.container}>
@@ -583,7 +713,59 @@ const AccountSettings = () => {
             </div>
           </div>
         </div>
+        <div style={styles.supportSection}>
+  <h2 style={styles.sectionTitle}>Support & Information</h2>
+  <div style={styles.supportGrid}>
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handleAboutClick}
+    >
+      <span style={styles.supportIcon}>📖</span>
+      <div style={styles.supportTitle}>About This App</div>
+      <div style={styles.supportDescription}>
+        Learn about our spiritual guidance system powered by Bhagavad Gita wisdom
+      </div>
+    </div>
 
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handleContactSupport}
+    >
+      <span style={styles.supportIcon}>📧</span>
+      <div style={styles.supportTitle}>Contact Support</div>
+<div style={styles.supportDescription}>
+  Having trouble? Get in touch for technical assistance or general inquiries.
+</div>
+
+    </div>
+
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handleFeedbackClick}
+    >
+      <span style={styles.supportIcon}>💭</span>
+      <div style={styles.supportTitle}>Share Feedback</div>
+      <div style={styles.supportDescription}>
+        Help us improve your spiritual journey experience
+      </div>
+    </div>
+
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handlePrivacyClick}
+    >
+      <span style={styles.supportIcon}>🔒</span>
+      <div style={styles.supportTitle}>Privacy & Terms</div>
+      <div style={styles.supportDescription}>
+        Understand how we protect your spiritual journey data
+      </div>
+    </div>
+  </div>
+</div>
         {/* Actions Card */}
         <div style={styles.actionsCard}>
           <h2 style={styles.sectionTitle}>Account Actions</h2>
@@ -711,6 +893,126 @@ const AccountSettings = () => {
           </div>
         </div>
       )}
+      {/* About Modal */}
+{showAboutModal && (
+  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowAboutModal)}>
+    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+      <div style={styles.popupIcon}>🕉️</div>
+      <h3 style={styles.popupTitle}>
+  About Geeta Gpt <br />
+  <span>(Spiritual Guidance Chatbot)</span>
+</h3>
+
+
+      <div style={styles.modalContent}>
+        <div style={styles.verse}>
+          "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।<br/>
+          अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्।।"<br/>
+          <small>- Bhagavad Gita 4.7</small>
+        </div>
+        <p style={styles.modalText}>
+          Our AI-powered spiritual guidance chatbot draws wisdom from the timeless teachings of the Bhagavad Gita to provide personalized spiritual counsel and life guidance.
+        </p>
+        <p style={styles.modalText}>
+          <strong>Features:</strong><br/>
+          • Personalized spiritual guidance based on Gita's teachings<br/>
+          • AI-powered responses using advanced language models<br/>
+          • Secure and private conversations<br/>
+          • Multilingual support for universal accessibility
+        </p>
+        <p style={styles.modalText}>
+          <strong>Technology:</strong> Powered by Google's Gemini AI for intelligent, contextual responses rooted in ancient wisdom.
+        </p>
+      </div>
+      <div style={styles.popupButtons}>
+        <button
+          onClick={() => handleCloseModal(setShowAboutModal)}
+          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
+          className="popup-btn-primary"
+        >
+          Understood 🙏
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Privacy Modal */}
+{showPrivacyModal && (
+  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowPrivacyModal)}>
+    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+      <div style={styles.popupIcon}>🔒</div>
+      <h3 style={styles.popupTitle}>Privacy & Data Protection</h3>
+      <div style={styles.modalContent}>
+        <p style={styles.modalText}>
+          <strong>Your Privacy Matters:</strong><br/>
+          We respect your spiritual journey and maintain strict confidentiality of your conversations.
+        </p>
+        <p style={styles.modalText}>
+          <strong>Data We Collect:</strong><br/>
+          • Chat messages for providing relevant guidance<br/>
+          • Basic profile information (name, avatar preference)<br/>
+          • Session data for improving our service
+        </p>
+        <p style={styles.modalText}>
+          <strong>Data We Don't Share:</strong><br/>
+          • Personal conversations remain private<br/>
+          • No selling of personal information<br/>
+          • Secure encryption for all communications
+        </p>
+        <p style={styles.modalText}>
+          <strong>Your Rights:</strong> You can request data deletion, export your conversations, or modify your privacy settings at any time.
+        </p>
+      </div>
+      <div style={styles.popupButtons}>
+        <button
+          onClick={() => handleCloseModal(setShowPrivacyModal)}
+          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
+          className="popup-btn-primary"
+        >
+          Accept
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Feedback Modal */}
+{showFeedbackModal && (
+  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowFeedbackModal)}>
+    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+      <div style={styles.popupIcon}>💭</div>
+      <h3 style={styles.popupTitle}>Share Your Experience</h3>
+      <div style={styles.modalContent}>
+        <p style={styles.modalText}>
+          Your feedback helps us improve the spiritual guidance experience for all seekers.
+        </p>
+        <textarea
+          style={styles.feedbackTextarea}
+          placeholder="Share your thoughts, suggestions, or experiences with our spiritual guidance chatbot..."
+          value={feedbackText}
+          onChange={(e) => setFeedbackText(e.target.value)}
+        />
+      </div>
+      <div style={styles.popupButtons}>
+        <button
+          onClick={handleSubmitFeedback}
+          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
+          className="popup-btn-primary"
+        >
+          Submit Feedback
+        </button>
+        <button
+          onClick={() => handleCloseModal(setShowFeedbackModal)}
+          style={{...styles.popupButton, ...styles.popupButtonSecondary}}
+          className="popup-btn-secondary"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

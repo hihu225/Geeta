@@ -70,7 +70,7 @@ paper: {
   maxWidth: "600px",       // Max width for larger screens
   marginLeft: "auto",
   marginRight: "auto",
-  padding: "1.5rem 5px",  // Reduced side padding for small devices
+  padding: "1.5rem 5px 2.2rem 5px",  // Reduced side padding for small devices
   borderRadius: "12px",
   backgroundColor: theme === "light" ? "rgba(255, 252, 240, 0.97)" : "rgba(40, 40, 40, 0.97)",
   border: theme === "light" ? "2px solid #D4A017" : "2px solid #664D00",

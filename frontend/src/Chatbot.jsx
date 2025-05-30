@@ -1554,7 +1554,6 @@ const BhagavadGitaBot = () => {
   const loadMoreChats = () => {
     setVisibleChats((prev) => Math.min(prev + 3, chats.length));
   };
-  // Add new useEffect for auto-scrolling (line 65)
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -2676,14 +2675,7 @@ const BhagavadGitaBot = () => {
               <span>Made with</span> <FaHeart color="#8B0000" />{" "}
               <span>and ancient wisdom.</span>
             </p>
-            <p>
-              <em>
-                <a href="mailto:vanshika.tripathi14072001@gmail.com">
-                  Contact Support
-                </a>{" "}
-                if facing any issue.
-              </em>
-            </p>
+            
             <p className="text-sm italic text-gray-500">
               <em>
                 Disclaimer: This chatbot may occasionally generate incorrect
