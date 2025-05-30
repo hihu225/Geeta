@@ -433,7 +433,7 @@ router.post('/send-otp', async (req, res) => {
                 </p>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #34495e;">
                     <p style="color: #7f8c8d; font-size: 12px; margin: 0;">
-                        © 2024 Geeta GPT. Spreading wisdom, one verse at a time.
+                        © 2025 Geeta GPT. Spreading wisdom, one verse at a time.
                     </p>
                 </div>
             </div>
