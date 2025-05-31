@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
 import {backend_url} from './utils/backend' ;
 import {useNavigate} from 'react-router-dom' ;
+import Cookies from 'js-cookie';
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
@@ -10,6 +11,7 @@ const NotificationSettings = () => {
     language: 'english',
     quoteType: 'random'
   });
+  const token = Cookies.get('token');
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -41,12 +43,12 @@ const NotificationSettings = () => {
 
   const fetchPreferences = async () => {
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
   // Redirect to login or show login prompt
   console.log('No token found');
   return;
 }
+      console.log(token)
       const response = await fetch(`${backend_url}/api/notifications/preferences`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -71,7 +73,6 @@ const NotificationSettings = () => {
   const updatePreferences = async (newSettings) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${backend_url}/api/notifications/preferences`, {
         method: 'POST',
         headers: {
@@ -115,7 +116,6 @@ const NotificationSettings = () => {
   const testNotification = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${backend_url}/api/notifications/send-quote`, {
         method: 'POST',
         headers: {
