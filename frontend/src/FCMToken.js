@@ -2,12 +2,12 @@
 import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase';
 import { backend_url } from './utils/backend';
-
+import Cookies from 'js-cookie';
 const FCMToken = async () => {
   try {
     // Request notification permission first
     const permission = await Notification.requestPermission();
-    
+    console.log("hefjkdshfbdjkffdiujgkfgfgfgf")
     if (permission !== 'granted') {
       console.warn('Notification permission denied');
       return null;
