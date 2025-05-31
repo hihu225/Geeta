@@ -1,6 +1,7 @@
 // frontend/src/FCMToken.js
 import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase';
+import { backend_url } from './utils/backend';
 
 const FCMToken = async () => {
   try {
@@ -21,9 +22,9 @@ const FCMToken = async () => {
 
       // Save token to your backend
       try {
-        const authToken = localStorage.getItem('token');
+        const authToken = Cookies.get('token');
         if (authToken) {
-          await fetch('/api/notifications/save-token', {
+          await fetch(`${backend_url}/api/notifications/save-token`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
