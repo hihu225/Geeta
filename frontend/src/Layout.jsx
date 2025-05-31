@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { StorageService } from "./utils/storage";
 import { backend_url } from "./utils/backend";
-
+import FCMToken from "./FCMToken";
 const Layout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,6 +40,17 @@ const Layout = ({ children }) => {
         if (response.data.success) {
           console.log('[Layout] Token valid, user authenticated');
           setIsAuthenticated(true);
+          try {
+    const fcm = await FCMToken();
+    if (fcm) {
+      console.log('[Layout] FCM token registered:', fcm);
+    } else {
+      console.warn('[Layout] No FCM token returned');
+    }
+  } catch (fcmError) {
+    console.error('[Layout] Error while registering FCM token:', fcmError);
+  }
+
         } else {
           console.log('[Layout] Token invalid, cleaning up');
           // Token is invalid, clean up

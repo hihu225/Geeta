@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
-import {backend_url} from './utils/backend' ;
-import {useNavigate} from 'react-router-dom' ;
+import { backend_url } from './utils/backend';
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
@@ -11,7 +12,9 @@ const NotificationSettings = () => {
     language: 'english',
     quoteType: 'random'
   });
+  
   const token = Cookies.get('token');
+  const navigate = useNavigate();
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -44,13 +47,19 @@ const NotificationSettings = () => {
   const fetchPreferences = async () => {
     try {
       if (!token) {
-  // Redirect to login or show login prompt
-  console.log('No token found');
-  return;
-}
-      console.log(token)
+        console.log('No token found');
+        // Optionally redirect to login
+        // navigate('/login');
+        return;
+      }
+      
+      console.log(token);
       const response = await fetch(`${backend_url}/api/notifications/preferences`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
@@ -64,6 +73,8 @@ const NotificationSettings = () => {
             quoteType: data.preferences.preferences?.quoteType || 'random'
           });
         }
+      } else {
+        console.error('Failed to fetch preferences:', response.status);
       }
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -121,18 +132,22 @@ const NotificationSettings = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({
+          customMessage: 'Test notification from settings'
+        })
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && data.success) {
         setMessage('Test notification sent!');
         setMessageType('success');
       } else {
-        setMessage('Failed to send test notification');
+        setMessage(data.message || 'Failed to send test notification');
         setMessageType('error');
       }
     } catch (error) {
+      console.error('Error sending test notification:', error);
       setMessage('Error sending test notification');
       setMessageType('error');
     } finally {

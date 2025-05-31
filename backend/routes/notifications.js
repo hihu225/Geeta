@@ -7,17 +7,26 @@ const notificationService = require("../services/notificationService");
 
 const router = express.Router();
 
-// Save FCM Token
 router.post("/save-token", auth, async (req, res) => {
   try {
-    const { token } = req.body;
-    const userId = req.user.id;
+    console.log("Incoming save-token request");
+    console.log("User ID:", req.user.id);
+    console.log("Request body:", req.body);
 
-    await User.findByIdAndUpdate(
-      userId,
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: "FCM token missing" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
       { $set: { fcmToken: token } },
       { new: true }
     );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     res.status(200).json({
       success: true,
