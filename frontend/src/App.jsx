@@ -250,6 +250,11 @@ const Dashboard = () => {
     Notification Settings
   </button>
 </Link>
+<Link to="/notifications">
+  <button style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px" }}>
+    Notifications
+  </button>
+</Link>
     </div>
   );
 };
