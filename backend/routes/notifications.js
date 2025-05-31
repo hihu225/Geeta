@@ -41,7 +41,7 @@ router.post("/save-token", auth, async (req, res) => {
 router.post("/preferences", auth, async (req, res) => {
   try {
     const { enabled, time, timezone, language, quoteType } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const updateData = {};
     if (enabled !== undefined) updateData["dailyQuotes.enabled"] = enabled;
@@ -65,7 +65,7 @@ router.post("/preferences", auth, async (req, res) => {
 // Get user preferences
 router.get("/preferences", auth, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const user = await User.findById(userId).select("dailyQuotes preferences");
 
     if (!user) {
@@ -90,7 +90,7 @@ router.get("/preferences", auth, async (req, res) => {
 // Send immediate quote (for testing)
 router.post("/send-quote", auth, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { customMessage } = req.body;
 
     const result = await notificationService.sendImmediateQuote(
