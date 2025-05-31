@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
-
+import {backend_url} from './utils/backend' ;
+import {useNavigate} from 'react-router-dom' ;
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
@@ -41,7 +42,12 @@ const NotificationSettings = () => {
   const fetchPreferences = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/notifications/preferences', {
+      if (!token) {
+  // Redirect to login or show login prompt
+  console.log('No token found');
+  return;
+}
+      const response = await fetch(`${backend_url}/api/notifications/preferences`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -66,7 +72,7 @@ const NotificationSettings = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/notifications/preferences', {
+      const response = await fetch(`${backend_url}/api/notifications/preferences`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +116,7 @@ const NotificationSettings = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/notifications/send-quote', {
+      const response = await fetch(`${backend_url}/api/notifications/send-quote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
