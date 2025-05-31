@@ -3,6 +3,7 @@ import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
 import { backend_url } from './utils/backend';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import axios from 'axios';
 
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
@@ -54,16 +55,12 @@ const NotificationSettings = () => {
       }
       
       console.log(token);
-      const response = await fetch(`${backend_url}/api/notifications/preferences`, {
+      const response = await axios(`${backend_url}/api/notifications/preferences`, {
         method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        
       });
       
-      if (response.ok) {
-        const data = await response.json();
+        const data = response.data;
         if (data.success) {
           setSettings({
             enabled: data.preferences.dailyQuotes?.enabled || false,
@@ -73,9 +70,6 @@ const NotificationSettings = () => {
             quoteType: data.preferences.preferences?.quoteType || 'random'
           });
         }
-      } else {
-        console.error('Failed to fetch preferences:', response.status);
-      }
     } catch (error) {
       console.error('Error fetching preferences:', error);
     }
@@ -84,16 +78,13 @@ const NotificationSettings = () => {
   const updatePreferences = async (newSettings) => {
     setLoading(true);
     try {
-      const response = await fetch(`${backend_url}/api/notifications/preferences`, {
+      const response = await axios(`${backend_url}/api/notifications/preferences`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        
         body: JSON.stringify(newSettings)
       });
 
-      const data = await response.json();
+      const data = response.data;
       if (data.success) {
         setMessage('Settings updated successfully!');
         setMessageType('success');
@@ -127,18 +118,14 @@ const NotificationSettings = () => {
   const testNotification = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${backend_url}/api/notifications/send-quote`, {
+      const response = await axios(`${backend_url}/api/notifications/send-quote`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           customMessage: 'Test notification from settings'
         })
       });
 
-      const data = await response.json();
+      const data = response.data;
       if (response.ok && data.success) {
         setMessage('Test notification sent!');
         setMessageType('success');

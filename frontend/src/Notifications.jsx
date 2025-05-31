@@ -3,6 +3,7 @@ import { Bell, Clock, BookOpen, X, RotateCcw, Trash2 } from 'lucide-react';
 import { backend_url } from './utils/backend';
 import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -29,15 +30,11 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${backend_url}/api/notifications/user-notifications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await axios(`${backend_url}/api/notifications/user-notifications`, {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = response.data;
         setNotifications(data.notifications || []);
       } else {
         console.error('Failed to fetch notifications');
@@ -51,12 +48,8 @@ const Notifications = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await fetch(`${backend_url}/api/notifications/mark-read/${notificationId}`, {
+      await axios(`${backend_url}/api/notifications/mark-read/${notificationId}`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
       });
       
       // Update local state
@@ -74,12 +67,8 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch(`${backend_url}/api/notifications/mark-all-read`, {
+      await axios(`${backend_url}/api/notifications/mark-all-read`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
       });
       
       setNotifications(prev => 
@@ -92,12 +81,8 @@ const Notifications = () => {
 
   const deleteNotification = async (notificationId) => {
     try {
-      await fetch(`${backend_url}/api/notifications/delete/${notificationId}`, {
+      await axios(`${backend_url}/api/notifications/delete/${notificationId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
       });
       
       setNotifications(prev => prev.filter(notif => notif._id !== notificationId));
@@ -112,12 +97,8 @@ const Notifications = () => {
   const clearAllNotifications = async () => {
     if (window.confirm('Are you sure you want to delete all notifications?')) {
       try {
-        await fetch(`${backend_url}/api/notifications/clear-all`, {
+        await axios(`${backend_url}/api/notifications/clear-all`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
         });
         
         setNotifications([]);

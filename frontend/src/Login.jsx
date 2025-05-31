@@ -214,11 +214,8 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${backend_url}/api/auth/forgot-password`, {
+      const response = await axios(`${backend_url}/api/auth/forgot-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
 

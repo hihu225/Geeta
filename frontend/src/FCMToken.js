@@ -3,7 +3,7 @@ import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase';
 import { backend_url } from './utils/backend';
 import Cookies from 'js-cookie';
-
+import axios from 'axios';
 const FCMToken = async () => {
   try {
     // Check if notifications are supported
@@ -58,12 +58,8 @@ const FCMToken = async () => {
       try {
         const authToken = Cookies.get('token');
         if (authToken) {
-          const response = await fetch(`${backend_url}/api/notifications/save-token`, {
+          const response = await axios(`${backend_url}/api/notifications/save-token`, {
             method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
-            },
             body: JSON.stringify({ token: currentToken }),
           });
 
