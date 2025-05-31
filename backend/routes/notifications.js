@@ -2,7 +2,7 @@
 const express = require("express");
 const admin = require("../utils/firebaseAdmin");
 const auth = require("../middleware/auth");
-const User = require("../models/usermodels")
+const User = require("../models/usermodels");
 const notificationService = require("../services/notificationService");
 
 const router = express.Router();
@@ -13,11 +13,15 @@ router.post("/save-token", auth, async (req, res) => {
     const { token } = req.body;
     const userId = req.user.id;
 
-    await User.findByIdAndUpdate(userId, { fcmToken: token });
-    
-    res.status(200).json({ 
-      success: true, 
-      message: "FCM token saved successfully" 
+    await User.findByIdAndUpdate(
+      userId,
+      { $set: { fcmToken: token } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "FCM token saved successfully",
     });
   } catch (error) {
     console.error("Error saving FCM token:", error);
@@ -32,17 +36,17 @@ router.post("/preferences", auth, async (req, res) => {
     const userId = req.user.id;
 
     const updateData = {};
-    if (enabled !== undefined) updateData['dailyQuotes.enabled'] = enabled;
-    if (time) updateData['dailyQuotes.time'] = time;
-    if (timezone) updateData['dailyQuotes.timezone'] = timezone;
-    if (language) updateData['preferences.language'] = language;
-    if (quoteType) updateData['preferences.quoteType'] = quoteType;
+    if (enabled !== undefined) updateData["dailyQuotes.enabled"] = enabled;
+    if (time) updateData["dailyQuotes.time"] = time;
+    if (timezone) updateData["dailyQuotes.timezone"] = timezone;
+    if (language) updateData["preferences.language"] = language;
+    if (quoteType) updateData["preferences.quoteType"] = quoteType;
 
     await User.findByIdAndUpdate(userId, updateData);
-    
-    res.status(200).json({ 
-      success: true, 
-      message: "Preferences updated successfully" 
+
+    res.status(200).json({
+      success: true,
+      message: "Preferences updated successfully",
     });
   } catch (error) {
     console.error("Error updating preferences:", error);
@@ -54,18 +58,20 @@ router.post("/preferences", auth, async (req, res) => {
 router.get("/preferences", auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).select('dailyQuotes preferences');
-    
+    const user = await User.findById(userId).select("dailyQuotes preferences");
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       preferences: {
         dailyQuotes: user.dailyQuotes,
-        preferences: user.preferences
-      }
+        preferences: user.preferences,
+      },
     });
   } catch (error) {
     console.error("Error fetching preferences:", error);
@@ -79,10 +85,15 @@ router.post("/send-quote", auth, async (req, res) => {
     const userId = req.user.id;
     const { customMessage } = req.body;
 
-    const result = await notificationService.sendImmediateQuote(userId, customMessage);
-    
+    const result = await notificationService.sendImmediateQuote(
+      userId,
+      customMessage
+    );
+
     if (result.success) {
-      res.status(200).json({ success: true, message: "Quote sent successfully" });
+      res
+        .status(200)
+        .json({ success: true, message: "Quote sent successfully" });
     } else {
       res.status(400).json({ success: false, message: result.message });
     }
@@ -109,7 +120,7 @@ router.post("/send", auth, async (req, res) => {
   const { token, title, body } = req.body;
 
   if (!token || !title || !body) {
-    return res.status(400).json({ success: false, message: 'Missing fields' });
+    return res.status(400).json({ success: false, message: "Missing fields" });
   }
 
   const message = {
