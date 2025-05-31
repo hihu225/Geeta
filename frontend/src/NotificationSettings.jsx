@@ -4,7 +4,7 @@ import { backend_url } from './utils/backend';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-
+import FCMToken from './FCMToken';
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
@@ -43,18 +43,11 @@ const NotificationSettings = () => {
 
   useEffect(() => {
     fetchPreferences();
+    FCMToken();
   }, []);
 
   const fetchPreferences = async () => {
     try {
-      if (!token) {
-        console.log('No token found');
-        // Optionally redirect to login
-        // navigate('/login');
-        return;
-      }
-      
-      console.log(token);
       const response = await axios(`${backend_url}/api/notifications/preferences`, {
         method: 'GET',
         

@@ -1,17 +1,130 @@
 // frontend/src/FCMToken.js
-import { getToken } from "firebase/messaging";
-import { messaging } from "./firebase";
+import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 import { backend_url } from "./utils/backend";
 import Cookies from "js-cookie";
 import axios from "axios";
+
 const FCMToken = async () => {
   try {
-    // Check if notifications are supported
-    if (!("Notification" in window)) {
-      console.warn("This browser does not support notifications");
-      return null;
+    // Check if running on native platform
+    if (Capacitor.isNativePlatform()) {
+      console.log('Running on native platform');
+      
+      // Request permission for push notifications
+      let permStatus = await PushNotifications.checkPermissions();
+      
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+      
+      if (permStatus.receive !== 'granted') {
+        console.warn('Push notification permissions not granted');
+        return null;
+      }
+      
+      console.log('Push notification permissions granted');
+      
+      // Set up listeners BEFORE calling register
+      return new Promise((resolve, reject) => {
+        let isResolved = false;
+        
+        // Set up registration success listener
+        const registrationListener = PushNotifications.addListener('registration', async (token) => {
+          if (isResolved) return;
+          isResolved = true;
+          
+          console.log('Push registration success, FCM token: ' + token.value);
+          
+          try {
+            // Save token to backend
+            const authToken = Cookies.get("token");
+            const response = await axios.post(
+              `${backend_url}/api/notifications/save-token`,
+              { token: token.value },
+              {
+                headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+              }
+            );
+            
+            if (response.status === 200) {
+              console.log("Token saved successfully to backend");
+            }
+          } catch (backendError) {
+            console.error("Failed to save token to backend:", backendError);
+            // Don't reject here, we still want to return the token
+          }
+          
+          // Clean up listeners
+          registrationListener.remove();
+          errorListener.remove();
+          
+          resolve(token.value);
+        });
+        
+        // Set up registration error listener
+        const errorListener = PushNotifications.addListener('registrationError', (error) => {
+          if (isResolved) return;
+          isResolved = true;
+          
+          console.error('Error on registration: ' + JSON.stringify(error));
+          
+          // Clean up listeners
+          registrationListener.remove();
+          errorListener.remove();
+          
+          reject(error);
+        });
+        
+        // Set up notification listeners (these stay active)
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push notification received: ', notification);
+        });
+        
+        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+          console.log('Push notification action performed', notification.actionId, notification.inputValue);
+        });
+        
+        // Set timeout to avoid hanging forever
+        setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            registrationListener.remove();
+            errorListener.remove();
+            reject(new Error('Registration timeout - no response after 15 seconds'));
+          }
+        }, 15000);
+        
+        // Now register for push notifications
+        PushNotifications.register().catch((error) => {
+          if (!isResolved) {
+            isResolved = true;
+            registrationListener.remove();
+            errorListener.remove();
+            reject(error);
+          }
+        });
+      });
+      
+    } else {
+      // Fallback to web implementation for browsers
+      console.log('Running on web platform, using original implementation');
+      return await getWebFCMToken();
     }
+    
+  } catch (err) {
+    console.error("An error occurred while retrieving token: ", err);
+    return null;
+  }
+};
 
+// Original web implementation as fallback
+const getWebFCMToken = async () => {
+  try {
+    // Import Firebase messaging only for web
+    const { getToken } = await import("firebase/messaging");
+    const { messaging } = await import("./firebase");
+    
     // Request notification permission
     const permission = await Notification.requestPermission();
     console.log("Notification permission:", permission);
@@ -31,8 +144,6 @@ const FCMToken = async () => {
           "/firebase-messaging-sw.js"
         );
         console.log("Service Worker registered:", registration);
-
-        // Wait for service worker to be ready
         await navigator.serviceWorker.ready;
       } catch (error) {
         console.error("Service Worker registration failed:", error);
@@ -64,13 +175,15 @@ const FCMToken = async () => {
         const authToken = Cookies.get("token");
         const response = await axios.post(
           `${backend_url}/api/notifications/save-token`,
-          { token: currentToken }
+          { token: currentToken },
+          {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+          }
         );
-        if(response.status === 200) {
+        
+        if (response.status === 200) {
           console.log("Token saved successfully to backend");
         }
-
-        console.log(response);
       } catch (backendError) {
         console.error("Failed to save token to backend:", backendError);
       }
@@ -81,7 +194,7 @@ const FCMToken = async () => {
       return null;
     }
   } catch (err) {
-    console.error("An error occurred while retrieving token: ", err);
+    console.error("Web FCM token error:", err);
     return null;
   }
 };

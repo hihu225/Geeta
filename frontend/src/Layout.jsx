@@ -12,17 +12,17 @@ const Layout = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('[Layout] Starting auth check...');
+        
         
         // Debug storage contents
         await StorageService.debug();
         
         const token = await StorageService.get("token");
-        console.log('[Layout] Retrieved token:', token ? 'Found' : 'Not found');
+        
 
         // 🔒 Don't proceed if user had logged out previously or no token
         if (!token) {
-          console.log('[Layout] No token found, setting unauthenticated');
+          
           setIsAuthenticated(false);
           setLoading(false);
           return;
@@ -30,15 +30,15 @@ const Layout = ({ children }) => {
 
         // Set authorization header
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        console.log('[Layout] Set authorization header');
+        
         
         // Verify token with backend
-        console.log('[Layout] Verifying token with backend...');
+        
         const response = await axios.get(`${backend_url}/api/auth/me`);
-        console.log('[Layout] Backend response:', response.data);
+        
         
         if (response.data.success) {
-          console.log('[Layout] Token valid, user authenticated');
+          
           setIsAuthenticated(true);
           try {
     
@@ -61,7 +61,7 @@ const Layout = ({ children }) => {
     };
 
     const handleAuthFailure = async () => {
-      console.log('[Layout] Handling auth failure');
+      
       setIsAuthenticated(false);
       await StorageService.remove("token");
       delete axios.defaults.headers.common["Authorization"];
