@@ -19,7 +19,7 @@ router.post("/save-token", auth, async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user.userId,
       { $set: { fcmToken: token } },
       { new: true }
     );
