@@ -57,18 +57,14 @@ const FCMToken = async () => {
       // Save token to backend
       try {
         const authToken = Cookies.get('token');
-        if (authToken) {
           const response = await axios(`${backend_url}/api/notifications/save-token`, {
             method: 'POST',
             body: JSON.stringify({ token: currentToken }),
           });
 
-          if (response.ok) {
-            console.log('FCM token saved to backend successfully');
-          } else {
-            console.error('Failed to save FCM token - Status:', response.status);
-          }
-        }
+          
+            console.log(response);
+        
       } catch (backendError) {
         console.error('Failed to save token to backend:', backendError);
       }
