@@ -51,6 +51,18 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: undefined
   },
+  fcmToken: { type: String }, // Store user's FCM token
+  dailyQuotes: {
+    enabled: { type: Boolean, default: false },
+    time: { type: String, default: "09:00" }, // Format: "HH:MM"
+    timezone: { type: String, default: "Asia/Kolkata" },
+    lastSent: { type: Date }
+  },
+  preferences: {
+    language: { type: String, default: "english" }, // english, hindi, sanskrit
+    quoteType: { type: String, default: "random" } // random, sequential, themed
+  },
+
   demoExpiresAt: { type: Date, default: null }
 }, {
   timestamps: true

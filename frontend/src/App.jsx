@@ -12,16 +12,42 @@ import Signup from "./Signup";
 import BhagavadGitaBot from "./Chatbot";
 import Layout from "./Layout";
 import Logout from "./Logout";
-import {ToastContainer} from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import ResetPassword from "./ResetPassword";
 import DeleteAccount from "./DeleteAccount";
 import AccountSettings from "./AccountSettings";
-
+import { setupPushNotifications } from "./setupPushNotifications";
+import { messaging, getToken, onMessage } from "./firebase";
+import FCMToken from "./FCMToken";
+import NotificationSettings from "./NotificationSettings";
 // Component to handle async token checking for root route
 const RootRedirect = () => {
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    setupPushNotifications();
+  }, []);
+
+  useEffect(() => {
+    FCMToken(); // Get and save FCM token
+  }, []);
+
+  // Set up foreground message listener
+  useEffect(() => {
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Foreground message received: ", payload);
+      
+      // Show notification or toast
+      if (payload.notification) {
+        // You can use a toast library or custom notification
+        alert(`${payload.notification.title}: ${payload.notification.body}`);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup listener
+  }, []);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -109,7 +135,14 @@ function App() {
 
           {/* Root route with async token checking */}
           <Route path="/" element={<RootRedirect />} />
-
+            <Route
+  path="/notification-settings"
+  element={
+    <Layout>
+      <NotificationSettings />
+    </Layout>
+  }
+/>
           {/* 404 */}
           <Route
             path="*"
@@ -146,11 +179,25 @@ const Dashboard = () => {
       </Link>
       <Link to="/logout">
         <button
-          style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px",background: "red" }}
+          style={{ 
+            padding: "10px 20px", 
+            fontSize: "16px", 
+            marginLeft: "10px",
+            background: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
         >
           Logout
         </button>
       </Link>
+      <Link to="/notification-settings">
+  <button style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px" }}>
+    Notification Settings
+  </button>
+</Link>
     </div>
   );
 };

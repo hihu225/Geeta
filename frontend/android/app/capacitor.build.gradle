@@ -12,6 +12,7 @@ dependencies {
     implementation project(':capacitor-community-speech-recognition')
     implementation project(':capacitor-filesystem')
     implementation project(':capacitor-preferences')
+    implementation project(':capacitor-push-notifications')
     implementation project(':capacitor-share')
 
 }

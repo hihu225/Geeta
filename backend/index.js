@@ -8,6 +8,8 @@ const authRoutes = require("./authRoutes");
 const auth = require("./middleware/auth");
 const cronRoutes = require("./cronRoutes");
 const generateBotResponse = require("./utils/generateBotResponse");
+const scheduler = require('./services/scheduler');
+const notificationRoutes = require('./routes/notifications');
 // const users = require("./models/usermodels");
 const app = express();
 const corsOptions = {
@@ -35,7 +37,13 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
+  .then(() => {
+  console.log('Connected to MongoDB');
+  
+  // Start the scheduler after DB connection
+  scheduler.start();
+  console.log('Daily quotes scheduler initialized');
+})
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Chat Schema & Model
@@ -843,4 +851,22 @@ app.post("/api/generate-response", auth, async (req, res) => {
     console.error("Error generating chat:", err);
     res.status(500).json({ error: "Failed to generate response" });
   }
+});
+app.use('/api/notifications', notificationRoutes);
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Shutting down gracefully...');
+  scheduler.stop();
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  });
+});
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  scheduler.stop();
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  });
 });

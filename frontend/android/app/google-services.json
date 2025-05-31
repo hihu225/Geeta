@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1030429675897",
+    "project_id": "geeta-app-6d0e0",
+    "storage_bucket": "geeta-app-6d0e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030429675897:android:fdc9cb76253c158a2e1fa8",
+        "android_client_info": {
+          "package_name": "com.geetagpt.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7Ju8-Rpy67vW5RW206D_-h0sn-7Q-6YA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030429675897:android:9002b976b85118e82e1fa8",
+        "android_client_info": {
+          "package_name": "com.hihu.geetagpt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7Ju8-Rpy67vW5RW206D_-h0sn-7Q-6YA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
