@@ -13,7 +13,7 @@ router.post("/save-token", auth, async (req, res) => {
     const { token } = req.body;
     const userId = req.user.id;
 
-    await User.findByIdAndUpdate(
+    const upd = await User.findByIdAndUpdate(
       userId,
       { $set: { fcmToken: token } },
       { new: true }
@@ -22,6 +22,10 @@ router.post("/save-token", auth, async (req, res) => {
     res.status(200).json({
       success: true,
       message: "FCM token saved successfully",
+      user: {
+        id: upd._id,
+        fcmToken: upd.fcmToken,
+      },
     });
   } catch (error) {
     console.error("Error saving FCM token:", error);
