@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate, useLocation, Link } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { StorageService } from "./utils/storage";
 import { backend_url } from "./utils/backend";
@@ -121,12 +121,6 @@ const Layout = ({ children }) => {
   return (
     <>
       {children}
-      {/* Add to your navigation component or layout */}
-      <Link to="/notifications">
-        <button style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px" }}>
-          Notifications
-        </button>
-      </Link>
     </>
   );
 };
