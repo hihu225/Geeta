@@ -8,8 +8,8 @@ class Scheduler {
   }
 
   start() {
-    // Run every 5 minutes to check for scheduled notifications
-    const cronJob = cron.schedule('*/5 * * * *', async () => {
+    // Run every 1 minutes to check for scheduled notifications
+    const cronJob = cron.schedule('*/1 * * * *', async () => {
       console.log('Checking for scheduled notifications...');
       try {
         const result = await notificationService.sendDailyQuotesToAllUsers();

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from "lucide-react";
-import { backend_url } from "./utils/backend";
-import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import axios from "axios";
-
+import React, { useState, useEffect } from 'react';
+import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
+import { backend_url } from './utils/backend';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import axios from 'axios';
+import FCMToken from './FCMToken';
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
@@ -43,35 +43,26 @@ const NotificationSettings = () => {
 
   useEffect(() => {
     fetchPreferences();
+    FCMToken();
   }, []);
 
   const fetchPreferences = async () => {
     try {
-      if (!token) {
-        console.log("No token found");
-        // Optionally redirect to login
-        // navigate('/login');
-        return;
-      }
-
-      console.log(token);
-      const response = await axios(
-        `${backend_url}/api/notifications/preferences`,
-        {
-          method: "GET",
+      const response = await axios(`${backend_url}/api/notifications/preferences`, {
+        method: 'GET',
+        
+      });
+      
+        const data = response.data;
+        if (data.success) {
+          setSettings({
+            enabled: data.preferences.dailyQuotes?.enabled || false,
+            time: data.preferences.dailyQuotes?.time || '09:00',
+            timezone: data.preferences.dailyQuotes?.timezone || 'Asia/Kolkata',
+            language: data.preferences.preferences?.language || 'english',
+            quoteType: data.preferences.preferences?.quoteType || 'random'
+          });
         }
-      );
-
-      const data = response.data;
-      if (data.success) {
-        setSettings({
-          enabled: data.preferences.dailyQuotes?.enabled || false,
-          time: data.preferences.dailyQuotes?.time || "09:00",
-          timezone: data.preferences.dailyQuotes?.timezone || "Asia/Kolkata",
-          language: data.preferences.preferences?.language || "english",
-          quoteType: data.preferences.preferences?.quoteType || "random",
-        });
-      }
     } catch (error) {
       console.error("Error fetching preferences:", error);
     }

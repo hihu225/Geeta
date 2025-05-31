@@ -450,8 +450,9 @@ class NotificationService {
       
       const timeDiff = Math.abs(currentTotalMinutes - scheduledTotalMinutes);
       
-      // Check if notification should be sent (within 5-minute window and not sent today)
-      const shouldSend = timeDiff <= 5 && !this.wasSentToday(user.dailyQuotes.lastSent);
+      // Check if notification should be sent (within 1-minute window and not sent today)
+      const shouldSend = timeDiff <= 2;
+      // && !this.wasSentToday(user.dailyQuotes.lastSent);
       
       console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDiff} minutes, Should send: ${shouldSend}`);
       
