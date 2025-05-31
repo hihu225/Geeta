@@ -1,44 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from 'lucide-react';
-import { backend_url } from './utils/backend';
-import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { Bell, Clock, Globe, Book, CheckCircle, XCircle } from "lucide-react";
+import { backend_url } from "./utils/backend";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
     enabled: false,
-    time: '09:00',
-    timezone: 'Asia/Kolkata',
-    language: 'english',
-    quoteType: 'random'
+    time: "09:00",
+    timezone: "Asia/Kolkata",
+    language: "english",
+    quoteType: "random",
   });
-  
-  const token = Cookies.get('token');
+
+  const token = Cookies.get("token");
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('');
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
 
   const timezones = [
-    'Asia/Kolkata',
-    'America/New_York',
-    'Europe/London',
-    'Asia/Tokyo',
-    'Australia/Sydney'
+    "Asia/Kolkata",
+    "America/New_York",
+    "Europe/London",
+    "Asia/Tokyo",
+    "Australia/Sydney",
   ];
 
   const languages = [
-    { value: 'english', label: 'English' },
-    { value: 'hindi', label: 'Hindi' },
-    { value: 'sanskrit', label: 'Sanskrit' }
+    { value: "english", label: "English" },
+    { value: "hindi", label: "Hindi" },
+    { value: "sanskrit", label: "Sanskrit" },
   ];
 
   const quoteTypes = [
-    { value: 'random', label: 'Random Verse' },
-    { value: 'sequential', label: 'Sequential Reading' },
-    { value: 'themed', label: 'Daily Theme Based' }
+    { value: "random", label: "Random Verse" },
+    { value: "sequential", label: "Sequential Reading" },
+    { value: "themed", label: "Daily Theme Based" },
   ];
 
   useEffect(() => {
@@ -48,57 +48,58 @@ const NotificationSettings = () => {
   const fetchPreferences = async () => {
     try {
       if (!token) {
-        console.log('No token found');
+        console.log("No token found");
         // Optionally redirect to login
         // navigate('/login');
         return;
       }
-      
+
       console.log(token);
-      const response = await axios(`${backend_url}/api/notifications/preferences`, {
-        method: 'GET',
-        
-      });
-      
-        const data = response.data;
-        if (data.success) {
-          setSettings({
-            enabled: data.preferences.dailyQuotes?.enabled || false,
-            time: data.preferences.dailyQuotes?.time || '09:00',
-            timezone: data.preferences.dailyQuotes?.timezone || 'Asia/Kolkata',
-            language: data.preferences.preferences?.language || 'english',
-            quoteType: data.preferences.preferences?.quoteType || 'random'
-          });
+      const response = await axios(
+        `${backend_url}/api/notifications/preferences`,
+        {
+          method: "GET",
         }
+      );
+
+      const data = response.data;
+      if (data.success) {
+        setSettings({
+          enabled: data.preferences.dailyQuotes?.enabled || false,
+          time: data.preferences.dailyQuotes?.time || "09:00",
+          timezone: data.preferences.dailyQuotes?.timezone || "Asia/Kolkata",
+          language: data.preferences.preferences?.language || "english",
+          quoteType: data.preferences.preferences?.quoteType || "random",
+        });
+      }
     } catch (error) {
-      console.error('Error fetching preferences:', error);
+      console.error("Error fetching preferences:", error);
     }
   };
 
   const updatePreferences = async (newSettings) => {
     setLoading(true);
     try {
-      const response = await axios(`${backend_url}/api/notifications/preferences`, {
-        method: 'POST',
-        
-        body: JSON.stringify(newSettings)
-      });
+      const response = await axios.post(
+        `${backend_url}/api/notifications/preferences`,
+        newSettings
+      );
 
       const data = response.data;
       if (data.success) {
-        setMessage('Settings updated successfully!');
-        setMessageType('success');
-        setSettings(prev => ({ ...prev, ...newSettings }));
+        setMessage("Settings updated successfully!");
+        setMessageType("success");
+        setSettings((prev) => ({ ...prev, ...newSettings }));
       } else {
-        setMessage('Failed to update settings');
-        setMessageType('error');
+        setMessage("Failed to update settings");
+        setMessageType("error");
       }
     } catch (error) {
-      setMessage('Error updating settings');
-      setMessageType('error');
+      setMessage("Error updating settings");
+      setMessageType("error");
     } finally {
       setLoading(false);
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(""), 3000);
     }
   };
 
@@ -118,81 +119,93 @@ const NotificationSettings = () => {
   const testNotification = async () => {
     setLoading(true);
     try {
-      const response = await axios(`${backend_url}/api/notifications/send-quote`, {
-        method: 'POST',
-        body: JSON.stringify({
-          customMessage: 'Test notification from settings'
-        })
-      });
+      const response = await axios(
+        `${backend_url}/api/notifications/send-quote`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            customMessage: "Test notification from settings",
+          }),
+        }
+      );
 
       const data = response.data;
       if (response.ok && data.success) {
-        setMessage('Test notification sent!');
-        setMessageType('success');
+        setMessage("Test notification sent!");
+        setMessageType("success");
       } else {
-        setMessage(data.message || 'Failed to send test notification');
-        setMessageType('error');
+        setMessage(data.message || "Failed to send test notification");
+        setMessageType("error");
       }
     } catch (error) {
-      console.error('Error sending test notification:', error);
-      setMessage('Error sending test notification');
-      setMessageType('error');
+      console.error("Error sending test notification:", error);
+      setMessage("Error sending test notification");
+      setMessageType("error");
     } finally {
       setLoading(false);
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(""), 3000);
     }
   };
 
   const testLocalNotification = () => {
-  console.log('Test notification function called');
-  console.log('Notification permission:', Notification.permission);
+    console.log("Test notification function called");
+    console.log("Notification permission:", Notification.permission);
 
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const notification = new Notification('🕉️ Test Notification', {
-      body: 'This is a test notification from Geeta GPT',
-      icon: '/vite.svg', // Use existing favicon instead of non-existent icon
-      tag: 'test-notification',
-    });
-    console.log('Notification created:', notification);
+    if ("Notification" in window && Notification.permission === "granted") {
+      const notification = new Notification("🕉️ Test Notification", {
+        body: "This is a test notification from Geeta GPT",
+        icon: "/vite.svg", // Use existing favicon instead of non-existent icon
+        tag: "test-notification",
+      });
+      console.log("Notification created:", notification);
 
-    // Add event listeners to debug
-    notification.onshow = () => {
-      console.log('Notification shown successfully!');
-    };
+      // Add event listeners to debug
+      notification.onshow = () => {
+        console.log("Notification shown successfully!");
+      };
 
-    notification.onerror = (error) => {
-      console.error('Notification error:', error);
-    };
+      notification.onerror = (error) => {
+        console.error("Notification error:", error);
+      };
 
-    notification.onclose = () => {
-      console.log('Notification closed');
-    };
+      notification.onclose = () => {
+        console.log("Notification closed");
+      };
 
-    notification.onclick = () => {
-      console.log('Test notification clicked');
-      notification.close();
-    };
-
-  } else {
-    console.log('Permission status:', Notification.permission);
-    alert(`Notifications not permitted or not supported. Status: ${Notification.permission}`);
-  }
-};
+      notification.onclick = () => {
+        console.log("Test notification clicked");
+        notification.close();
+      };
+    } else {
+      console.log("Permission status:", Notification.permission);
+      alert(
+        `Notifications not permitted or not supported. Status: ${Notification.permission}`
+      );
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <div className="flex items-center gap-3 mb-6">
         <Bell className="w-6 h-6 text-orange-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Daily Bhagavad Gita Quotes</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Daily Bhagavad Gita Quotes
+        </h2>
       </div>
 
       {message && (
-        <div className={`flex items-center gap-2 p-3 mb-4 rounded-lg ${
-          messageType === 'success' 
-            ? 'bg-green-100 text-green-800 border border-green-200' 
-            : 'bg-red-100 text-red-800 border border-red-200'
-        }`}>
-          {messageType === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+        <div
+          className={`flex items-center gap-2 p-3 mb-4 rounded-lg ${
+            messageType === "success"
+              ? "bg-green-100 text-green-800 border border-green-200"
+              : "bg-red-100 text-red-800 border border-red-200"
+          }`}
+        >
+          {messageType === "success" ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : (
+            <XCircle className="w-5 h-5" />
+          )}
           {message}
         </div>
       )}
@@ -202,18 +215,20 @@ const NotificationSettings = () => {
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
             <h3 className="font-semibold text-gray-800">Enable Daily Quotes</h3>
-            <p className="text-sm text-gray-600">Receive inspirational verses from Bhagavad Gita daily</p>
+            <p className="text-sm text-gray-600">
+              Receive inspirational verses from Bhagavad Gita daily
+            </p>
           </div>
           <button
             onClick={handleToggle}
             disabled={loading}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings.enabled ? 'bg-orange-600' : 'bg-gray-300'
-            } ${loading ? 'opacity-50' : ''}`}
+              settings.enabled ? "bg-orange-600" : "bg-gray-300"
+            } ${loading ? "opacity-50" : ""}`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                settings.enabled ? 'translate-x-6' : 'translate-x-1'
+                settings.enabled ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
@@ -243,11 +258,13 @@ const NotificationSettings = () => {
               </label>
               <select
                 value={settings.timezone}
-                onChange={(e) => handleChange('timezone', e.target.value)}
+                onChange={(e) => handleChange("timezone", e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
-                {timezones.map(tz => (
-                  <option key={tz} value={tz}>{tz}</option>
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
                 ))}
               </select>
             </div>
@@ -260,11 +277,13 @@ const NotificationSettings = () => {
               </label>
               <select
                 value={settings.language}
-                onChange={(e) => handleChange('language', e.target.value)}
+                onChange={(e) => handleChange("language", e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
-                {languages.map(lang => (
-                  <option key={lang.value} value={lang.value}>{lang.label}</option>
+                {languages.map((lang) => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -273,22 +292,30 @@ const NotificationSettings = () => {
             <div className="space-y-2">
               <label className="font-semibold text-gray-800">Quote Type</label>
               <div className="grid grid-cols-1 gap-2">
-                {quoteTypes.map(type => (
-                  <label key={type.value} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                {quoteTypes.map((type) => (
+                  <label
+                    key={type.value}
+                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="quoteType"
                       value={type.value}
                       checked={settings.quoteType === type.value}
-                      onChange={(e) => handleChange('quoteType', e.target.value)}
+                      onChange={(e) =>
+                        handleChange("quoteType", e.target.value)
+                      }
                       className="text-orange-600 focus:ring-orange-500"
                     />
                     <div>
                       <div className="font-medium">{type.label}</div>
                       <div className="text-sm text-gray-600">
-                        {type.value === 'random' && 'Get a different verse each day'}
-                        {type.value === 'sequential' && 'Read through the Gita systematically'}
-                        {type.value === 'themed' && 'Verses relevant to daily life challenges'}
+                        {type.value === "random" &&
+                          "Get a different verse each day"}
+                        {type.value === "sequential" &&
+                          "Read through the Gita systematically"}
+                        {type.value === "themed" &&
+                          "Verses relevant to daily life challenges"}
                       </div>
                     </div>
                   </label>
@@ -303,7 +330,7 @@ const NotificationSettings = () => {
                 disabled={loading}
                 className="w-full py-3 px-4 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Sending...' : 'Send Test Notification'}
+                {loading ? "Sending..." : "Send Test Notification"}
               </button>
             </div>
           </>
@@ -313,10 +340,21 @@ const NotificationSettings = () => {
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <h4 className="font-semibold text-blue-800 mb-2">How it works:</h4>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Daily quotes are generated using AI from authentic Bhagavad Gita verses</li>
-          <li>• Notifications include verse reference, translation, and practical guidance</li>
-          <li>• You can customize timing, language, and quote style preferences</li>
-          <li>• Enable browser notifications to receive quotes even when the app is closed</li>
+          <li>
+            • Daily quotes are generated using AI from authentic Bhagavad Gita
+            verses
+          </li>
+          <li>
+            • Notifications include verse reference, translation, and practical
+            guidance
+          </li>
+          <li>
+            • You can customize timing, language, and quote style preferences
+          </li>
+          <li>
+            • Enable browser notifications to receive quotes even when the app
+            is closed
+          </li>
         </ul>
       </div>
 
