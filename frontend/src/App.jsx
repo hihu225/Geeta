@@ -21,6 +21,7 @@ import { setupPushNotifications } from "./setupPushNotifications";
 import { messaging, getToken, onMessage } from "./firebase";
 import FCMToken from "./FCMToken";
 import NotificationSettings from "./NotificationSettings";
+import Notifications from "./Notifications";
 // Component to handle async token checking for root route
 const RootRedirect = () => {
   const [loading, setLoading] = useState(true);
@@ -39,10 +40,27 @@ const RootRedirect = () => {
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground message received: ", payload);
       
-      // Show notification or toast
+      // Show notification even when app is in foreground
       if (payload.notification) {
-        // You can use a toast library or custom notification
-        alert(`${payload.notification.title}: ${payload.notification.body}`);
+        // Create a custom notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const notification = new Notification(
+            payload.notification.title || '🕉️ Bhagavad Gita Wisdom',
+            {
+              body: payload.notification.body || 'New spiritual guidance available',
+              icon: '/favicon.ico',
+              data: payload.data
+            }
+          );
+
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+
+          // Auto close after 5 seconds
+          setTimeout(() => notification.close(), 5000);
+        }
       }
     });
 
@@ -103,6 +121,31 @@ const RootRedirect = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Listen for messages from service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'NOTIFICATION_CLICKED') {
+          // Navigate to notifications page
+          window.location.href = event.data.url;
+        }
+      });
+    }
+  }, []);
+
   return (
     <>
       <Router>
@@ -135,7 +178,7 @@ function App() {
 
           {/* Root route with async token checking */}
           <Route path="/" element={<RootRedirect />} />
-            <Route
+          <Route
   path="/notification-settings"
   element={
     <Layout>
@@ -143,6 +186,15 @@ function App() {
     </Layout>
   }
 />
+          <Route
+  path="/notifications"
+  element={
+    <Layout>
+      <Notifications />
+    </Layout>
+  }
+/>
+
           {/* 404 */}
           <Route
             path="*"

@@ -3,6 +3,7 @@ const express = require("express");
 const admin = require("../utils/firebaseAdmin");
 const auth = require("../middleware/auth");
 const User = require("../models/usermodels");
+const Notification = require("../models/notificationModels"); 
 const notificationService = require("../services/notificationService");
 
 const router = express.Router();
@@ -98,6 +99,8 @@ router.post("/send-quote", auth, async (req, res) => {
       customMessage
     );
 
+    console.log("Send quote result:", result);
+
     if (result.success) {
       res
         .status(200)
@@ -142,6 +145,64 @@ router.post("/send", auth, async (req, res) => {
   } catch (error) {
     console.error("Notification error:", error);
     res.status(500).json({ success: false, error });
+  }
+});
+
+// Backend routes for notifications management
+router.get('/user-notifications', auth, async (req, res) => {
+  try {
+    const notifications = await Notification.find({ userId: req.user.userId })
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    res.json({ success: true, notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/mark-read/:notificationId', auth, async (req, res) => {
+  try {
+    await Notification.findOneAndUpdate(
+      { _id: req.params.notificationId, userId: req.user.userId },
+      { isRead: true, readAt: new Date() }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/mark-all-read', auth, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user.userId, isRead: false },
+      { isRead: true, readAt: new Date() }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/delete/:notificationId', auth, async (req, res) => {
+  try {
+    await Notification.findOneAndDelete({
+      _id: req.params.notificationId,
+      userId: req.user.userId
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/clear-all', auth, async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.user.userId });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

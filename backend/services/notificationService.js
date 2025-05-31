@@ -2,6 +2,7 @@
 const admin = require("../utils/firebaseAdmin");
 const User = require("../models/usermodels");
 const geminiService = require("./geminiService");
+const moment = require('moment-timezone');
 
 class NotificationService {
   async sendDailyQuoteToUser(userId) {
@@ -11,14 +12,19 @@ class NotificationService {
         return { success: false, message: "User not eligible for notifications" };
       }
 
-      // Get quote from Gemini
-      const quoteData = await geminiService.getDailyQuote(
-        user.preferences.language,
-        user.preferences.quoteType
+      // Get quote from Gemini with fallback
+      let quoteData = await geminiService.getDailyQuote(
+        user.preferences?.language || 'english',
+        user.preferences?.quoteType || 'random'
       );
 
+      // If Gemini API fails, use fallback quote
       if (!quoteData.success) {
-        throw new Error("Failed to generate quote");
+        console.warn("Gemini API failed, using fallback quote");
+        quoteData = {
+          success: true,
+          quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47"
+        };
       }
 
       // Prepare notification message
@@ -30,7 +36,7 @@ class NotificationService {
         data: {
           type: "daily_quote",
           fullQuote: quoteData.quote,
-          language: user.preferences.language,
+          language: user.preferences?.language || 'english',
           timestamp: new Date().toISOString()
         },
         token: user.fcmToken
@@ -98,25 +104,33 @@ class NotificationService {
   }
 
   shouldSendNotification(user) {
-    const now = new Date();
-    const userTime = this.getUserCurrentTime(user.dailyQuotes.timezone);
-    const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
-    
-    const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
-    
-    // Check if current time matches scheduled time (within 5-minute window)
-    const currentHour = userTime.getHours();
-    const currentMinute = userTime.getMinutes();
-    
-    const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
-    const currentTotalMinutes = currentHour * 60 + currentMinute;
-    
-    const timeDiff = Math.abs(currentTotalMinutes - scheduledTotalMinutes);
-    
-    // Check if notification should be sent (within 5-minute window and not sent today)
-    const shouldSend = timeDiff <= 5 && !this.wasSentToday(user.dailyQuotes.lastSent);
-    
-    return shouldSend;
+    try {
+      const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
+      const timezone = user.dailyQuotes.timezone;
+      
+      // Get current time in user's timezone using moment
+      const userCurrentTime = moment().tz(timezone);
+      
+      const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
+      
+      const currentHour = userCurrentTime.hour();
+      const currentMinute = userCurrentTime.minute();
+      
+      const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
+      const currentTotalMinutes = currentHour * 60 + currentMinute;
+      
+      const timeDiff = Math.abs(currentTotalMinutes - scheduledTotalMinutes);
+      
+      // Check if notification should be sent (within 5-minute window and not sent today)
+      const shouldSend = timeDiff <= 5 && !this.wasSentToday(user.dailyQuotes.lastSent);
+      
+      console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDiff} minutes, Should send: ${shouldSend}`);
+      
+      return shouldSend;
+    } catch (error) {
+      console.error(`Error checking notification time for user ${user._id}:`, error);
+      return false;
+    }
   }
 
   wasSentToday(lastSent) {
@@ -129,7 +143,7 @@ class NotificationService {
   }
 
   getUserCurrentTime(timezone) {
-    return new Date().toLocaleString("en-US", { timeZone: timezone });
+    return moment().tz(timezone).toDate();
   }
 
   truncateText(text, maxLength) {

@@ -3,13 +3,36 @@ import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase';
 import { backend_url } from './utils/backend';
 import Cookies from 'js-cookie';
+
 const FCMToken = async () => {
   try {
-    // Request notification permission first
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.warn('Notification permission denied');
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications');
       return null;
+    }
+
+    // Request notification permission
+    const permission = await Notification.requestPermission();
+    console.log('Notification permission:', permission);
+
+    if (permission !== 'granted') {
+      console.warn('Notifications not allowed');
+      alert('Please enable notifications to receive daily Bhagavad Gita quotes!');
+      return null;
+    }
+
+    // Register service worker if not already registered
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Service Worker registered:', registration);
+        
+        // Wait for service worker to be ready
+        await navigator.serviceWorker.ready;
+      } catch (error) {
+        console.error('Service Worker registration failed:', error);
+      }
     }
 
     const currentToken = await getToken(messaging, {
@@ -19,11 +42,23 @@ const FCMToken = async () => {
     if (currentToken) {
       console.log('FCM Token:', currentToken);
 
-      // Save token to your backend
+      // Test notification
+      try {
+        const testNotification = new Notification('🕉️ Geeta GPT Ready!', {
+          body: 'You will now receive daily Bhagavad Gita wisdom',
+          icon: '/favicon.ico'
+        });
+        
+        setTimeout(() => testNotification.close(), 4000);
+      } catch (notifError) {
+        console.log('Test notification failed:', notifError);
+      }
+
+      // Save token to backend
       try {
         const authToken = Cookies.get('token');
         if (authToken) {
-          await fetch(`${backend_url}/api/notifications/save-token`, {
+          const response = await fetch(`${backend_url}/api/notifications/save-token`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -31,7 +66,12 @@ const FCMToken = async () => {
             },
             body: JSON.stringify({ token: currentToken }),
           });
-          console.log('FCM token saved to backend');
+
+          if (response.ok) {
+            console.log('FCM token saved to backend successfully');
+          } else {
+            console.error('Failed to save FCM token - Status:', response.status);
+          }
         }
       } catch (backendError) {
         console.error('Failed to save token to backend:', backendError);

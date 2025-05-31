@@ -156,6 +156,42 @@ const NotificationSettings = () => {
     }
   };
 
+  const testLocalNotification = () => {
+  console.log('Test notification function called');
+  console.log('Notification permission:', Notification.permission);
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const notification = new Notification('🕉️ Test Notification', {
+      body: 'This is a test notification from Geeta GPT',
+      icon: '/vite.svg', // Use existing favicon instead of non-existent icon
+      tag: 'test-notification',
+    });
+    console.log('Notification created:', notification);
+
+    // Add event listeners to debug
+    notification.onshow = () => {
+      console.log('Notification shown successfully!');
+    };
+
+    notification.onerror = (error) => {
+      console.error('Notification error:', error);
+    };
+
+    notification.onclose = () => {
+      console.log('Notification closed');
+    };
+
+    notification.onclick = () => {
+      console.log('Test notification clicked');
+      notification.close();
+    };
+
+  } else {
+    console.log('Permission status:', Notification.permission);
+    alert(`Notifications not permitted or not supported. Status: ${Notification.permission}`);
+  }
+};
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <div className="flex items-center gap-3 mb-6">
@@ -295,6 +331,16 @@ const NotificationSettings = () => {
           <li>• You can customize timing, language, and quote style preferences</li>
           <li>• Enable browser notifications to receive quotes even when the app is closed</li>
         </ul>
+      </div>
+
+      {/* Test Local Notification Button */}
+      <div className="mt-4">
+        <button
+          onClick={testLocalNotification}
+          className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Test Local Notification
+        </button>
       </div>
     </div>
   );
