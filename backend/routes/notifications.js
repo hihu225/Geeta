@@ -10,7 +10,6 @@ const router = express.Router();
 router.post("/save-token", auth, async (req, res) => {
   try {
     console.log("Incoming save-token request");
-    console.log("User ID:", req.user.id);
     console.log("Request body:", req.body);
 
     const { token } = req.body;
