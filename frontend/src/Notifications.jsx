@@ -33,12 +33,8 @@ const Notifications = () => {
       const response = await axios(`${backend_url}/api/notifications/user-notifications`, {
       });
 
-      if (response.ok) {
         const data = response.data;
         setNotifications(data.notifications || []);
-      } else {
-        console.error('Failed to fetch notifications');
-      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
