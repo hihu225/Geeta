@@ -5,7 +5,7 @@ import { backend_url } from "./utils/backend";
 import Cookies from "js-cookie";
 import axios from "axios";
 
-const FCMToken = async () => {
+const FCMToken = async (navigate = null) => {
   try {
     // Check if running on native platform
     if (Capacitor.isNativePlatform()) {
@@ -81,8 +81,17 @@ const FCMToken = async () => {
           console.log('Push notification received: ', notification);
         });
         
+        // Handle notification click - Navigate to Notifications page
         PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
           console.log('Push notification action performed', notification.actionId, notification.inputValue);
+          
+          // Navigate to Notifications page when notification is clicked
+          if (navigate) {
+            navigate('/notifications');
+          } else {
+            // Fallback for web - use window location
+            window.location.href = '/notifications';
+          }
         });
         
         // Set timeout to avoid hanging forever
@@ -109,7 +118,7 @@ const FCMToken = async () => {
     } else {
       // Fallback to web implementation for browsers
       console.log('Running on web platform, using original implementation');
-      return await getWebFCMToken();
+      return await getWebFCMToken(navigate);
     }
     
   } catch (err) {
@@ -119,10 +128,10 @@ const FCMToken = async () => {
 };
 
 // Original web implementation as fallback
-const getWebFCMToken = async () => {
+const getWebFCMToken = async (navigate = null) => {
   try {
     // Import Firebase messaging only for web
-    const { getToken } = await import("firebase/messaging");
+    const { getToken, onMessage } = await import("firebase/messaging");
     const { messaging } = await import("./firebase");
     
     // Request notification permission
@@ -158,12 +167,51 @@ const getWebFCMToken = async () => {
     if (currentToken) {
       console.log("FCM Token:", currentToken);
 
+      // Handle foreground messages (when app is open)
+      onMessage(messaging, (payload) => {
+        console.log('Message received in foreground: ', payload);
+        
+        // Show notification manually for foreground messages
+        if (Notification.permission === 'granted') {
+          const notification = new Notification(payload.notification?.title || 'New Message', {
+            body: payload.notification?.body || 'You have a new message',
+            icon: payload.notification?.icon || '/favicon.ico',
+            data: payload.data || {}
+          });
+          
+          // Handle click on foreground notification
+          notification.onclick = function(event) {
+            event.preventDefault();
+            notification.close();
+            
+            // Navigate to notifications page
+            if (navigate) {
+              navigate('/notifications');
+            } else {
+              window.location.href = '/notifications';
+            }
+          };
+        }
+      });
+
       // Test notification
       try {
         const testNotification = new Notification("🕉️ Geeta GPT Ready!", {
           body: "You will now receive daily Bhagavad Gita wisdom",
           icon: "/favicon.ico",
         });
+        
+        // Handle click on test notification
+        testNotification.onclick = function(event) {
+          event.preventDefault();
+          testNotification.close();
+          
+          if (navigate) {
+            navigate('/notifications');
+          } else {
+            window.location.href = '/notifications';
+          }
+        };
 
         setTimeout(() => testNotification.close(), 4000);
       } catch (notifError) {

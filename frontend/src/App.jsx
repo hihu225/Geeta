@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
   Link,
+  useNavigate,
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { StorageService } from "./utils/storage";
@@ -22,20 +23,26 @@ import { messaging, getToken, onMessage } from "./firebase";
 import FCMToken from "./FCMToken";
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
-// Component to handle async token checking for root route
-const RootRedirect = () => {
-  const [loading, setLoading] = useState(true);
-  const [hasToken, setHasToken] = useState(false);
+
+// Component to handle navigation-aware FCM setup
+const FCMSetup = () => {
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setupPushNotifications();
-  }, []);
+    // Initialize FCM with navigation function
+    const initializeFCM = async () => {
+      try {
+        await FCMToken(navigate);
+        console.log('FCM initialized with navigation');
+      } catch (error) {
+        console.error('FCM initialization failed:', error);
+      }
+    };
 
-  useEffect(() => {
-    FCMToken(); // Get and save FCM token
-  }, []);
+    initializeFCM();
+  }, [navigate]);
 
-  // Set up foreground message listener
+  // Set up foreground message listener with navigation
   useEffect(() => {
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground message received: ", payload);
@@ -56,6 +63,8 @@ const RootRedirect = () => {
           notification.onclick = () => {
             window.focus();
             notification.close();
+            // Navigate to notifications page when clicked
+            navigate('/notifications');
           };
 
           // Auto close after 5 seconds
@@ -65,6 +74,18 @@ const RootRedirect = () => {
     });
 
     return () => unsubscribe(); // Cleanup listener
+  }, [navigate]);
+
+  return null; // This component doesn't render anything
+};
+
+// Component to handle async token checking for root route
+const RootRedirect = () => {
+  const [loading, setLoading] = useState(true);
+  const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    setupPushNotifications();
   }, []);
 
   useEffect(() => {
@@ -120,6 +141,105 @@ const RootRedirect = () => {
   );
 };
 
+// Main App Routes component that has access to navigate
+const AppRoutes = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Listen for messages from service worker
+    if ('serviceWorker' in navigator) {
+      const handleMessage = (event) => {
+        if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
+          // Navigate to notifications page using React Router
+          navigate('/notifications');
+        }
+      };
+
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+
+      // Cleanup
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleMessage);
+      };
+    }
+  }, [navigate]);
+
+  return (
+    <>
+      {/* FCM Setup Component */}
+      <FCMSetup />
+      
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/delete-account" element={<DeleteAccount />} />
+        <Route path="/account-settings" element={<AccountSettings />} />
+        
+        {/* Protected Routes wrapped in Layout */}
+        <Route
+          path="/dashboard"
+          element={
+            <Layout>
+              <Dashboard />
+            </Layout>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <Layout>
+              <BhagavadGitaBot />
+            </Layout>
+          }
+        />
+
+        {/* Root route with async token checking */}
+        <Route path="/" element={<RootRedirect />} />
+        
+        <Route
+          path="/notification-settings"
+          element={
+            <Layout>
+              <NotificationSettings />
+            </Layout>
+          }
+        />
+        
+        <Route
+          path="/notifications"
+          element={
+            <Layout>
+              <Notifications />
+            </Layout>
+          }
+        />
+
+        {/* 404 */}
+        <Route
+          path="*"
+          element={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+                flexDirection: "column",
+              }}
+            >
+              <h1>404 - Page Not Found</h1>
+              <p>The page you're looking for doesn't exist.</p>
+            </div>
+          }
+        />
+      </Routes>
+    </>
+  );
+};
+
 function App() {
   useEffect(() => {
     // Register service worker
@@ -134,86 +254,10 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    // Listen for messages from service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'NOTIFICATION_CLICKED') {
-          // Navigate to notifications page
-          window.location.href = event.data.url;
-        }
-      });
-    }
-  }, []);
-
   return (
     <>
       <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/delete-account" element={<DeleteAccount />} />
-          <Route path="/account-settings" element={<AccountSettings />} />
-          
-          {/* Protected Routes wrapped in Layout */}
-          <Route
-            path="/dashboard"
-            element={
-              <Layout>
-                <Dashboard />
-              </Layout>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <Layout>
-                <BhagavadGitaBot />
-              </Layout>
-            }
-          />
-
-          {/* Root route with async token checking */}
-          <Route path="/" element={<RootRedirect />} />
-                    <Route
-  path="/notification-settings"
-  element={
-    <Layout>
-      <NotificationSettings />
-    </Layout>
-  }
-/>
-          <Route
-  path="/notifications"
-  element={
-    <Layout>
-      <Notifications />
-    </Layout>
-  }
-/>
-
-          {/* 404 */}
-          <Route
-            path="*"
-            element={
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100vh",
-                  flexDirection: "column",
-                }}
-              >
-                <h1>404 - Page Not Found</h1>
-                <p>The page you're looking for doesn't exist.</p>
-              </div>
-            }
-          />
-        </Routes>
+        <AppRoutes />
       </Router>
       <ToastContainer position="top-right" autoClose={3000} />
     </>
@@ -227,6 +271,20 @@ const Dashboard = () => {
       <Link to="/chat">
         <button style={{ padding: "10px 20px", fontSize: "16px" }}>
           Go to Chatbot
+        </button>
+      </Link>
+      <Link to="/notifications">
+        <button style={{ 
+          padding: "10px 20px", 
+          fontSize: "16px", 
+          marginLeft: "10px",
+          background: "#4CAF50",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer"
+        }}>
+          Notifications
         </button>
       </Link>
       <Link to="/logout">

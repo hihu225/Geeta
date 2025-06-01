@@ -26,7 +26,11 @@ messaging.onBackgroundMessage((payload) => {
     tag: 'geeta-notification',
     requireInteraction: false,
     silent: false,
-    data: payload.data || {},
+    data: {
+      ...payload.data,
+      url: '/notifications',
+      notificationId: payload.data?.notificationId || payload.data?.id || Date.now().toString()
+    },
     actions: [
       {
         action: 'open',
@@ -43,43 +47,88 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Handle notification clicks
+// Single notification click handler
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   
   event.notification.close();
+
+  // Handle different actions
+  if (event.action === 'dismiss') {
+    console.log('User dismissed notification');
+    return;
+  }
+
+  const notificationData = event.notification.data || {};
+  const notificationId = notificationData.notificationId || notificationData.id;
+  const urlFromData = notificationData.url;
+  const targetUrl = urlFromData || (notificationId 
+    ? `/notifications?notificationId=${notificationId}`
+    : '/notifications');
+
+  console.log('Attempting to navigate to:', targetUrl);
+
+  event.waitUntil(
+    clients.matchAll({ 
+      type: 'window', 
+      includeUncontrolled: true 
+    }).then((clientList) => {
+      console.log('Found clients:', clientList.length);
+      
+      // Check if app is already open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin)) {
+          console.log('App is open, focusing and sending message');
+          
+          // Send message to React app for navigation
+          client.postMessage({
+            type: 'NOTIFICATION_CLICKED',
+            notificationId,
+            url: targetUrl
+          });
+
+          return client.focus();
+        }
+      }
+
+      // If no client is open, open a new one
+      console.log('App is not open, opening new window');
+      if (clients.openWindow) {
+        return clients.openWindow(self.location.origin + targetUrl);
+      }
+    }).catch((error) => {
+      console.error('Error handling notification click:', error);
+      // Fallback: just open the origin
+      if (clients.openWindow) {
+        return clients.openWindow(self.location.origin + '/notifications');
+      }
+    })
+  );
+});
+
+// Handle notification close event
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification was closed:', event);
+  // You can track notification close events here if needed
+});
+
+// Listen for messages from the main app
+self.addEventListener('message', (event) => {
+  console.log('Service Worker received message:', event.data);
   
-  if (event.action === 'open' || !event.action) {
-    // Get notification ID from payload data
-    const notificationId = event.notification.data?.notificationId || event.notification.data?.id;
-    const targetUrl = notificationId 
-      ? `/notifications?notificationId=${notificationId}`
-      : '/notifications';
-    
-    event.waitUntil(
-      clients.matchAll({ type: 'window', includeUncontrolled: true })
-        .then((clientList) => {
-          // If app is already open, focus it and navigate
-          for (const client of clientList) {
-            if (client.url.includes(self.location.origin) && 'focus' in client) {
-              client.postMessage({
-                type: 'NOTIFICATION_CLICKED',
-                notificationId: notificationId,
-                url: targetUrl
-              });
-              return client.focus();
-            }
-          }
-          // Otherwise open new window
-          if (clients.openWindow) {
-            return clients.openWindow(targetUrl);
-          }
-        })
-    );
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
 
-// Handle notification close
-self.addEventListener('notificationclose', (event) => {
-  console.log('Notification closed:', event);
+// Handle service worker activation
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activated');
+  event.waitUntil(self.clients.claim());
+});
+
+// Handle service worker installation
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installed');
+  self.skipWaiting();
 });
