@@ -38,13 +38,13 @@ const FCMToken = async () => {
           
           try {
             // Save token to backend
-            const authToken = Cookies.get("token");
+            //const authToken = Cookies.get("token");
             const response = await axios.post(
               `${backend_url}/api/notifications/save-token`,
               { token: token.value },
-              {
-                headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-              }
+              // {
+              //   headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+              // }
             );
             
             if (response.status === 200) {

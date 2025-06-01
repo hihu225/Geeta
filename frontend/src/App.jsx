@@ -178,8 +178,22 @@ function App() {
 
           {/* Root route with async token checking */}
           <Route path="/" element={<RootRedirect />} />
-<Route path="/notification-settings" element={<NotificationSettings />} />
-<Route path="/notifications" element={<Notifications />} />
+                    <Route
+  path="/notification-settings"
+  element={
+    <Layout>
+      <NotificationSettings />
+    </Layout>
+  }
+/>
+          <Route
+  path="/notifications"
+  element={
+    <Layout>
+      <Notifications />
+    </Layout>
+  }
+/>
 
           {/* 404 */}
           <Route
