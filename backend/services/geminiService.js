@@ -55,13 +55,14 @@ class GeminiService {
 3. Give a clear, beautiful translation in ${language}
 4. Offer practical wisdom that applies to daily modern challenges
 
-**Output Format:**
-**Verse:** [Chapter.Verse Number]
-**Sanskrit:** [Authentic Sanskrit verse]
-**Translation:** [Clear, inspiring translation in ${language}]
-**Today's Wisdom:** [2-3 sentences of practical guidance for applying this wisdom in daily life, addressing common modern concerns like stress, relationships, work, or personal growth]
+**Output Format**:
+Verse: [${this.currentChapter}.${this.currentVerse}]
+Sanskrit: [Authentic Sanskrit verse from Chapter ${this.currentChapter}, Verse ${this.currentVerse}]
+Translation: [Clear and inspiring translation in ${language}]
+Today's Wisdom: [2–3 concise sentences offering practical guidance on applying this verse in daily life, addressing common modern challenges such as stress, relationships, work, or personal growth]
 
 ${languageInstructions.additional}
+
 
 Remember: Focus on verses that offer hope, guidance, and practical wisdom for someone seeking spiritual and personal growth.`;
   }
@@ -81,12 +82,20 @@ Remember: Focus on verses that offer hope, guidance, and practical wisdom for so
 **Language:** ${languageInstructions.primary}
 
 **Output Format:**
-**Verse:** ${this.currentChapter}.${this.currentVerse}
-**Sanskrit:** [Exact Sanskrit text for Chapter ${this.currentChapter}, Verse ${this.currentVerse}]
-**Translation:** [Accurate translation in ${language}]
-**Daily Reflection:** [3-4 sentences explaining: 1) The context of this verse in the chapter, 2) Its deeper spiritual meaning, 3) How to apply this teaching in daily life]
+Verse: ${this.currentChapter}.${this.currentVerse}
+Sanskrit: [Provide the exact Sanskrit text for Chapter ${this.currentChapter}, Verse ${this.currentVerse}]
+Translation: [Provide an accurate and fluent translation in ${language}]
+Daily Reflection:
+
+Context: Explain the situational or narrative context of this verse within the chapter.
+
+Spiritual Meaning: Elaborate on the deeper spiritual or philosophical significance of this verse.
+
+Practical Application: Suggest how one can apply the teachings of this verse in everyday life, with clear and actionable advice.
 
 ${languageInstructions.additional}
+
+
 
 **Important:** This is part of a sequential study, so connect this verse to the overall flow of Krishna's teachings. Make it meaningful for someone following the Gita systematically.`;
   }
@@ -117,18 +126,28 @@ ${languageInstructions.additional}
 
 **Language:** ${languageInstructions.primary}
 
-**Output Format:**
-**Today's Challenge:** ${randomTheme}
-**Verse:** [Chapter.Verse of most relevant Bhagavad Gita verse]
-**Sanskrit:** [Authentic Sanskrit text]
-**Translation:** [Clear, comforting translation in ${language}]
-**Practical Guidance:** [4-5 sentences providing: 1) Why this verse addresses the challenge, 2) Specific steps to apply this wisdom, 3) What positive changes to expect, 4) A gentle reminder or affirmation]
+**Output Format**:
+Today's Challenge: ${randomTheme}
+Verse: [${this.currentChapter}.${this.currentVerse}]
+Sanskrit: [Authentic Sanskrit text]
+Translation: [Clear, comforting translation in ${language}]
+
+Practical Guidance:
+
+Explain why this verse is relevant to today’s challenge.
+
+Suggest specific, practical steps to apply the verse’s wisdom.
+
+Describe positive changes to expect from following this guidance.
+
+Offer a gentle reminder or uplifting affirmation to inspire hope and perseverance.
 
 ${languageInstructions.additional}
 
-**Tone:** Compassionate, wise, and encouraging. Write as if speaking to a dear friend who needs both spiritual wisdom and practical help.`;
+Tone: Compassionate, wise, and encouraging — as if speaking to a dear friend seeking both spiritual insight and practical support.
   }
-
+  `; 
+  }
   getLanguageInstructions(language) {
     const instructions = {
       english: {
@@ -169,15 +188,36 @@ Provide personalized spiritual guidance using the most relevant Bhagavad Gita ve
 **STRICT FORMATTING REQUIREMENTS:**
 - Use exactly these headers: **Your Situation:**, **Krishna's Guidance:**, **Verse:**, **Sanskrit:**, **Translation:**, **Personal Message:**
 
-**Output Format:**
-**Your Situation:** [Acknowledge their situation in 1-2 compassionate sentences]
-**Krishna's Guidance:** [Explain why this specific verse is perfect for their situation]
-**Verse:** [Chapter.Verse of the most relevant verse]
-**Sanskrit:** [Authentic Sanskrit text]
-**Translation:** [Clear, relevant English translation]
-**Personal Message:** [4-5 sentences of personalized guidance that: 1) Directly addresses their specific situation, 2) Offers practical steps they can take, 3) Provides encouragement and hope, 4) Reminds them of their inner strength and divine nature]
+**Output Format**:
+Your Situation:
+[Acknowledge their current situation in 1–2 compassionate sentences, showing deep understanding and empathy.]
 
-**Tone:** Write as a caring mentor who truly understands their struggle and offers both spiritual wisdom and practical support. Be specific to their situation, not generic.
+Krishna's Guidance:
+[Explain why this particular verse is especially relevant and helpful for their situation, connecting the verse’s wisdom directly to their experience.]
+
+Verse:
+[${this.currentChapter}.${this.currentVerse}]
+
+Sanskrit:
+[Authentic Sanskrit text from the specified verse.]
+
+Translation:
+[Clear, meaningful English translation that relates to their circumstances.]
+
+Personal Message:
+[4–5 sentences offering personalized guidance that:
+
+Addresses their unique challenges directly,
+
+Suggests practical, actionable steps they can take,
+
+Provides encouragement and hope,
+
+Reminds them of their inner strength and divine nature.]
+
+Tone:
+Write with the warmth and insight of a caring mentor who truly understands their struggle, blending spiritual wisdom with compassionate, practical support. Avoid generic advice—be specific and heartfelt.
+
 
 **Important:** Choose a verse that directly relates to their specific challenge, not just a general inspirational quote.`;
       
