@@ -15,6 +15,16 @@ class NotificationService {
         return { success: false, message: "User not eligible for notifications" };
       }
 
+      // CRITICAL: Check if already sent today before doing anything else
+      if (this.wasSentToday(user.dailyQuotes.lastSent)) {
+        console.log(`Daily quote already sent today for user ${userId}`);
+        return { 
+          success: false, 
+          message: "Daily quote already sent today",
+          alreadySent: true 
+        };
+      }
+
       // Get quote from Gemini with fallback
       let quoteData = await geminiService.getDailyQuote(
         user.preferences?.language || 'english',
@@ -30,7 +40,12 @@ class NotificationService {
         };
       }
 
-      // Create notification record in database FIRST
+      // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
+      await User.findByIdAndUpdate(userId, {
+        'dailyQuotes.lastSent': new Date()
+      });
+
+      // Create notification record in database
       notificationRecord = new Notification({
         userId: user._id,
         title: "🕉️ Daily Bhagavad Gita Wisdom",
@@ -42,7 +57,8 @@ class NotificationService {
           quoteType: user.preferences?.quoteType || 'random',
           metadata: {
             generatedBy: 'gemini',
-            isScheduled: true
+            isScheduled: true,
+            sentDate: new Date().toISOString().split('T')[0] // Store date for tracking
           }
         },
         deliveryStatus: 'pending',
@@ -63,7 +79,7 @@ class NotificationService {
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
           timestamp: new Date().toISOString(),
-          notificationId: notificationRecord._id.toString() // Add notification ID for tracking
+          notificationId: notificationRecord._id.toString()
         },
         token: user.fcmToken
       };
@@ -71,15 +87,10 @@ class NotificationService {
       try {
         // Send FCM notification
         const response = await admin.messaging().send(message);
-        console.log(`FCM notification sent: ${response}`);
+        console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
 
         // Update notification record as delivered
         await notificationRecord.markAsDelivered(response);
-
-        // Update user's last sent timestamp
-        await User.findByIdAndUpdate(userId, {
-          'dailyQuotes.lastSent': new Date()
-        });
 
         return {
           success: true,
@@ -91,7 +102,7 @@ class NotificationService {
       } catch (fcmError) {
         console.error(`FCM delivery failed for user ${userId}:`, fcmError);
         
-        // Mark notification as failed
+        // Mark notification as failed but don't reset lastSent
         await notificationRecord.markAsFailed(fcmError.message);
         
         return {
@@ -132,8 +143,9 @@ class NotificationService {
       const results = [];
       
       for (const user of users) {
-        // Check if it's time to send notification for this user
-        if (this.shouldSendNotification(user)) {
+        // Check if it's time to send notification for this user AND not sent today
+        if (this.shouldSendNotification(user) && !this.wasSentToday(user.dailyQuotes.lastSent)) {
+          console.log(`Sending notification to user ${user._id} (${user.email})`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
             userId: user._id,
@@ -142,17 +154,21 @@ class NotificationService {
           });
           
           // Add delay between notifications to avoid rate limiting
-          await this.delay(1000);
+          await this.delay(2000); // Increased delay to 2 seconds
+        } else {
+          console.log(`Skipping user ${user._id}: Either not time or already sent today`);
         }
       }
 
       const successCount = results.filter(r => r.success).length;
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully`);
+      const skippedCount = users.length - results.length;
+      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped`);
 
       return {
         success: true,
         totalUsers: users.length,
         sentNotifications: successCount,
+        skippedUsers: skippedCount,
         results
       };
     } catch (error) {
@@ -189,7 +205,7 @@ class NotificationService {
         userId: user._id,
         title: "🕉️ Bhagavad Gita Wisdom",
         body: this.truncateText(quoteData.quote, 100) + "...",
-        type: customMessage ? "system" : "daily_quote",
+        type: customMessage ? "system" : "instant_quote",
         data: {
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
@@ -201,7 +217,7 @@ class NotificationService {
           }
         },
         deliveryStatus: 'pending',
-        priority: 'high' // Immediate notifications have higher priority
+        priority: 'high'
       });
 
       await notificationRecord.save();
@@ -222,8 +238,6 @@ class NotificationService {
 
       try {
         const response = await admin.messaging().send(message);
-        
-        // Mark as delivered
         await notificationRecord.markAsDelivered(response);
         
         return { 
@@ -232,7 +246,6 @@ class NotificationService {
           notificationId: notificationRecord._id 
         };
       } catch (fcmError) {
-        // Mark as failed
         await notificationRecord.markAsFailed(fcmError.message);
         
         return { 
@@ -335,7 +348,7 @@ class NotificationService {
         }
 
         // Add delay to avoid rate limiting
-        await this.delay(500);
+        await this.delay(1000);
       }
 
       return {
@@ -395,7 +408,7 @@ class NotificationService {
           });
         }
 
-        await this.delay(1000); // Longer delay for retries
+        await this.delay(1000);
       }
 
       return {
@@ -450,9 +463,9 @@ class NotificationService {
       
       const timeDiff = Math.abs(currentTotalMinutes - scheduledTotalMinutes);
       
-      // Check if notification should be sent (within 1-minute window and not sent today)
-      const shouldSend = timeDiff <= 2;
-      // && !this.wasSentToday(user.dailyQuotes.lastSent);
+      // FIXED: Check if notification should be sent (within 5-minute window only)
+      // Removed the date check from here since it's handled in sendDailyQuotesToAllUsers
+      const shouldSend = timeDiff <= 5;
       
       console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDiff} minutes, Should send: ${shouldSend}`);
       
@@ -469,7 +482,14 @@ class NotificationService {
     const today = new Date();
     const lastSentDate = new Date(lastSent);
     
-    return today.toDateString() === lastSentDate.toDateString();
+    // Compare dates in YYYY-MM-DD format to avoid timezone issues
+    const todayString = today.toISOString().split('T')[0];
+    const lastSentString = lastSentDate.toISOString().split('T')[0];
+    
+    const wasSent = todayString === lastSentString;
+    console.log(`Checking if sent today: Today=${todayString}, LastSent=${lastSentString}, WasSent=${wasSent}`);
+    
+    return wasSent;
   }
 
   getUserCurrentTime(timezone) {
@@ -483,6 +503,31 @@ class NotificationService {
 
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Additional helper method to check and prevent duplicate notifications
+  async checkDuplicateNotifications(userId) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const todayNotifications = await Notification.find({
+        userId: userId,
+        type: 'daily_quote',
+        createdAt: {
+          $gte: new Date(today + 'T00:00:00.000Z'),
+          $lt: new Date(today + 'T23:59:59.999Z')
+        }
+      });
+
+      return {
+        hasDuplicates: todayNotifications.length > 0,
+        count: todayNotifications.length,
+        notifications: todayNotifications
+      };
+    } catch (error) {
+      console.error('Error checking duplicate notifications:', error);
+      return { hasDuplicates: false, count: 0, notifications: [] };
+    }
   }
 }
 
