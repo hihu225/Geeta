@@ -23,7 +23,7 @@ import { messaging, getToken, onMessage } from "./firebase";
 import FCMToken from "./FCMToken";
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
-
+import { UserProvider } from "./UserContext";
 // Component to handle navigation-aware FCM setup
 const FCMSetup = () => {
   const navigate = useNavigate();
@@ -241,6 +241,7 @@ const AppRoutes = () => {
 };
 
 function App() {
+  
   useEffect(() => {
     // Register service worker
     if ('serviceWorker' in navigator) {
@@ -255,12 +256,14 @@ function App() {
   }, []);
 
   return (
+    <UserProvider>
     <>
       <Router>
         <AppRoutes />
       </Router>
       <ToastContainer position="top-right" autoClose={3000} />
     </>
+    </UserProvider>
   );
 }
 

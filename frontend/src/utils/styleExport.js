@@ -548,7 +548,25 @@ voiceButton : {
                 cursor: 'pointer',
                 fontSize: '0.9rem',
   },
-  
+    greeting: {
+  fontSize: '18px',
+  color: theme === "light" ? '#8B0000' : '#FFD700',        // Dark red in light, gold in dark
+  fontWeight: '600',
+  marginTop: '12px',
+  marginBottom: '24px',
+  lineHeight: 1.5,
+  letterSpacing: '0.03em',
+  textAlign: 'center',
+  fontStyle: 'italic',
+  padding: '4px 12px',
+  borderRadius: '8px',
+  textShadow: theme === "dark" 
+    ? '0 0 8px rgba(255, 215, 0, 0.7)'    // stronger gold glow in dark mode
+    : '1px 1px 2px rgba(139, 0, 0, 0.3)', // soft shadow in light mode for contrast
+},
+
+
+
     // Enhanced view more button with better hover effects and mobile sizing
   viewMoreButton: {
     backgroundColor: theme === "light" ? "#B8860B" : "#CD853F",

@@ -16,6 +16,7 @@ import React, {
   useRef,
   createContext,
   useReducer,
+  useContext,
 } from "react";
 import ExportChats from "./components/exportChats.jsx";
 import { FaRegPaperPlane, FaOm, FaBookOpen, FaHeart } from "react-icons/fa";
@@ -34,7 +35,7 @@ import ThemeDetails from "./ThemeDetails.jsx";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-
+import {UserContext} from "./UserContext.jsx";
 const REACT_APP_API_URL = import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
   try {
@@ -71,6 +72,18 @@ const BhagavadGitaBot = () => {
       date.toLocaleDateString()
     );
   };
+  const getISTGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return "Good Morning";
+  } else if (hour >= 12 && hour < 17) {
+    return "Good Afternoon";  
+  } else if (hour >= 17 && hour < 21) {
+    return "Good Evening";
+  } else {
+    return "Good Night";
+  }
+};
 
   const handleShare = async (chatId) => {
     try {
@@ -1532,7 +1545,8 @@ const BhagavadGitaBot = () => {
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [themeData, setThemeData] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
-  // Add ref for auto-scrolling
+  // Add ref for auto-
+  const { user } = useContext(UserContext);
   const messagesEndRef = useRef(null);
   useEffect(() => {
     const fetchChats = async () => {
@@ -1822,11 +1836,15 @@ const BhagavadGitaBot = () => {
             Account Settings
           </button>
           <h1 style={styles.title}>
-            <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
-          </h1>
-          <p style={styles.subtitle}>
-            Seek timeless guidance from Lord Krishna's teachings
-          </p>
+  <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
+</h1>
+<p style={styles.subtitle}>
+  Seek timeless guidance from Lord Krishna's teachings
+</p>
+<p style={styles.greeting}>
+  {getISTGreeting()}, {user?.name || "seeker of wisdom"}! 🙏
+</p>
+
 
           <div style={styles.geetaQuote}>{currentQuote}</div>
           <button
