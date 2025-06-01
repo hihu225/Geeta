@@ -178,22 +178,8 @@ function App() {
 
           {/* Root route with async token checking */}
           <Route path="/" element={<RootRedirect />} />
-          <Route
-  path="/notification-settings"
-  element={
-    <Layout>
-      <NotificationSettings />
-    </Layout>
-  }
-/>
-          <Route
-  path="/notifications"
-  element={
-    <Layout>
-      <Notifications />
-    </Layout>
-  }
-/>
+<Route path="/notification-settings" element={<NotificationSettings />} />
+<Route path="/notifications" element={<Notifications />} />
 
           {/* 404 */}
           <Route
@@ -245,16 +231,6 @@ const Dashboard = () => {
           Logout
         </button>
       </Link>
-      <Link to="/notification-settings">
-  <button style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px" }}>
-    Notification Settings
-  </button>
-</Link>
-<Link to="/notifications">
-  <button style={{ padding: "10px 20px", fontSize: "16px", marginLeft: "10px" }}>
-    Notifications
-  </button>
-</Link>
     </div>
   );
 };

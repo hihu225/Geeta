@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft,Bell, Settings } from 'lucide-react';
+import NotificationSettings from "./NotificationSettings";
+import Notifications from "./Notifications";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -12,6 +14,24 @@ const AccountSettings = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
+  const [notifications, setNotifications] = useState([
+  {
+    id: 1,
+    title: "Daily Wisdom Reminder",
+    message: "Time for your daily Bhagavad Gita verse reflection",
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    read: false,
+    type: "wisdom"
+  },
+  {
+    id: 2,
+    title: "Meditation Session Complete",
+    message: "You've completed your 15-minute morning meditation",
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+    read: true,
+    type: "achievement"
+  }
+]);
   // Avatar options inspired by Bhagavad Gita and Hindu philosophy
   const avatarOptions = [
     { icon: '🕉️', name: 'Om' },
@@ -661,7 +681,17 @@ const handleSubmitFeedback = () => {
     toast?.("Please share your thoughts before submitting.", { type: 'warning' });
   }
 };
+const handleNotificationSettings = () => {
+  navigate('/notification-settings');
+};
 
+const handleViewNotifications = () => {
+  navigate('/notifications');
+};
+
+const getUnreadNotificationCount = () => {
+  return notifications.filter(notif => !notif.read).length;
+};
 const handleCloseModal = (setter) => {
   setter(false);
 };
@@ -713,6 +743,70 @@ const handleCloseModal = (setter) => {
             </div>
           </div>
         </div>
+        <div style={styles.supportSection}>
+  <h2 style={styles.sectionTitle}>Notifications & Alerts</h2>
+  <div style={styles.supportGrid}>
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handleNotificationSettings}
+    >
+      <span style={styles.supportIcon}><Settings size={32} color="#9a3412" /></span>
+      <div style={styles.supportTitle}>Notification Settings</div>
+      <div style={styles.supportDescription}>
+        Customize your spiritual reminders and guidance alerts
+      </div>
+    </div>
+
+    <div 
+      style={styles.supportCard} 
+      className="support-card"
+      onClick={handleViewNotifications}
+    >
+      <span style={styles.supportIcon}>
+        <Bell size={32} color="#9a3412" />
+        {getUnreadNotificationCount() > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            backgroundColor: '#f97316',
+            color: 'white',
+            borderRadius: '50%',
+            width: '20px',
+            height: '20px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold'
+          }}>
+            {getUnreadNotificationCount()}
+          </span>
+        )}
+      </span>
+      <div style={styles.supportTitle}>
+        View Notifications
+        {getUnreadNotificationCount() > 0 && (
+          <span style={{
+            marginLeft: '8px',
+            backgroundColor: '#f97316',
+            color: 'white',
+            borderRadius: '12px',
+            padding: '2px 8px',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>
+            {getUnreadNotificationCount()}
+          </span>
+        )}
+      </div>
+      <div style={styles.supportDescription}>
+        Check your recent spiritual insights and reminders
+      </div>
+    </div>
+  </div>
+</div>
         <div style={styles.supportSection}>
   <h2 style={styles.sectionTitle}>Support & Information</h2>
   <div style={styles.supportGrid}>
