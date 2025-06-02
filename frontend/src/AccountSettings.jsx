@@ -765,7 +765,7 @@ const handleCloseModal = (setter) => {
     >
       <span style={styles.supportIcon}>
         <Bell size={32} color="#9a3412" />
-        {getUnreadNotificationCount() > 0 && (
+        {getUnreadNotificationCount()-1 > 0 && (
           <span style={{
             position: 'absolute',
             top: '8px',
@@ -787,7 +787,7 @@ const handleCloseModal = (setter) => {
       </span>
       <div style={styles.supportTitle}>
         View Notifications
-        {getUnreadNotificationCount() > 0 && (
+        {getUnreadNotificationCount()-1 > 0 && (
           <span style={{
             marginLeft: '8px',
             backgroundColor: '#f97316',
