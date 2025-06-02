@@ -30,7 +30,7 @@ class NotificationService {
         user.preferences?.language || 'english',
         user.preferences?.quoteType || 'random'
       );
-
+      console.log("Gemini Quote Data:", quoteData);
       // If Gemini API fails, use fallback quote
       if (!quoteData.success) {
         console.warn("Gemini API failed, using fallback quote");
