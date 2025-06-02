@@ -50,7 +50,7 @@ class GeminiService {
       
       return {
         success: true,
-        quote: rawText,
+        quote: this.cleanFormattedText(rawText), // Clean the raw text
         parsed: parsedQuote,
         timestamp: new Date(),
         type: quoteType,
@@ -60,6 +60,15 @@ class GeminiService {
       console.error("Gemini API Error:", error);
       return this.getFallbackQuote();
     }
+  }
+
+  // Add method to clean formatted text and remove stars
+  cleanFormattedText(text) {
+    return text
+      .replace(/\*\*/g, '') // Remove all ** formatting
+      .replace(/\*([^*]+)\*/g, '$1') // Remove single * formatting
+      .replace(/\n\s*\n/g, '\n') // Clean up extra newlines
+      .trim();
   }
 
   getRandomQuotePrompt(language) {
@@ -208,11 +217,11 @@ Generate the themed quote now:`;
       },
       gujarati: {
         primary: "બધા અનુવાદ અને જ્ઞાન સુંદર ગુજરાતીમાં આપો",
-        additional: "આધુનિક ગુજરાતી ભાષીઓ માટે પ્રેરણાદાયક અને સુલભ ભાષાનો ઉપયોગ કરો। કઠિન શબ્દોથી બચો।"
+        additional: "આધુનિક ગુજરાતી ભાષીઓ માટે પ્રેરણાદાયક અને સુલભ ભાષાનો ઉપયોગ કરો. કઠિન શબ્દોથી બચો."
       },
       tamil: {
         primary: "அனைத்து மொழிபெயர்ப்பு மற்றும் ஞானத்தையும் அழகான தமிழில் வழங்கவும்",
-        additional: "நவீன தமிழ் பேசுபவர்களுக்கு ஊக்கமளிக்கும் மற்றும் அணுகக்கூடிய மொழியைப் பயன்படுத்தவும். கடினமான சொற்களைத் தவிர்க்கவும்।"
+        additional: "நவீன தமிழ் பேசுபவர்களுக்கு ஊக்கமளிக்கும் மற்றும் அணுகக்கூடிய மொழியைப் பயன்படுத்தவும். கடினமான சொற்களைத் தவிர்க்கவும்."
       }
     };
 
@@ -259,7 +268,7 @@ Generate the personalized quote now:`;
       
       return {
         success: true,
-        quote: rawText,
+        quote: this.cleanFormattedText(rawText), // Clean the raw text
         parsed: parsedQuote,
         personalized: true,
         timestamp: new Date()
@@ -304,7 +313,7 @@ Generate the situational wisdom now:`;
       
       return {
         success: true,
-        quote: rawText,
+        quote: this.cleanFormattedText(rawText), // Clean the raw text
         parsed: parsedQuote,
         situational: true,
         timestamp: new Date()
@@ -363,7 +372,7 @@ Generate the thematic quote now:`;
       
       return {
         success: true,
-        quote: rawText,
+        quote: this.cleanFormattedText(rawText), // Clean the raw text
         parsed: parsedQuote,
         theme: theme,
         timestamp: new Date()
@@ -526,9 +535,12 @@ Generate the thematic quote now:`;
 
     const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
     
+    // Create formatted response without stars
+    const formattedQuote = `Verse: ${randomQuote.verse}\nSanskrit: ${randomQuote.sanskrit}\nTranslation: ${randomQuote.translation}\nToday's Wisdom: ${randomQuote.wisdom}`;
+    
     return {
       success: false,
-      quote: `**Verse:** ${randomQuote.verse}\n**Sanskrit:** ${randomQuote.sanskrit}\n**Translation:** ${randomQuote.translation}\n**Today's Wisdom:** ${randomQuote.wisdom}`,
+      quote: formattedQuote, // Already clean, no stars
       parsed: {
         verse: randomQuote.verse,
         sanskrit: randomQuote.sanskrit,
