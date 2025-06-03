@@ -72,18 +72,21 @@ const BhagavadGitaBot = () => {
       date.toLocaleDateString()
     );
   };
-  const getISTGreeting = () => {
+
+const getISTGreeting = () => {
   const hour = new Date().getHours();
+
   if (hour >= 5 && hour < 12) {
     return "Good Morning";
   } else if (hour >= 12 && hour < 17) {
-    return "Good Afternoon";  
+    return "Good Afternoon";
   } else if (hour >= 17 && hour < 21) {
     return "Good Evening";
   } else {
-    return "Good Night";
+    return "Peaceful Night";
   }
 };
+
 
   const handleShare = async (chatId) => {
     try {
@@ -1574,24 +1577,53 @@ const BhagavadGitaBot = () => {
     }
   }, [chats]);
 
-  const getRandomQuote = () => {
-    const vedicQuotes = [
-      "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन॥ - BG 2.47",
-      "योगः कर्मसु कौशलम्॥ - BG 2.50",
-      "सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज॥ - BG 18.66",
-      "विद्या विनय संपन्ने ब्राह्मणे गवि हस्तिनि॥ - BG 5.18",
-      "न हि कश्चित्क्षणमपि जातु तिष्ठत्यकर्मकृत्॥ - BG 3.5",
-      "उद्धरेदात्मनाऽत्मानं नात्मानमवसादयेत्॥ - BG 6.5",
-      "मन: प्रसाद: सौम्यत्वं मौनमात्मविनिग्रह:॥ - BG 17.16",
-      "ज्ञानेन तु तदज्ञानं येषां नाशितमात्मन:॥ - BG 5.16",
-      "न त्वेवाहं जातु नासं न त्वं नेमे जनाधिपा:॥ - BG 2.12",
-      "श्रीभगवानुवाच: समये मृत्यु: च य: स्मरन् मम एव एष्यति॥ - BG 8.5",
-    ];
+  const vedicQuotes = [
+  {
+    verse: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन॥ - BG 2.47",
+    meaning: "You have the right to perform your duties, but not to the fruits of your actions."
+  },
+  {
+    verse: "योगः कर्मसु कौशलम्॥ - BG 2.50",
+    meaning: "Yoga is skill in action."
+  },
+  {
+    verse: "सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज॥ - BG 18.66",
+    meaning: "Abandon all varieties of dharma and simply surrender unto Me."
+  },
+  {
+    verse: "विद्या विनय संपन्ने ब्राह्मणे गवि हस्तिनि॥ - BG 5.18",
+    meaning: "The wise see all beings equally — a learned Brahmin, a cow, an elephant, even a dog or outcaste."
+  },
+  {
+    verse: "न हि कश्चित्क्षणमपि जातु तिष्ठत्यकर्मकृत्॥ - BG 3.5",
+    meaning: "No one can remain without action even for a moment."
+  },
+  {
+    verse: "उद्धरेदात्मनाऽत्मानं नात्मानमवसादयेत्॥ - BG 6.5",
+    meaning: "Elevate yourself by your own self, do not degrade yourself."
+  },
+  {
+    verse: "मन: प्रसाद: सौम्यत्वं मौनमात्मविनिग्रह:॥ - BG 17.16",
+    meaning: "Serenity of mind, gentleness, silence, self-restraint are mental austerities."
+  },
+  {
+    verse: "ज्ञानेन तु तदज्ञानं येषां नाशितमात्मन:॥ - BG 5.16",
+    meaning: "For those whose ignorance is destroyed by knowledge, that knowledge reveals the Supreme."
+  },
+  {
+    verse: "न त्वेवाहं जातु नासं न त्वं नेमे जनाधिपा:॥ - BG 2.12",
+    meaning: "Never was there a time when I did not exist, nor you, nor all these kings."
+  },
+  {
+    verse: "श्रीभगवानुवाच: समये मृत्यु: च य: स्मरन् मम एव एष्यति॥ - BG 8.5",
+    meaning: "Whoever remembers Me at the time of death comes to Me alone."
+  }
+];
+const getRandomQuote = () => {
+  const random = vedicQuotes[Math.floor(Math.random() * vedicQuotes.length)];
+  setCurrentQuote(random);
+};
 
-    setCurrentQuote(
-      vedicQuotes[Math.floor(Math.random() * vedicQuotes.length)]
-    );
-  };
   const moreSound = new Audio("/more.mp3");
   const startSound = new Audio("/start.mp3");
   const stopSound = new Audio("/end.mp3");
@@ -1846,7 +1878,18 @@ const BhagavadGitaBot = () => {
 </p>
 
 
-          <div style={styles.geetaQuote}>{currentQuote}</div>
+          <div style={styles.geetaQuote}>
+  <div style={{ marginBottom: "8px" }}>{currentQuote?.verse}</div>
+  <div style={{
+    fontSize: "0.95rem",
+    fontWeight: "normal",
+    color: theme === "light" ? "#333" : "#ccc",
+    fontStyle: "italic"
+  }}>
+    {currentQuote?.meaning}
+  </div>
+</div>
+
           <button
             className="themes-button"
             onClick={() => setShowThemeSection(!showThemeSection)}

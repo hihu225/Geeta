@@ -19,34 +19,42 @@ const AccountSettings = () => {
     id: 1,
     title: "Daily Wisdom Reminder",
     message: "Time for your daily Bhagavad Gita verse reflection",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    read: false,
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    read: true, 
     type: "wisdom"
   },
   {
     id: 2,
-    title: "Meditation Session Complete",
+    title: "Meditation Session Complete", 
     message: "You've completed your 15-minute morning meditation",
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
     read: true,
     type: "achievement"
   }
 ]);
-  // Avatar options inspired by Bhagavad Gita and Hindu philosophy
   const avatarOptions = [
-    { icon: '🕉️', name: 'Om' },
-    { icon: '🪷', name: 'Lotus' },
-    { icon: '🔱', name: 'Trishul' },
-    { icon: '📿', name: 'Mala' },
-    { icon: '🐚', name: 'Conch' },
-    { icon: '🌸', name: 'Flower' },
-    { icon: '🌟', name: 'Star' },
-    { icon: '🔥', name: 'Sacred Fire' },
-    { icon: '🌙', name: 'Moon' },
-    { icon: '☀️', name: 'Sun' },
-    { icon: '🦚', name: 'Peacock' },
-    { icon: '🎋', name: 'Bamboo' }
-  ];
+  { icon: '🕉️', name: 'Om' },
+  { icon: '🪷', name: 'Lotus' },
+  { icon: '🔱', name: 'Trishul' },
+  { icon: '🐚', name: 'Conch' },
+  { icon: '🌸', name: 'Flower' },
+  { icon: '🌟', name: 'Star' },
+  { icon: '🔥', name: 'Sacred Fire' },
+  { icon: '🌙', name: 'Moon' },
+  { icon: '☀️', name: 'Sun' },
+  { icon: '🦚', name: 'Peacock' },
+  { icon: '🎐', name: 'Wind Chime' },
+  { icon: '🌿', name: 'Tulsi Leaf' },
+  { icon: '🍃', name: 'Sacred Leaf' },
+  { icon: '🪔', name: 'Oil Lamp' },
+  { icon: '🪘', name: 'Drum (Damaru)' },
+  { icon: '🪯', name: 'Dharma Wheel' },
+  { icon: '🧘', name: 'Meditator' },
+  { icon: '🕊️', name: 'Peace Dove' },
+  { icon: '⚖️', name: 'Balance (Dharma)' },
+  { icon: '🗻', name: 'Himalayas' },
+];
+
 
   // Enhanced styles with Bhagavad Gita theme
   const styles = {
@@ -759,52 +767,42 @@ const handleCloseModal = (setter) => {
     </div>
 
     <div 
-      style={styles.supportCard} 
-      className="support-card"
-      onClick={handleViewNotifications}
-    >
-      <span style={styles.supportIcon}>
-        <Bell size={32} color="#9a3412" />
-        {getUnreadNotificationCount()-1 > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            backgroundColor: '#f97316',
-            color: 'white',
-            borderRadius: '50%',
-            width: '20px',
-            height: '20px',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold'
-          }}>
-            {getUnreadNotificationCount()}
-          </span>
-        )}
+  style={styles.supportCard} 
+  className="support-card"
+  onClick={handleViewNotifications}
+>
+  <span style={styles.supportIcon}>
+    <Bell size={32} color="#9a3412" />
+    {getUnreadNotificationCount() > 0 && (
+      <span style={{
+        position: 'absolute',
+        top: '8px',
+        right: '8px',
+        backgroundColor: '#f97316',
+        color: 'white',
+        borderRadius: '50%',
+        width: '20px',
+        height: '20px',
+        fontSize: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold'
+      }}>
+        {getUnreadNotificationCount()}
       </span>
-      <div style={styles.supportTitle}>
-        View Notifications
-        {getUnreadNotificationCount()-1 > 0 && (
-          <span style={{
-            marginLeft: '8px',
-            backgroundColor: '#f97316',
-            color: 'white',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>
-            {getUnreadNotificationCount()}
-          </span>
-        )}
-      </div>
-      <div style={styles.supportDescription}>
-        Check your recent spiritual insights and reminders
-      </div>
-    </div>
+    )}
+  </span>
+  <div style={styles.supportTitle}>
+    View Notifications
+  </div>
+  <div style={styles.supportDescription}>
+    {getUnreadNotificationCount() > 0 
+      ? `${getUnreadNotificationCount()} unread notification${getUnreadNotificationCount() > 1 ? 's' : ''} - Check your recent spiritual insights`
+      : 'Check your recent spiritual insights and reminders'
+    }
+  </div>
+</div>
   </div>
 </div>
         <div style={styles.supportSection}>
