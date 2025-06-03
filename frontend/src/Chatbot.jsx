@@ -501,7 +501,7 @@ const BhagavadGitaBot = () => {
   };
 
   const handleDeleteSelected = async () => {
-    if (Object.keys(selectedChats).length === 0) {
+    if (Object.values(selectedChats).filter(Boolean).length === 0) {
       await Swal.fire({
         icon: "info",
         title: "No Chats Selected",
@@ -2125,7 +2125,7 @@ const BhagavadGitaBot = () => {
                   onClick={toggleSelectAll}
                   style={styles.smallButtonStyle}
                 >
-                  {Object.keys(selectedChats).length === chats.length
+                  {Object.values(selectedChats).filter(Boolean).length === chats.length
                     ? "Unselect All"
                     : "Select All"}
                 </button>
@@ -2153,21 +2153,21 @@ const BhagavadGitaBot = () => {
                   Delete Selected
                 </button>
 
-                {Object.keys(selectedChats).length > 0 && (
-                  <span
-                    style={{
-                      backgroundColor:
-                        theme === "light" ? "#FFF0CC" : "#3D3D3D",
-                      color: theme === "light" ? "#8B4513" : "#CD853F",
-                      padding: "5px 10px",
-                      borderRadius: "15px",
-                      fontSize: "0.8rem",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {Object.keys(selectedChats).length} selected
-                  </span>
-                )}
+                {Object.values(selectedChats).filter(Boolean).length > 0 && (
+  <span
+    style={{
+      backgroundColor: theme === "light" ? "#FFF0CC" : "#3D3D3D",
+      color: theme === "light" ? "#8B4513" : "#CD853F",
+      padding: "5px 10px",
+      borderRadius: "15px",
+      fontSize: "0.8rem",
+      fontWeight: "bold",
+    }}
+  >
+    {Object.values(selectedChats).filter(Boolean).length} selected
+  </span>
+)}
+
               </div>
             )}
 
