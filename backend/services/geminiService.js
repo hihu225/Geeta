@@ -34,10 +34,11 @@ class GeminiService {
       const dbVerse = this.getRandomQuoteFromDatabase();
       const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
       
-      const formattedQuote = `Verse: ${dbVerse.reference}
-Sanskrit: ${dbVerse.sanskrit}
-Translation: ${translation}
-Today's Wisdom: This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+      const formattedQuote =
+  `🕉️ Verse: ${dbVerse.reference}\n` +
+  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+  `💬 Translation:\n${translation}\n\n` +
+  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
       return {
         success: true,
@@ -134,18 +135,15 @@ getRandomQuoteFromDatabase() {
   const randomIndex = Math.floor(Math.random() * verseDatabase.length);
   return verseDatabase[randomIndex];
 }
-
-
   
   cleanFormattedText(text) {
-  return text
-    .replace(/\*Verse:([^*]+)Sanskrit:/, '**Verse:**\nSanskrit:$1Sanskrit:')
-    .replace(/Sanskrit:(.*?)\s*Translation:/s, '**Sanskrit:**\n$1\n\n**Translation:**\n')
-    .replace(/Translation:(.*?)Today's Wisdom:/s, '$1\n\n**Today\'s Wisdom:**\n')
-    .replace(/Today's Wisdom:\*/g, '**Today\'s Wisdom:**\n') // fallback
-    .replace(/\*([^*]+)\*/g, '$1') // Remove any other stray asterisks
-    .trim();
-}
+    return text
+      .replace(/\*\*/g, '') // Remove all ** formatting
+      .replace(/\*([^*]+)\*/g, '$1') // Remove single * formatting
+      .replace(/\n\s*\n/g, '\n') // Clean up extra newlines
+      .trim();
+  }
+
 
 
   getRandomVerseReference() {
@@ -648,7 +646,12 @@ Generate the thematic quote now:`;
     const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
     
     // Create formatted response without stars
-    const formattedQuote = `Verse: ${randomQuote.verse}\nSanskrit: ${randomQuote.sanskrit}\nTranslation: ${randomQuote.translation}\nToday's Wisdom: ${randomQuote.wisdom}`;
+    const formattedQuote =
+  `🕉️ Verse: ${dbVerse.reference}\n` +
+  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+  `💬 Translation:\n${translation}\n\n` +
+  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+
     
     return {
       success: false,
