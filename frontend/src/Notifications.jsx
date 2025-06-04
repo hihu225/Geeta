@@ -522,13 +522,13 @@ const Notifications = () => {
 function renderFormattedQuote(text) {
   const html = text
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold markdown
-    .replace(/\n/g, '<br />');                        // line breaks
+    .replace(/\n/g, '<br /><br />');                        // line breaks
   return { __html: html };
 }
 function formatBody(text) {
   return {
     __html: text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/''/g, '<strong>$1</strong>') // Bold
   };
 }
 const formatNotificationBody = (text) => {

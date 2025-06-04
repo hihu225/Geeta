@@ -27,7 +27,7 @@ class GeminiService {
     };
   }
 
-  async getDailyQuote(language = "english", quoteType = "random") {
+  async getDailyQuote(language = "english", quoteType = "random",userId=null) {
   try {
     // For true randomness, use database approach occasionally
     if (quoteType === "random" && Math.random() < 0.3) {
@@ -55,10 +55,14 @@ class GeminiService {
         source: "database"
       };
     }
-    
+    if(quoteType==="sequential" && userId) {
+      const user = await user.findById(userId);
+    const chapter = user.sequentialProgress?.chapter || 1;
+    const verse = user.sequentialProgress?.verse || 1;
+    }
     const prompts = {
       random: this.getRandomQuotePrompt(language),
-      sequential: this.getSequentialQuotePrompt(language),
+      sequential: this.getSequentialQuotePrompt(language,chapter,verse),
       themed: this.getThemedQuotePrompt(language)
     };
 
@@ -209,10 +213,11 @@ QUALITY CHECKS:
 Generate a RANDOM quote now:`;
 }
 
-  getSequentialQuotePrompt(language) {
+  getSequentialQuotePrompt(language,userChapter = 1, userVerse = 1) {
     const languageInstructions = this.getLanguageInstructions(language);
     
-    return `You are providing sequential verses from the Bhagavad Gita for systematic daily study.
+    return `CURRENT POSITION: Chapter ${userChapter}, Verse ${userVerse} 
+    You are providing sequential verses from the Bhagavad Gita for systematic daily study.
 
 CURRENT POSITION: Chapter ${this.currentChapter}, Verse ${this.currentVerse}
 
