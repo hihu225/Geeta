@@ -139,10 +139,9 @@ getRandomQuoteFromDatabase() {
   
   cleanFormattedText(text) {
   return text
-    .replace(/\*\*/g, '')
+    .replace(/\*\*([^*]+):\*\*/g, '**$1:**\n') 
     .replace(/\*([^*]+)\*/g, '$1') 
     .replace(/\n\s*\n\s*\n/g, '\n\n') 
-    .replace(/^(.+?):\s*/gm, '$1:\n') 
     .trim();
 }
 
