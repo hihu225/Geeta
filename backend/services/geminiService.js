@@ -57,7 +57,7 @@ class GeminiService {
     }
     const prompts = {
       random: this.getRandomQuotePrompt(language),
-      sequential: this.getSequentialQuotePrompt(language,chapter,verse),
+      sequential: this.getSequentialQuotePrompt(language),
       themed: this.getThemedQuotePrompt(language)
     };
 
