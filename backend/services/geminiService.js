@@ -35,10 +35,10 @@ class GeminiService {
       const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
       
       const formattedQuote =
-  `🕉️ **Verse:** ${dbVerse.reference}\n` +
-  `📜 **Sanskrit:**\n${dbVerse.sanskrit}\n\n` +
-  `💬 **Translation:**\n${translation}\n\n` +
-  `🧘 **Today's Wisdom:**\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  `🕉️ Verse: ${dbVerse.reference}\n` +
+  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+  `💬 Translation:\n${translation}\n\n` +
+  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
       return {
         success: true,
@@ -659,10 +659,10 @@ Generate the thematic quote now:`;
     
     // Create formatted response without stars
     const formattedQuote =
-  `🕉️ **Verse:** ${dbVerse.reference}\n` +
-  `📜 **Sanskrit:**\n${dbVerse.sanskrit}\n\n` +
-  `💬 **Translation:**\n${translation}\n\n` +
-  `🧘 **Today's Wisdom:**\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  `🕉️ Verse: ${dbVerse.reference}\n` +
+  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+  `💬 Translation:\n${translation}\n\n` +
+  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
     
     return {

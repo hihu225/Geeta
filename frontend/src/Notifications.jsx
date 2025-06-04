@@ -525,6 +525,18 @@ function renderFormattedQuote(text) {
     .replace(/\n/g, '<br />');                        // line breaks
   return { __html: html };
 }
+function formatBody(text) {
+  return {
+    __html: text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
+  };
+}
+const formatNotificationBody = (text) => {
+  return {
+    __html: text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold
+  };
+};
 
   const fetchNotifications = async () => {
     try {
@@ -795,9 +807,11 @@ function renderFormattedQuote(text) {
                         {notification.title}
                       </h3>
                       
-                      <p style={styles.notificationBody}>
-                        {notification.body}
-                      </p>
+                      <p
+  style={styles.notificationBody}
+  dangerouslySetInnerHTML={formatNotificationBody(notification.body)}
+/>
+
                       
                       <div style={styles.notificationMeta}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -850,9 +864,8 @@ function renderFormattedQuote(text) {
                   <BookOpen size={16} />
                   {selectedNotification.title}
                 </h3>
-                <p style={styles.detailText}>
-                  {selectedNotification.body}
-                </p>
+                <p style={styles.detailText} dangerouslySetInnerHTML={formatBody(selectedNotification.body)} />
+
               </div>
               
               {selectedNotification.data?.fullQuote && (
