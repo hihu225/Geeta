@@ -29,7 +29,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  // ADD THESE MISSING FIELDS:
   isDemo: {
     type: Boolean,
     default: false
@@ -51,19 +50,26 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: undefined
   },
-  fcmToken: { type: String }, // Store user's FCM token
+  fcmToken: { type: String },
   dailyQuotes: {
     enabled: { type: Boolean, default: false },
-    time: { type: String, default: "09:00" }, // Format: "HH:MM"
+    time: { type: String, default: "09:00" },
     timezone: { type: String, default: "Asia/Kolkata" },
     lastSent: { type: Date },
     scheduleUpdatedAt: { type: Date }
   },
   preferences: {
-    language: { type: String, default: "english" }, // english, hindi, sanskrit
-    quoteType: { type: String, default: "random" } // random, sequential, themed
+    language: { type: String, default: "english" },
+    quoteType: { type: String, default: "random" }
   },
-
+  // ADD SEQUENTIAL PROGRESS TRACKING
+  sequentialProgress: {
+    currentChapter: { type: Number, default: 1, min: 1, max: 18 },
+    currentVerse: { type: Number, default: 1, min: 1 },
+    lastUpdated: { type: Date, default: Date.now },
+    completedChapters: [{ type: Number }], // Track completed chapters
+    totalVersesRead: { type: Number, default: 0 }
+  },
   demoExpiresAt: { type: Date, default: null }
 }, {
   timestamps: true

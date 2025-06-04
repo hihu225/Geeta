@@ -1,4 +1,3 @@
-// backend/services/geminiService.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class GeminiService {
@@ -6,9 +5,9 @@ class GeminiService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
-    // Track sequential verse progression
-    this.currentChapter = 1;
-    this.currentVerse = 1;
+    // Remove class-level chapter/verse tracking since we'll use user-specific data
+    // this.currentChapter = 1;
+    // this.currentVerse = 1;
     
     // Regex patterns for response validation and parsing
     this.patterns = {
@@ -27,114 +26,248 @@ class GeminiService {
     };
   }
 
-  async getDailyQuote(language = "english", quoteType = "random") {
-  try {
-    // For true randomness, use database approach occasionally
-    if (quoteType === "random" && Math.random() < 0.3) {
-      const dbVerse = this.getRandomQuoteFromDatabase();
-      const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
-      
-      const formattedQuote =
-  `🕉️ Verse: ${dbVerse.reference}\n` +
-  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
-  `💬 Translation:\n${translation}\n\n` +
-  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  // Updated method to accept user for sequential quotes
+  async getDailyQuote(language = "english", quoteType = "random", user = null) {
+    try {
+      // For true randomness, use database approach occasionally
+      if (quoteType === "random" && Math.random() < 0.3) {
+        const dbVerse = this.getRandomQuoteFromDatabase();
+        const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
+        
+        const formattedQuote =
+          `🕉️ Verse: ${dbVerse.reference}\n` +
+          `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+          `💬 Translation:\n${translation}\n\n` +
+          `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
+        return {
+          success: true,
+          quote: formattedQuote,
+          parsed: {
+            verse: dbVerse.reference,
+            sanskrit: dbVerse.sanskrit,
+            translation: translation,
+            wisdom: "This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions."
+          },
+          timestamp: new Date(),
+          type: quoteType,
+          language: language,
+          source: "database"
+        };
+      }
+
+      const prompts = {
+        random: this.getRandomQuotePrompt(language),
+        sequential: this.getSequentialQuotePrompt(language, user),
+        themed: this.getThemedQuotePrompt(language)
+      };
+
+      const prompt = prompts[quoteType] || prompts.random;
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      
+      const rawText = response.text();
+      console.log("Raw Gemini Response:", rawText);
+      
+      const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
+      console.log("Parsed Quote:", parsedQuote);
+      
+      if (!rawText || rawText.trim().length < 50) {
+        console.warn("Response too short or empty, using fallback");
+        return this.getFallbackQuote();
+      }
+      
+      const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
+      
+      if (!hasBasicContent) {
+        console.warn("No meaningful content found, using fallback");
+        return this.getFallbackQuote();
+      }
+      
       return {
         success: true,
-        quote: formattedQuote,
-        parsed: {
-          verse: dbVerse.reference,
-          sanskrit: dbVerse.sanskrit,
-          translation: translation,
-          wisdom: "This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions."
-        },
+        quote: this.cleanFormattedText(rawText),
+        parsed: parsedQuote,
         timestamp: new Date(),
         type: quoteType,
         language: language,
-        source: "database"
+        userProgress: user && quoteType === 'sequential' ? {
+          chapter: user.sequentialProgress.currentChapter,
+          verse: user.sequentialProgress.currentVerse
+        } : null
       };
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      return this.getFallbackQuote();
     }
-    const prompts = {
-      random: this.getRandomQuotePrompt(language),
-      sequential: this.getSequentialQuotePrompt(language),
-      themed: this.getThemedQuotePrompt(language)
+  }
+
+  // Updated sequential quote prompt to use user's progress
+  getSequentialQuotePrompt(language, user) {
+    const languageInstructions = this.getLanguageInstructions(language);
+    
+    // Get user's current progress or default to 1.1
+    const currentChapter = user?.sequentialProgress?.currentChapter || 1;
+    const currentVerse = user?.sequentialProgress?.currentVerse || 1;
+    
+    return `You are a spiritual guide sharing wisdom from the Bhagavad Gita.
+    You are providing sequential verses from the Bhagavad Gita for systematic daily study.
+
+CURRENT POSITION: Chapter ${currentChapter}, Verse ${currentVerse}
+
+CRITICAL FORMATTING RULES:
+- Use EXACTLY these headers: **Verse:**, **Sanskrit:**, **Translation:**, **Daily Reflection:**
+- Each section must be on a new line
+- Provide the EXACT verse requested, not a random one
+- Follow the precise structure below
+
+LANGUAGE: ${languageInstructions.primary}
+
+EXACT OUTPUT FORMAT:
+**Verse:** ${currentChapter}.${currentVerse}
+**Sanskrit:** [Exact Sanskrit text for Chapter ${currentChapter}, Verse ${currentVerse} in Devanagari]
+**Translation:** [Accurate translation in ${language}]
+**Daily Reflection:** [Comprehensive reflection with three parts:
+
+1. Context: Situational context within the chapter (2-3 sentences)
+2. Spiritual Meaning: Deeper philosophical significance (2-3 sentences)  
+3. Practical Application: Actionable advice for daily life (2-3 sentences)]
+
+${languageInstructions.additional}
+
+QUALITY REQUIREMENTS:
+- Must be the exact verse requested (${currentChapter}.${currentVerse})
+- Sanskrit must be authentic and properly formatted
+- Translation must be accurate and flowing
+- Reflection must connect to the overall flow of Krishna's teachings
+- Each reflection part must be clearly structured and meaningful
+
+Generate the sequential verse now:`;
+  }
+
+  // Method to advance user's sequential progress
+  async advanceUserSequentialVerse(user) {
+    const verseCounts = {
+      1: 47, 2: 72, 3: 43, 4: 42, 5: 29, 6: 47, 7: 30, 8: 28, 
+      9: 34, 10: 42, 11: 55, 12: 20, 13: 35, 14: 27, 15: 20, 
+      16: 24, 17: 28, 18: 78
     };
 
-    const prompt = prompts[quoteType] || prompts.random;
-    const result = await this.model.generateContent(prompt);
-    const response = await result.response;
+    const currentChapter = user.sequentialProgress.currentChapter;
+    const currentVerse = user.sequentialProgress.currentVerse;
     
-    const rawText = response.text();
-    console.log("Raw Gemini Response:", rawText);
+    let newChapter = currentChapter;
+    let newVerse = currentVerse + 1;
     
-    const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
-    console.log("Parsed Quote:", parsedQuote);
-    
-    if (!rawText || rawText.trim().length < 50) {
-      console.warn("Response too short or empty, using fallback");
-      return this.getFallbackQuote();
+    // Check if we need to move to next chapter
+    if (newVerse > (verseCounts[currentChapter] || 50)) {
+      // Mark current chapter as completed
+      if (!user.sequentialProgress.completedChapters.includes(currentChapter)) {
+        user.sequentialProgress.completedChapters.push(currentChapter);
+      }
+      
+      newChapter = currentChapter + 1;
+      newVerse = 1;
+      
+      // Reset to beginning if we've completed all chapters
+      if (newChapter > 18) {
+        newChapter = 1; 
+        newVerse = 1;
+        // Could also reset completedChapters here if you want to allow re-reading
+      }
     }
+
+    // Update user's progress
+    user.sequentialProgress.currentChapter = newChapter;
+    user.sequentialProgress.currentVerse = newVerse;
+    user.sequentialProgress.totalVersesRead += 1;
+    user.sequentialProgress.lastUpdated = new Date();
     
-    const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
-    
-    if (!hasBasicContent) {
-      console.warn("No meaningful content found, using fallback");
-      return this.getFallbackQuote();
-    }
+    await user.save();
     
     return {
-      success: true,
-      quote: this.cleanFormattedText(rawText),
-      parsed: parsedQuote,
-      timestamp: new Date(),
-      type: quoteType,
-      language: language
+      chapter: newChapter,
+      verse: newVerse,
+      position: `${newChapter}.${newVerse}`,
+      totalRead: user.sequentialProgress.totalVersesRead,
+      completedChapters: user.sequentialProgress.completedChapters.length
     };
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return this.getFallbackQuote();
   }
-}
-getRandomQuoteFromDatabase() {
-  const verseDatabase = [
-    {
-      reference: "2.20",
-      sanskrit: "न जायते म्रियते वा कदाचिन्नायं भूत्वा भविता वा न भूयः। अजो नित्यः शाश्वतोऽयं पुराणो न हन्यते हन्यमाने शरीरे॥",
-      english: "The soul is never born, nor does it die. It is not slain when the body is slain.",
-      hindi: "आत्मा न तो जन्म लेती है और न ही मरती है। शरीर के नष्ट होने पर आत्मा नष्ट नहीं होती।"
-    },
-    {
-      reference: "2.62",
-      sanskrit: "ध्यायतो विषयान्पुंसः सङ्गस्तेषूपजायते। सङ्गात्सञ्जायते कामः कामात्क्रोधोऽभिजायते॥",
-      english: "While contemplating the objects of the senses, attachment develops. From attachment comes desire, and from desire arises anger.",
-      hindi: "विषयों का चिंतन करने से उनमें आसक्ति होती है। आसक्ति से काम और काम से क्रोध उत्पन्न होता है।"
-    },
-    {
-      reference: "4.7",
-      sanskrit: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत। अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥",
-      english: "Whenever there is a decline in dharma and rise of adharma, I manifest myself.",
-      hindi: "जब-जब धर्म की हानि और अधर्म की वृद्धि होती है, तब-तब मैं अवतार लेता हूं।"
-    },
-    {
-      reference: "6.5",
-      sanskrit: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्। आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
-      english: "One should lift oneself by one's own efforts and not degrade oneself. The mind alone is one's friend as well as one's enemy.",
-      hindi: "मनुष्य को अपने द्वारा अपना उद्धार करना चाहिए। मन ही मनुष्य का मित्र है और मन ही शत्रु है।"
-    },
-    {
-      reference: "15.7",
-      sanskrit: "ममैवांशो जीवलोके जीवभूतः सनातनः। मनःषष्ठानीन्द्रियाणि प्रकृतिस्थानि कर्षति॥",
-      english: "The living entities in this world are My eternal fragmental parts, drawing the six senses including the mind from material nature.",
-      hindi: "इस संसार में सभी जीव मेरे ही शाश्वत अंश हैं, जो प्रकृति से मन सहित छह इंद्रियों को आकर्षित करते हैं।"
+
+  // Method to get user's sequential progress
+  getUserSequentialProgress(user) {
+    if (!user || !user.sequentialProgress) {
+      return {
+        chapter: 1,
+        verse: 1,
+        position: "1.1",
+        totalRead: 0,
+        completedChapters: 0
+      };
     }
-    // can add more verses here
-  ];
-  
-  const randomIndex = Math.floor(Math.random() * verseDatabase.length);
-  return verseDatabase[randomIndex];
-}
-  
+
+    return {
+      chapter: user.sequentialProgress.currentChapter,
+      verse: user.sequentialProgress.currentVerse,
+      position: `${user.sequentialProgress.currentChapter}.${user.sequentialProgress.currentVerse}`,
+      totalRead: user.sequentialProgress.totalVersesRead,
+      completedChapters: user.sequentialProgress.completedChapters.length,
+      lastUpdated: user.sequentialProgress.lastUpdated
+    };
+  }
+
+  // Method to reset user's sequential progress
+  async resetUserSequentialProgress(user, chapter = 1, verse = 1) {
+    user.sequentialProgress.currentChapter = chapter;
+    user.sequentialProgress.currentVerse = verse;
+    user.sequentialProgress.totalVersesRead = 0;
+    user.sequentialProgress.completedChapters = [];
+    user.sequentialProgress.lastUpdated = new Date();
+    
+    await user.save();
+    return this.getUserSequentialProgress(user);
+  }
+
+  // Rest of your existing methods remain the same...
+  getRandomQuoteFromDatabase() {
+    const verseDatabase = [
+      {
+        reference: "2.20",
+        sanskrit: "न जायते म्रियते वा कदाचिन्नायं भूत्वा भविता वा न भूयः। अजो नित्यः शाश्वतोऽयं पुराणो न हन्यते हन्यमाने शरीरे॥",
+        english: "The soul is never born, nor does it die. It is not slain when the body is slain.",
+        hindi: "आत्मा न तो जन्म लेती है और न ही मरती है। शरीर के नष्ट होने पर आत्मा नष्ट नहीं होती।"
+      },
+      {
+        reference: "2.62",
+        sanskrit: "ध्यायतो विषयान्पुंसः सङ्गस्तेषूपजायते। सङ्गात्सञ्जायते कामः कामात्क्रोधोऽभिजायते॥",
+        english: "While contemplating the objects of the senses, attachment develops. From attachment comes desire, and from desire arises anger.",
+        hindi: "विषयों का चिंतन करने से उनमें आसक्ति होती है। आसक्ति से काम और काम से क्रोध उत्पन्न होता है।"
+      },
+      {
+        reference: "4.7",
+        sanskrit: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत। अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥",
+        english: "Whenever there is a decline in dharma and rise of adharma, I manifest myself.",
+        hindi: "जब-जब धर्म की हानि और अधर्म की वृद्धि होती है, तब-तब मैं अवतार लेता हूं।"
+      },
+      {
+        reference: "6.5",
+        sanskrit: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्। आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
+        english: "One should lift oneself by one's own efforts and not degrade oneself. The mind alone is one's friend as well as one's enemy.",
+        hindi: "मनुष्य को अपने द्वारा अपना उद्धार करना चाहिए। मन ही मनुष्य का मित्र है और मन ही शत्रु है।"
+      },
+      {
+        reference: "15.7",
+        sanskrit: "ममैवांशो जीवलोके जीवभूतः सनातनः। मनःषष्ठानीन्द्रियाणि प्रकृतिस्थानि कर्षति॥",
+        english: "The living entities in this world are My eternal fragmental parts, drawing the six senses including the mind from material nature.",
+        hindi: "इस संसार में सभी जीव मेरे ही शाश्वत अंश हैं, जो प्रकृति से मन सहित छह इंद्रियों को आकर्षित करते हैं।"
+      }
+    ];
+    
+    const randomIndex = Math.floor(Math.random() * verseDatabase.length);
+    return verseDatabase[randomIndex];
+  }
+
+  // Keep all your other existing methods...
   cleanFormattedText(text) {
     return text
       .replace(/\*\*/g, '') // Remove all ** formatting

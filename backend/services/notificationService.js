@@ -25,10 +25,11 @@ class NotificationService {
         };
       }
 
-      // Get quote from Gemini with fallback
+      // Get quote from Gemini with user context for sequential quotes
       let quoteData = await geminiService.getDailyQuote(
         user.preferences?.language || 'english',
-        user.preferences?.quoteType || 'random'
+        user.preferences?.quoteType || 'random',
+        user // Pass user object for sequential progress tracking
       );
       console.log("Gemini Quote Data:", quoteData);
       
@@ -41,12 +42,24 @@ class NotificationService {
         };
       }
 
+      // IMPORTANT: Update sequential progress if user is on sequential mode
+      let sequentialProgress = null;
+      if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
+        try {
+          sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
+          console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
+        } catch (progressError) {
+          console.error(`Error updating sequential progress for user ${userId}:`, progressError);
+          // Continue with quote delivery even if progress update fails
+        }
+      }
+
       // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
       await User.findByIdAndUpdate(userId, {
         'dailyQuotes.lastSent': new Date()
       });
 
-      // Create notification record in database
+      // Create notification record in database with enhanced data
       notificationRecord = new Notification({
         userId: user._id,
         title: "🕉️ Daily Bhagavad Gita Wisdom",
@@ -56,10 +69,19 @@ class NotificationService {
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
           quoteType: user.preferences?.quoteType || 'random',
+          // Add sequential progress data if applicable
+          sequentialProgress: sequentialProgress ? {
+            currentPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead,
+            completedChapters: sequentialProgress.completedChapters
+          } : null,
+          // Add parsed quote data for better tracking
+          parsedQuote: quoteData.parsed || null,
           metadata: {
             generatedBy: 'gemini',
             isScheduled: true,
-            sentDate: new Date().toISOString().split('T')[0] // Store date for tracking
+            sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
+            userProgress: quoteData.userProgress || null // Store user's verse position
           }
         },
         deliveryStatus: 'pending',
@@ -69,7 +91,7 @@ class NotificationService {
       await notificationRecord.save();
       console.log(`Notification record created: ${notificationRecord._id}`);
 
-      // Prepare FCM message with notification ID
+      // Prepare enhanced FCM message with sequential progress
       const message = {
         notification: {
           title: "🕉️ Daily Bhagavad Gita Wisdom",
@@ -79,8 +101,22 @@ class NotificationService {
           type: "daily_quote",
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
+          quoteType: user.preferences?.quoteType || 'random',
           timestamp: new Date().toISOString(),
-          notificationId: notificationRecord._id.toString()
+          notificationId: notificationRecord._id.toString(),
+          // Add sequential progress for app to display
+          ...(sequentialProgress && {
+            sequentialPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead.toString(),
+            completedChapters: sequentialProgress.completedChapters.toString()
+          }),
+          // Add parsed data for app usage
+          ...(quoteData.parsed && {
+            verse: quoteData.parsed.verse || '',
+            sanskrit: quoteData.parsed.sanskrit || '',
+            translation: quoteData.parsed.translation || '',
+            wisdom: quoteData.parsed.wisdom || ''
+          })
         },
         token: user.fcmToken
       };
@@ -97,7 +133,11 @@ class NotificationService {
           success: true,
           response,
           quote: quoteData.quote,
-          notificationId: notificationRecord._id
+          notificationId: notificationRecord._id,
+          // Return sequential progress info for logging/tracking
+          sequentialProgress: sequentialProgress,
+          quoteType: user.preferences?.quoteType || 'random',
+          userProgress: quoteData.userProgress
         };
 
       } catch (fcmError) {
@@ -109,7 +149,8 @@ class NotificationService {
         return {
           success: false,
           error: fcmError.message,
-          notificationId: notificationRecord._id
+          notificationId: notificationRecord._id,
+          sequentialProgress: sequentialProgress // Still return progress even if FCM failed
         };
       }
 
@@ -275,7 +316,24 @@ class NotificationService {
       };
     }
   }
-
+  // Helper method to ensure user has sequential progress initialized
+async initializeSequentialProgressIfNeeded(user) {
+  if (!user.sequentialProgress || 
+      !user.sequentialProgress.currentChapter || 
+      !user.sequentialProgress.currentVerse) {
+    
+    user.sequentialProgress = {
+      currentChapter: 1,
+      currentVerse: 1,
+      lastUpdated: new Date(),
+      completedChapters: [],
+      totalVersesRead: 0
+    };
+    
+    await user.save();
+    console.log(`Initialized sequential progress for user ${user._id}`);
+  }
+}
   // Create notification without sending (for scheduling)
   async createNotification(userId, title, body, type = 'system', data = {}, scheduledFor = null) {
     try {
