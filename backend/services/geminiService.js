@@ -97,6 +97,44 @@ Today's Wisdom: This verse reminds us of the eternal truths that guide our daily
     return this.getFallbackQuote();
   }
 }
+getRandomQuoteFromDatabase() {
+  const verseDatabase = [
+    {
+      reference: "2.20",
+      sanskrit: "न जायते म्रियते वा कदाचिन्नायं भूत्वा भविता वा न भूयः। अजो नित्यः शाश्वतोऽयं पुराणो न हन्यते हन्यमाने शरीरे॥",
+      english: "The soul is never born, nor does it die. It is not slain when the body is slain.",
+      hindi: "आत्मा न तो जन्म लेती है और न ही मरती है। शरीर के नष्ट होने पर आत्मा नष्ट नहीं होती।"
+    },
+    {
+      reference: "2.62",
+      sanskrit: "ध्यायतो विषयान्पुंसः सङ्गस्तेषूपजायते। सङ्गात्सञ्जायते कामः कामात्क्रोधोऽभिजायते॥",
+      english: "While contemplating the objects of the senses, attachment develops. From attachment comes desire, and from desire arises anger.",
+      hindi: "विषयों का चिंतन करने से उनमें आसक्ति होती है। आसक्ति से काम और काम से क्रोध उत्पन्न होता है।"
+    },
+    {
+      reference: "4.7",
+      sanskrit: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत। अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥",
+      english: "Whenever there is a decline in dharma and rise of adharma, I manifest myself.",
+      hindi: "जब-जब धर्म की हानि और अधर्म की वृद्धि होती है, तब-तब मैं अवतार लेता हूं।"
+    },
+    {
+      reference: "6.5",
+      sanskrit: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्। आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
+      english: "One should lift oneself by one's own efforts and not degrade oneself. The mind alone is one's friend as well as one's enemy.",
+      hindi: "मनुष्य को अपने द्वारा अपना उद्धार करना चाहिए। मन ही मनुष्य का मित्र है और मन ही शत्रु है।"
+    },
+    {
+      reference: "15.7",
+      sanskrit: "ममैवांशो जीवलोके जीवभूतः सनातनः। मनःषष्ठानीन्द्रियाणि प्रकृतिस्थानि कर्षति॥",
+      english: "The living entities in this world are My eternal fragmental parts, drawing the six senses including the mind from material nature.",
+      hindi: "इस संसार में सभी जीव मेरे ही शाश्वत अंश हैं, जो प्रकृति से मन सहित छह इंद्रियों को आकर्षित करते हैं।"
+    }
+    // Add more verses as needed
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * verseDatabase.length);
+  return verseDatabase[randomIndex];
+}
 
 
   // Add method to clean formatted text and remove stars
