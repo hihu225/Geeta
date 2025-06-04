@@ -55,7 +55,6 @@ Today's Wisdom: This verse reminds us of the eternal truths that guide our daily
       };
     }
     
-    // Rest of your existing getDailyQuote logic...
     const prompts = {
       random: this.getRandomQuotePrompt(language),
       sequential: this.getSequentialQuotePrompt(language),
@@ -129,7 +128,7 @@ getRandomQuoteFromDatabase() {
       english: "The living entities in this world are My eternal fragmental parts, drawing the six senses including the mind from material nature.",
       hindi: "इस संसार में सभी जीव मेरे ही शाश्वत अंश हैं, जो प्रकृति से मन सहित छह इंद्रियों को आकर्षित करते हैं।"
     }
-    // Add more verses as needed
+    // can add more verses here
   ];
   
   const randomIndex = Math.floor(Math.random() * verseDatabase.length);
@@ -137,17 +136,16 @@ getRandomQuoteFromDatabase() {
 }
 
 
-  // Add method to clean formatted text and remove stars
+  
   cleanFormattedText(text) {
     return text
-      .replace(/\*\*/g, '') // Remove all ** formatting
-      .replace(/\*([^*]+)\*/g, '$1') // Remove single * formatting
-      .replace(/\n\s*\n/g, '\n') // Clean up extra newlines
+      .replace(/\*\*/g, '') 
+      .replace(/\*([^*]+)\*/g, '$1') 
+      .replace(/\n\s*\n/g, '\n') 
       .trim();
   }
 
   getRandomVerseReference() {
-  // Define verse counts for each chapter
   const verseCounts = {
     1: 47, 2: 72, 3: 43, 4: 42, 5: 29, 6: 47, 7: 30, 8: 28, 
     9: 34, 10: 42, 11: 55, 12: 20, 13: 35, 14: 27, 15: 20, 
@@ -486,7 +484,6 @@ Generate the thematic quote now:`;
     }
   }
 
-  // Enhanced parsing methods with regex
   parseQuoteResponse(responseText, quoteType) {
     const parsed = {
       verse: this.extractMatch(responseText, this.patterns.verse, 0),
@@ -576,10 +573,7 @@ Generate the thematic quote now:`;
     return null;
   }
 
-  // Enhanced validation methods
   validateQuoteResponse(parsedQuote) {
-  // FIXED: Much more lenient validation
-  // Just check if we have at least one meaningful field
   const hasVerse = parsedQuote.verse && parsedQuote.verse.length > 0;
   const hasSanskrit = parsedQuote.sanskrit && parsedQuote.sanskrit.length > 5;
   const hasTranslation = parsedQuote.translation && parsedQuote.translation.length > 10;
@@ -655,7 +649,7 @@ Generate the thematic quote now:`;
     
     return {
       success: false,
-      quote: formattedQuote, // Already clean, no stars
+      quote: formattedQuote, 
       parsed: {
         verse: randomQuote.verse,
         sanskrit: randomQuote.sanskrit,
@@ -667,9 +661,7 @@ Generate the thematic quote now:`;
     };
   }
 
-  // Method to advance sequential reading
   advanceSequentialVerse() {
-    // Approximate verse counts per chapter
     const verseCounts = {
       1: 47, 2: 72, 3: 43, 4: 42, 5: 29, 6: 47, 7: 30, 8: 28, 
       9: 34, 10: 42, 11: 55, 12: 20, 13: 35, 14: 27, 15: 20, 

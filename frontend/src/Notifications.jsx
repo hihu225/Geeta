@@ -638,13 +638,8 @@ const Notifications = () => {
   };
 
   const handleBack = () => {
-  if (window.history.length > 1) {
     navigate(-1);
-  } else {
-    navigate('/notifications-settings'); 
-  }
-};
-
+  };
 
   const closeModal = () => {
     setSelectedNotification(null);

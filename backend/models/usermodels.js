@@ -56,7 +56,8 @@ const userSchema = new mongoose.Schema({
     enabled: { type: Boolean, default: false },
     time: { type: String, default: "09:00" }, // Format: "HH:MM"
     timezone: { type: String, default: "Asia/Kolkata" },
-    lastSent: { type: Date }
+    lastSent: { type: Date },
+    scheduleUpdatedAt: { type: Date }
   },
   preferences: {
     language: { type: String, default: "english" }, // english, hindi, sanskrit

@@ -15,15 +15,15 @@ class NotificationService {
         return { success: false, message: "User not eligible for notifications" };
       }
 
-      // CRITICAL: Check if already sent today before doing anything else
-      // if (this.wasSentToday(user.dailyQuotes.lastSent)) {
-      //   console.log(`Daily quote already sent today for user ${userId}`);
-      //   return { 
-      //     success: false, 
-      //     message: "Daily quote already sent today",
-      //     alreadySent: true 
-      //   };
-      // }
+      // CRITICAL: Check if already sent today AND schedule hasn't changed since last sent
+      if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
+        console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
+        return { 
+          success: false, 
+          message: "Daily quote already sent today",
+          alreadySent: true 
+        };
+      }
 
       // Get quote from Gemini with fallback
       let quoteData = await geminiService.getDailyQuote(
@@ -31,6 +31,7 @@ class NotificationService {
         user.preferences?.quoteType || 'random'
       );
       console.log("Gemini Quote Data:", quoteData);
+      
       // If Gemini API fails, use fallback quote
       if (!quoteData.success) {
         console.warn("Gemini API failed, using fallback quote");
@@ -41,9 +42,9 @@ class NotificationService {
       }
 
       // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
-      // await User.findByIdAndUpdate(userId, {
-      //   'dailyQuotes.lastSent': new Date()
-      // });
+      await User.findByIdAndUpdate(userId, {
+        'dailyQuotes.lastSent': new Date()
+      });
 
       // Create notification record in database
       notificationRecord = new Notification({
@@ -143,8 +144,9 @@ class NotificationService {
       const results = [];
       
       for (const user of users) {
-        // Check if it's time to send notification for this user AND not sent today
-        if (this.shouldSendNotification(user) /*&& !this.wasSentToday(user.dailyQuotes.lastSent)*/) {
+        // Check if it's time to send notification AND (not sent today OR schedule changed after last sent)
+        if (this.shouldSendNotification(user) && 
+            (!this.wasSentToday(user.dailyQuotes.lastSent) || this.scheduleChangedAfterLastSent(user))) {
           console.log(`Sending notification to user ${user._id} (${user.email})`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
@@ -156,7 +158,7 @@ class NotificationService {
           // Add delay between notifications to avoid rate limiting
           await this.delay(2000); // Increased delay to 2 seconds
         } else {
-          console.log(`Skipping user ${user._id}: Either not time or already sent today`);
+          console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
         }
       }
 
@@ -446,33 +448,33 @@ class NotificationService {
   }
 
   shouldSendNotification(user) {
-  try {
-    const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
-    const timezone = user.dailyQuotes.timezone;
-    
-    // Get current time in user's timezone using moment
-    const userCurrentTime = moment().tz(timezone);
-    
-    const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
-    
-    const currentHour = userCurrentTime.hour();
-    const currentMinute = userCurrentTime.minute();
-    
-    const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
-    const currentTotalMinutes = currentHour * 60 + currentMinute;
-    
-    // FIXED: Only send if current time is AT or AFTER scheduled time (within 5-minute window)
-    const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
-    const shouldSend = timeDifference >= 0 && timeDifference <= 1;
-    
-    console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
-    
-    return shouldSend;
-  } catch (error) {
-    console.error(`Error checking notification time for user ${user._id}:`, error);
-    return false;
+    try {
+      const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
+      const timezone = user.dailyQuotes.timezone;
+      
+      // Get current time in user's timezone using moment
+      const userCurrentTime = moment().tz(timezone);
+      
+      const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
+      
+      const currentHour = userCurrentTime.hour();
+      const currentMinute = userCurrentTime.minute();
+      
+      const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
+      const currentTotalMinutes = currentHour * 60 + currentMinute;
+      
+      // FIXED: Only send if current time is AT or AFTER scheduled time (within 5-minute window)
+      const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
+      const shouldSend = timeDifference >= 0 && timeDifference <= 1;
+      
+      console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
+      
+      return shouldSend;
+    } catch (error) {
+      console.error(`Error checking notification time for user ${user._id}:`, error);
+      return false;
+    }
   }
-}
 
   wasSentToday(lastSent) {
     if (!lastSent) return false;
@@ -488,6 +490,27 @@ class NotificationService {
     console.log(`Checking if sent today: Today=${todayString}, LastSent=${lastSentString}, WasSent=${wasSent}`);
     
     return wasSent;
+  }
+
+  // NEW METHOD: Check if schedule was changed after last notification was sent
+  scheduleChangedAfterLastSent(user) {
+    try {
+      // Check if scheduleUpdatedAt exists and is after lastSent
+      if (!user.dailyQuotes.scheduleUpdatedAt || !user.dailyQuotes.lastSent) {
+        return false;
+      }
+      
+      const scheduleUpdated = new Date(user.dailyQuotes.scheduleUpdatedAt);
+      const lastSent = new Date(user.dailyQuotes.lastSent);
+      
+      const changed = scheduleUpdated > lastSent;
+      console.log(`Schedule change check for user ${user._id}: Schedule updated: ${scheduleUpdated}, Last sent: ${lastSent}, Changed: ${changed}`);
+      
+      return changed;
+    } catch (error) {
+      console.error(`Error checking schedule change for user ${user._id}:`, error);
+      return false;
+    }
   }
 
   getUserCurrentTime(timezone) {

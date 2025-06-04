@@ -45,17 +45,36 @@ router.post("/preferences", auth, async (req, res) => {
     const userId = req.user.userId;
 
     const updateData = {};
+    let scheduleChanged = false;
+
+    // Track if schedule-related fields are being updated
     if (enabled !== undefined) updateData["dailyQuotes.enabled"] = enabled;
-    if (time) updateData["dailyQuotes.time"] = time;
-    if (timezone) updateData["dailyQuotes.timezone"] = timezone;
+    
+    if (time) {
+      updateData["dailyQuotes.time"] = time;
+      scheduleChanged = true;
+    }
+    
+    if (timezone) {
+      updateData["dailyQuotes.timezone"] = timezone;
+      scheduleChanged = true;
+    }
+    
     if (language) updateData["preferences.language"] = language;
     if (quoteType) updateData["preferences.quoteType"] = quoteType;
+
+    // If time or timezone changed, update the scheduleUpdatedAt timestamp
+    if (scheduleChanged) {
+      updateData["dailyQuotes.scheduleUpdatedAt"] = new Date();
+      console.log(`Schedule updated for user ${userId}: time=${time}, timezone=${timezone}`);
+    }
 
     await User.findByIdAndUpdate(userId, updateData);
 
     res.status(200).json({
       success: true,
       message: "Preferences updated successfully",
+      scheduleChanged: scheduleChanged
     });
   } catch (error) {
     console.error("Error updating preferences:", error);
