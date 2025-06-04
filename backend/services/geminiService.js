@@ -137,13 +137,20 @@ getRandomQuoteFromDatabase() {
 }
   
   cleanFormattedText(text) {
-    return text
-      .replace(/\*\*/g, '') // Remove all ** formatting
-      .replace(/\*([^*]+)\*/g, '$1') // Remove single * formatting
-      .replace(/\n\s*\n/g, '\n') // Clean up extra newlines
-      .trim();
-  }
-
+  return text
+    // Normalize label lines with line breaks and bold markers
+    .replace(/\*?Verse:\s*/gi, '\n**Verse:** ')
+    .replace(/Sanskrit:\s*/gi, '\n**Sanskrit:**\n')
+    .replace(/Translation:\s*/gi, '\n**Translation:**\n')
+    .replace(/Today's Wisdom:\*?/gi, '\n**Today\'s Wisdom:**\n')
+    
+    // Cleanup: remove stray asterisks
+    .replace(/\*([^*]+)\*/g, '$1')
+    
+    // Trim whitespace and extra newlines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 
   getRandomVerseReference() {
