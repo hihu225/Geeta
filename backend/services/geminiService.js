@@ -28,39 +28,51 @@ class GeminiService {
   }
 
   async getDailyQuote(language = "english", quoteType = "random") {
-    try {
-      const prompts = {
-        random: this.getRandomQuotePrompt(language),
-        sequential: this.getSequentialQuotePrompt(language),
-        themed: this.getThemedQuotePrompt(language)
-      };
+  try {
+    const prompts = {
+      random: this.getRandomQuotePrompt(language),
+      sequential: this.getSequentialQuotePrompt(language),
+      themed: this.getThemedQuotePrompt(language)
+    };
 
-      const prompt = prompts[quoteType] || prompts.random;
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      
-      const rawText = response.text();
-      const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
-      
-      // Validate the response
-      if (!this.validateQuoteResponse(parsedQuote)) {
-        console.warn("Invalid response received, using fallback");
-        return this.getFallbackQuote();
-      }
-      
-      return {
-        success: true,
-        quote: this.cleanFormattedText(rawText), // Clean the raw text
-        parsed: parsedQuote,
-        timestamp: new Date(),
-        type: quoteType,
-        language: language
-      };
-    } catch (error) {
-      console.error("Gemini API Error:", error);
+    const prompt = prompts[quoteType] || prompts.random;
+    const result = await this.model.generateContent(prompt);
+    const response = await result.response;
+    
+    const rawText = response.text();
+    console.log("Raw Gemini Response:", rawText); // Debug log
+    
+    const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
+    console.log("Parsed Quote:", parsedQuote); // Debug log
+    
+    // FIXED: More lenient validation - only check if we have basic content
+    if (!rawText || rawText.trim().length < 50) {
+      console.warn("Response too short or empty, using fallback");
       return this.getFallbackQuote();
     }
+    
+    // Check if we have at least some meaningful content
+    const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
+    
+    if (!hasBasicContent) {
+      console.warn("No meaningful content found, using fallback");
+      return this.getFallbackQuote();
+    }
+    
+    // SUCCESS: Return the response even if parsing isn't perfect
+    return {
+      success: true,
+      quote: this.cleanFormattedText(rawText), // Clean the raw text
+      parsed: parsedQuote,
+      timestamp: new Date(),
+      type: quoteType,
+      language: language
+    };
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return this.getFallbackQuote();
   }
+}
 
   // Add method to clean formatted text and remove stars
   cleanFormattedText(text) {
@@ -475,15 +487,27 @@ Generate the thematic quote now:`;
 
   // Enhanced validation methods
   validateQuoteResponse(parsedQuote) {
-    const validations = [
-      this.validateVerse(parsedQuote.verse),
-      this.validateSanskrit(parsedQuote.sanskrit),
-      this.validateTranslation(parsedQuote.translation),
-      this.validateWisdom(parsedQuote.wisdom)
-    ];
+  // FIXED: Much more lenient validation
+  // Just check if we have at least one meaningful field
+  const hasVerse = parsedQuote.verse && parsedQuote.verse.length > 0;
+  const hasSanskrit = parsedQuote.sanskrit && parsedQuote.sanskrit.length > 5;
+  const hasTranslation = parsedQuote.translation && parsedQuote.translation.length > 10;
+  const hasWisdom = parsedQuote.wisdom && parsedQuote.wisdom.length > 10;
+  
+  // Return true if we have at least translation OR wisdom
+  const isValid = hasTranslation || hasWisdom;
+  
+  console.log("Validation results:", {
+    hasVerse,
+    hasSanskrit, 
+    hasTranslation,
+    hasWisdom,
+    isValid
+  });
+  
+  return isValid;
+}
 
-    return validations.every(validation => validation === true);
-  }
 
   validateVerse(verse) {
     if (!verse) return false;
