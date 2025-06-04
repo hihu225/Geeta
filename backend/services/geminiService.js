@@ -138,12 +138,13 @@ getRandomQuoteFromDatabase() {
 
   
   cleanFormattedText(text) {
-    return text
-      .replace(/\*\*/g, '') 
-      .replace(/\*([^*]+)\*/g, '$1') 
-      .replace(/\n\s*\n/g, '\n') 
-      .trim();
-  }
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/\*([^*]+)\*/g, '$1') 
+    .replace(/\n\s*\n\s*\n/g, '\n\n') 
+    .replace(/^(.+?):\s*/gm, '$1:\n') 
+    .trim();
+}
 
   getRandomVerseReference() {
   const verseCounts = {

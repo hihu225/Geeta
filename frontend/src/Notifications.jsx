@@ -4,6 +4,7 @@ import { backend_url } from './utils/backend';
 import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -580,19 +581,32 @@ const Notifications = () => {
   };
 
   const clearAllNotifications = async () => {
-    if (window.confirm('Are you sure you want to delete all notifications? This action cannot be undone.')) {
-      try {
-        await axios(`${backend_url}/api/notifications/clear-all`, {
-          method: 'DELETE',
-        });
-        
-        setNotifications([]);
-        setSelectedNotification(null);
-      } catch (error) {
-        console.error('Error clearing all notifications:', error);
-      }
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: 'This will delete all notifications and cannot be undone!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete all',
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await axios(`${backend_url}/api/notifications/clear-all`, {
+        method: 'DELETE',
+      });
+
+      setNotifications([]);
+      setSelectedNotification(null);
+
+      Swal.fire('Deleted!', 'All notifications have been cleared.', 'success');
+    } catch (error) {
+      console.error('Error clearing all notifications:', error);
+      Swal.fire('Error', 'Failed to clear notifications.', 'error');
     }
-  };
+  }
+};
 
   const filteredNotifications = notifications.filter(notif => {
     if (filter === 'unread') return !notif.isRead;
