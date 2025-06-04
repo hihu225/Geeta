@@ -35,10 +35,10 @@ class GeminiService {
       const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
       
       const formattedQuote =
-  `🕉️ Verse: ${dbVerse.reference}\n` +
-  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
-  `💬 Translation:\n${translation}\n\n` +
-  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  `🕉️ **Verse:** ${dbVerse.reference}\n` +
+  `📜 **Sanskrit:**\n${dbVerse.sanskrit}\n\n` +
+  `💬 **Translation:**\n${translation}\n\n` +
+  `🧘 **Today's Wisdom:**\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
       return {
         success: true,
@@ -137,20 +137,25 @@ getRandomQuoteFromDatabase() {
 }
   
   cleanFormattedText(text) {
-  return text
-    // Normalize label lines with line breaks and bold markers
-    .replace(/\*?Verse:\s*/gi, '\n**Verse:** ')
-    .replace(/Sanskrit:\s*/gi, '\n**Sanskrit:**\n')
-    .replace(/Translation:\s*/gi, '\n**Translation:**\n')
-    .replace(/Today's Wisdom:\*?/gi, '\n**Today\'s Wisdom:**\n')
-    
-    // Cleanup: remove stray asterisks
-    .replace(/\*([^*]+)\*/g, '$1')
-    
-    // Trim whitespace and extra newlines
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+    return text
+      .replace(/\*?\s*Verse\s*:\s*\*?/gi, '\n**Verse:** ') 
+      .replace(/\*?\s*Sanskrit\s*:\s*\*?/gi, '\n**Sanskrit:**\n')
+      .replace(/\*?\s*Translation\s*:\s*\*?/gi, '\n**Translation:**\n')
+      .replace(/\*?\s*(Today's\s*Wisdom|Daily\s*Reflection|Practical\s*Guidance)\s*:\s*\*?/gi, '\n**Today\'s Wisdom:**\n') // Made "Today's Wisdom" more flexible
+      .replace(/\*?\s*Today's\s*Challenge\s*:\s*\*?/gi, '\n**Today\'s Challenge:** ')
+      .replace(/\*?\s*Personal\s*Message\s*:\s*\*?/gi, '\n**Personal Message:**\n')
+      .replace(/\*?\s*Your\s*Situation\s*:\s*\*?/gi, '\n**Your Situation:** ')
+      .replace(/\*?\s*Krishna's\s*Guidance\s*:\s*\*?/gi, '\n**Krishna\'s Guidance:**\n')
+      .replace(/\*?\s*Situation\s*:\s*\*?/gi, '\n**Situation:** ')
+      .replace(/\*?\s*Wisdom\s*for\s*You\s*:\s*\*?/gi, '\n**Wisdom for You:**\n')
+      .replace(/\*?\s*Gentle\s*Reminder\s*:\s*\*?/gi, '\n**Gentle Reminder:**\n')
+      .replace(/\*?\s*Theme\s*:\s*\*?/gi, '\n**Theme:** ')
+      .replace(/\*?\s*Application\s*:\s*\*?/gi, '\n**Application:**\n')
+      .replace(/\*?\s*Affirmation\s*:\s*\*?/gi, '\n**Affirmation:**\n')
+      .replace(/\n{3,}/g, '\n\n') 
+      .trim(); 
+  }
+
 
 
   getRandomVerseReference() {
@@ -654,10 +659,10 @@ Generate the thematic quote now:`;
     
     // Create formatted response without stars
     const formattedQuote =
-  `🕉️ Verse: ${dbVerse.reference}\n` +
-  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
-  `💬 Translation:\n${translation}\n\n` +
-  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  `🕉️ **Verse:** ${dbVerse.reference}\n` +
+  `📜 **Sanskrit:**\n${dbVerse.sanskrit}\n\n` +
+  `💬 **Translation:**\n${translation}\n\n` +
+  `🧘 **Today's Wisdom:**\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
     
     return {
