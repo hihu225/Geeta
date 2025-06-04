@@ -16,14 +16,14 @@ class NotificationService {
       }
 
       // CRITICAL: Check if already sent today before doing anything else
-      if (this.wasSentToday(user.dailyQuotes.lastSent)) {
-        console.log(`Daily quote already sent today for user ${userId}`);
-        return { 
-          success: false, 
-          message: "Daily quote already sent today",
-          alreadySent: true 
-        };
-      }
+      // if (this.wasSentToday(user.dailyQuotes.lastSent)) {
+      //   console.log(`Daily quote already sent today for user ${userId}`);
+      //   return { 
+      //     success: false, 
+      //     message: "Daily quote already sent today",
+      //     alreadySent: true 
+      //   };
+      // }
 
       // Get quote from Gemini with fallback
       let quoteData = await geminiService.getDailyQuote(
@@ -41,9 +41,9 @@ class NotificationService {
       }
 
       // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
-      await User.findByIdAndUpdate(userId, {
-        'dailyQuotes.lastSent': new Date()
-      });
+      // await User.findByIdAndUpdate(userId, {
+      //   'dailyQuotes.lastSent': new Date()
+      // });
 
       // Create notification record in database
       notificationRecord = new Notification({
@@ -144,7 +144,7 @@ class NotificationService {
       
       for (const user of users) {
         // Check if it's time to send notification for this user AND not sent today
-        if (this.shouldSendNotification(user) && !this.wasSentToday(user.dailyQuotes.lastSent)) {
+        if (this.shouldSendNotification(user) /*&& !this.wasSentToday(user.dailyQuotes.lastSent)*/) {
           console.log(`Sending notification to user ${user._id} (${user.email})`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
@@ -446,35 +446,33 @@ class NotificationService {
   }
 
   shouldSendNotification(user) {
-    try {
-      const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
-      const timezone = user.dailyQuotes.timezone;
-      
-      // Get current time in user's timezone using moment
-      const userCurrentTime = moment().tz(timezone);
-      
-      const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
-      
-      const currentHour = userCurrentTime.hour();
-      const currentMinute = userCurrentTime.minute();
-      
-      const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
-      const currentTotalMinutes = currentHour * 60 + currentMinute;
-      
-      const timeDiff = Math.abs(currentTotalMinutes - scheduledTotalMinutes);
-      
-      // FIXED: Check if notification should be sent (within 5-minute window only)
-      // Removed the date check from here since it's handled in sendDailyQuotesToAllUsers
-      const shouldSend = timeDiff <= 5;
-      
-      console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDiff} minutes, Should send: ${shouldSend}`);
-      
-      return shouldSend;
-    } catch (error) {
-      console.error(`Error checking notification time for user ${user._id}:`, error);
-      return false;
-    }
+  try {
+    const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
+    const timezone = user.dailyQuotes.timezone;
+    
+    // Get current time in user's timezone using moment
+    const userCurrentTime = moment().tz(timezone);
+    
+    const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
+    
+    const currentHour = userCurrentTime.hour();
+    const currentMinute = userCurrentTime.minute();
+    
+    const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
+    const currentTotalMinutes = currentHour * 60 + currentMinute;
+    
+    // FIXED: Only send if current time is AT or AFTER scheduled time (within 5-minute window)
+    const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
+    const shouldSend = timeDifference >= 0 && timeDifference <= 1;
+    
+    console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
+    
+    return shouldSend;
+  } catch (error) {
+    console.error(`Error checking notification time for user ${user._id}:`, error);
+    return false;
   }
+}
 
   wasSentToday(lastSent) {
     if (!lastSent) return false;

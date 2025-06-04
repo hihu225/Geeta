@@ -61,7 +61,7 @@ const NotificationSettings = () => {
       value: "english",
       label: "English",
       icon: "🇬🇧",
-      sample: "You have the right to perform your actions, but you are entitled to the fruits of those actions.",
+      sample: "You have the right to perform your actions, but you are not entitled to the fruits of those actions.",
       description: "Classic translations with deep meaning"
     },
     {
