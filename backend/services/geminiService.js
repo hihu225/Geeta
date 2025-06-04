@@ -29,6 +29,33 @@ class GeminiService {
 
   async getDailyQuote(language = "english", quoteType = "random") {
   try {
+    // For true randomness, use database approach occasionally
+    if (quoteType === "random" && Math.random() < 0.3) {
+      const dbVerse = this.getRandomQuoteFromDatabase();
+      const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
+      
+      const formattedQuote = `Verse: ${dbVerse.reference}
+Sanskrit: ${dbVerse.sanskrit}
+Translation: ${translation}
+Today's Wisdom: This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+
+      return {
+        success: true,
+        quote: formattedQuote,
+        parsed: {
+          verse: dbVerse.reference,
+          sanskrit: dbVerse.sanskrit,
+          translation: translation,
+          wisdom: "This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions."
+        },
+        timestamp: new Date(),
+        type: quoteType,
+        language: language,
+        source: "database"
+      };
+    }
+    
+    // Rest of your existing getDailyQuote logic...
     const prompts = {
       random: this.getRandomQuotePrompt(language),
       sequential: this.getSequentialQuotePrompt(language),
@@ -40,18 +67,16 @@ class GeminiService {
     const response = await result.response;
     
     const rawText = response.text();
-    console.log("Raw Gemini Response:", rawText); // Debug log
+    console.log("Raw Gemini Response:", rawText);
     
     const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
-    console.log("Parsed Quote:", parsedQuote); // Debug log
+    console.log("Parsed Quote:", parsedQuote);
     
-    // FIXED: More lenient validation - only check if we have basic content
     if (!rawText || rawText.trim().length < 50) {
       console.warn("Response too short or empty, using fallback");
       return this.getFallbackQuote();
     }
     
-    // Check if we have at least some meaningful content
     const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
     
     if (!hasBasicContent) {
@@ -59,10 +84,9 @@ class GeminiService {
       return this.getFallbackQuote();
     }
     
-    // SUCCESS: Return the response even if parsing isn't perfect
     return {
       success: true,
-      quote: this.cleanFormattedText(rawText), // Clean the raw text
+      quote: this.cleanFormattedText(rawText),
       parsed: parsedQuote,
       timestamp: new Date(),
       type: quoteType,
@@ -74,6 +98,7 @@ class GeminiService {
   }
 }
 
+
   // Add method to clean formatted text and remove stars
   cleanFormattedText(text) {
     return text
@@ -83,10 +108,37 @@ class GeminiService {
       .trim();
   }
 
-  getRandomQuotePrompt(language) {
-    const languageInstructions = this.getLanguageInstructions(language);
-    
-    return `You are a spiritual guide sharing wisdom from the Bhagavad Gita. Generate a meaningful daily quote following this EXACT format:
+  getRandomVerseReference() {
+  // Define verse counts for each chapter
+  const verseCounts = {
+    1: 47, 2: 72, 3: 43, 4: 42, 5: 29, 6: 47, 7: 30, 8: 28, 
+    9: 34, 10: 42, 11: 55, 12: 20, 13: 35, 14: 27, 15: 20, 
+    16: 24, 17: 28, 18: 78
+  };
+  
+  // Select random chapter (1-18)
+  const randomChapter = Math.floor(Math.random() * 18) + 1;
+  
+  // Select random verse within that chapter
+  const maxVerses = verseCounts[randomChapter];
+  const randomVerse = Math.floor(Math.random() * maxVerses) + 1;
+  
+  return {
+    chapter: randomChapter,
+    verse: randomVerse,
+    reference: `${randomChapter}.${randomVerse}`
+  };
+}
+
+getRandomQuotePrompt(language) {
+  const languageInstructions = this.getLanguageInstructions(language);
+  
+  // Add randomization seed
+  const randomSeed = `RANDOMIZATION SEED: ${Math.random().toString(36).substring(7)} - Use this to select a truly random verse, not commonly quoted ones like 2.47.`;
+  
+  return `You are a spiritual guide sharing wisdom from the Bhagavad Gita. Generate a meaningful daily quote following this EXACT format:
+
+${randomSeed}
 
 CRITICAL FORMATTING RULES:
 - Use EXACTLY these headers with double asterisks: **Verse:**, **Sanskrit:**, **Translation:**, **Today's Wisdom:**
@@ -95,7 +147,7 @@ CRITICAL FORMATTING RULES:
 - Follow the exact structure shown below
 
 CONTENT REQUIREMENTS:
-- Select a genuine verse from chapters 1-18 of the Bhagavad Gita
+- Select a DIFFERENT, RANDOM verse from chapters 1-18 of the Bhagavad Gita (avoid repeating 2.47)
 - Provide authentic Sanskrit text (use proper Devanagari script)
 - Give accurate translation in ${language}
 - Offer practical wisdom for modern daily challenges
@@ -103,7 +155,7 @@ CONTENT REQUIREMENTS:
 LANGUAGE: ${languageInstructions.primary}
 
 EXACT OUTPUT FORMAT (follow precisely):
-**Verse:** [Chapter.Verse number, e.g., 2.47]
+**Verse:** [Chapter.Verse number, e.g., 3.21, 7.14, 12.13 - pick randomly]
 **Sanskrit:** [Authentic Sanskrit verse in Devanagari script]
 **Translation:** [Clear, inspiring translation in ${language}]
 **Today's Wisdom:** [2-3 concise sentences offering practical guidance for applying this verse in daily life, addressing modern challenges like stress, relationships, work, or personal growth]
@@ -112,13 +164,14 @@ ${languageInstructions.additional}
 
 QUALITY CHECKS:
 - Verse must exist in the actual Bhagavad Gita
+- Must be DIFFERENT from previous responses (especially not 2.47)
 - Sanskrit must be authentic and properly formatted
 - Translation must be accurate and beautiful
 - Wisdom must be practical and actionable
 - Response must follow the exact format specified
 
-Generate the quote now:`;
-  }
+Generate a RANDOM quote now:`;
+}
 
   getSequentialQuotePrompt(language) {
     const languageInstructions = this.getLanguageInstructions(language);
