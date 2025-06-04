@@ -519,6 +519,12 @@ const Notifications = () => {
       markAsRead(notificationId);
     }
   }, [location]);
+function renderFormattedQuote(text) {
+  const html = text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold markdown
+    .replace(/\n/g, '<br />');                        // line breaks
+  return { __html: html };
+}
 
   const fetchNotifications = async () => {
     try {
@@ -856,10 +862,12 @@ const Notifications = () => {
                     Sacred Verse
                   </h4>
                   <div style={styles.quoteBox}>
-                    <p style={styles.quoteText}>
-                      "{selectedNotification.data.fullQuote}"
-                    </p>
-                  </div>
+  <p
+    style={styles.quoteText}
+    dangerouslySetInnerHTML={renderFormattedQuote(selectedNotification.data.fullQuote)}
+  />
+</div>
+
                 </div>
               )}
               
