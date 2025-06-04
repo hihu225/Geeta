@@ -8,7 +8,6 @@ class GeminiService {
     // Remove class-level chapter/verse tracking since we'll use user-specific data
     // this.currentChapter = 1;
     // this.currentVerse = 1;
-    
     // Regex patterns for response validation and parsing
     this.patterns = {
       verse: /\*\*Verse:\*\*\s*(\d+)\.(\d+)/i,
@@ -102,48 +101,6 @@ class GeminiService {
     }
   }
 
-  // Updated sequential quote prompt to use user's progress
-  getSequentialQuotePrompt(language, user) {
-    const languageInstructions = this.getLanguageInstructions(language);
-    
-    // Get user's current progress or default to 1.1
-    const currentChapter = user?.sequentialProgress?.currentChapter || 1;
-    const currentVerse = user?.sequentialProgress?.currentVerse || 1;
-    
-    return `You are a spiritual guide sharing wisdom from the Bhagavad Gita.
-    You are providing sequential verses from the Bhagavad Gita for systematic daily study.
-
-CURRENT POSITION: Chapter ${currentChapter}, Verse ${currentVerse}
-
-CRITICAL FORMATTING RULES:
-- Use EXACTLY these headers: **Verse:**, **Sanskrit:**, **Translation:**, **Daily Reflection:**
-- Each section must be on a new line
-- Provide the EXACT verse requested, not a random one
-- Follow the precise structure below
-
-LANGUAGE: ${languageInstructions.primary}
-
-EXACT OUTPUT FORMAT:
-**Verse:** ${currentChapter}.${currentVerse}
-**Sanskrit:** [Exact Sanskrit text for Chapter ${currentChapter}, Verse ${currentVerse} in Devanagari]
-**Translation:** [Accurate translation in ${language}]
-**Daily Reflection:** [Comprehensive reflection with three parts:
-
-1. Context: Situational context within the chapter (2-3 sentences)
-2. Spiritual Meaning: Deeper philosophical significance (2-3 sentences)  
-3. Practical Application: Actionable advice for daily life (2-3 sentences)]
-
-${languageInstructions.additional}
-
-QUALITY REQUIREMENTS:
-- Must be the exact verse requested (${currentChapter}.${currentVerse})
-- Sanskrit must be authentic and properly formatted
-- Translation must be accurate and flowing
-- Reflection must connect to the overall flow of Krishna's teachings
-- Each reflection part must be clearly structured and meaningful
-
-Generate the sequential verse now:`;
-  }
 
   // Method to advance user's sequential progress
   async advanceUserSequentialVerse(user) {
@@ -341,13 +298,17 @@ QUALITY CHECKS:
 Generate a RANDOM quote now:`;
 }
 
-  getSequentialQuotePrompt(language) {
+  // Updated sequential quote prompt to use user's progress
+  getSequentialQuotePrompt(language, user) {
     const languageInstructions = this.getLanguageInstructions(language);
     
-    return `You are a spiritual guide sharing wisdom from the Bhagavad Gita.
-    You are providing sequential verses from the Bhagavad Gita for systematic daily study.
+    // Get user's current progress or default to 1.1
+    const currentChapter = user?.sequentialProgress?.currentChapter || 1;
+    const currentVerse = user?.sequentialProgress?.currentVerse || 1;
+    
+    return `You are providing sequential verses from the Bhagavad Gita for systematic daily study.
 
-CURRENT POSITION: Chapter ${this.currentChapter}, Verse ${this.currentVerse}
+CURRENT POSITION: Chapter ${currentChapter}, Verse ${currentVerse}
 
 CRITICAL FORMATTING RULES:
 - Use EXACTLY these headers: **Verse:**, **Sanskrit:**, **Translation:**, **Daily Reflection:**
@@ -358,8 +319,8 @@ CRITICAL FORMATTING RULES:
 LANGUAGE: ${languageInstructions.primary}
 
 EXACT OUTPUT FORMAT:
-**Verse:** ${this.currentChapter}.${this.currentVerse}
-**Sanskrit:** [Exact Sanskrit text for Chapter ${this.currentChapter}, Verse ${this.currentVerse} in Devanagari]
+**Verse:** ${currentChapter}.${currentVerse}
+**Sanskrit:** [Exact Sanskrit text for Chapter ${currentChapter}, Verse ${currentVerse} in Devanagari]
 **Translation:** [Accurate translation in ${language}]
 **Daily Reflection:** [Comprehensive reflection with three parts:
 
@@ -370,7 +331,7 @@ EXACT OUTPUT FORMAT:
 ${languageInstructions.additional}
 
 QUALITY REQUIREMENTS:
-- Must be the exact verse requested (${this.currentChapter}.${this.currentVerse})
+- Must be the exact verse requested (${currentChapter}.${currentVerse})
 - Sanskrit must be authentic and properly formatted
 - Translation must be accurate and flowing
 - Reflection must connect to the overall flow of Krishna's teachings
