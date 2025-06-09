@@ -27,18 +27,6 @@ class NotificationService {
         };
       }
 
-      // CRITICAL: Enhanced duplicate check with database verification
-      const duplicateCheck = await this.checkDuplicateNotifications(userId);
-      if (duplicateCheck.hasDuplicates) {
-        console.log(`Duplicate notification prevented for user ${userId}: ${duplicateCheck.count} notifications already sent today`);
-        return { 
-          success: false, 
-          message: "Daily quote already sent today (database verified)",
-          alreadySent: true,
-          duplicateCount: duplicateCheck.count
-        };
-      }
-
       // CRITICAL: Check if already sent today AND schedule hasn't changed since last sent
       if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
         console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
@@ -49,154 +37,133 @@ class NotificationService {
         };
       }
 
-      // NEW: Create a processing lock to prevent race conditions
-      const lockKey = `daily_quote_${userId}_${new Date().toISOString().split('T')[0]}`;
-      const existingLock = await this.checkProcessingLock(lockKey);
-      if (existingLock) {
-        console.log(`Processing lock exists for user ${userId}, skipping to prevent duplicate`);
-        return { 
-          success: false, 
-          message: "Already processing notification for today",
-          processingLock: true 
+      // Get quote from Gemini with user context for sequential quotes
+      let quoteData = await geminiService.getDailyQuote(
+        user.preferences?.language || 'english',
+        user.preferences?.quoteType || 'random',
+        user // Pass user object for sequential progress tracking
+      );
+      console.log("Gemini Quote Data:", quoteData);
+      
+      // If Gemini API fails, use fallback quote
+      if (!quoteData.success) {
+        console.warn("Gemini API failed, using fallback quote");
+        quoteData = {
+          success: true,
+          quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47"
         };
       }
 
-      // Set processing lock
-      await this.setProcessingLock(lockKey);
-
-      try {
-        // Get quote from Gemini with user context for sequential quotes
-        let quoteData = await geminiService.getDailyQuote(
-          user.preferences?.language || 'english',
-          user.preferences?.quoteType || 'random',
-          user // Pass user object for sequential progress tracking
-        );
-        console.log("Gemini Quote Data:", quoteData);
-        
-        // If Gemini API fails, use fallback quote
-        if (!quoteData.success) {
-          console.warn("Gemini API failed, using fallback quote");
-          quoteData = {
-            success: true,
-            quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47"
-          };
+      // IMPORTANT: Update sequential progress if user is on sequential mode
+      let sequentialProgress = null;
+      if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
+        try {
+          sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
+          console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
+        } catch (progressError) {
+          console.error(`Error updating sequential progress for user ${userId}:`, progressError);
+          // Continue with quote delivery even if progress update fails
         }
+      }
 
-        // IMPORTANT: Update sequential progress if user is on sequential mode
-        let sequentialProgress = null;
-        if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
-          try {
-            sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
-            console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
-          } catch (progressError) {
-            console.error(`Error updating sequential progress for user ${userId}:`, progressError);
-            // Continue with quote delivery even if progress update fails
+      // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
+      await User.findByIdAndUpdate(userId, {
+        'dailyQuotes.lastSent': new Date()
+      });
+
+      // Create notification record in database with enhanced data
+      notificationRecord = new Notification({
+        userId: user._id,
+        title: "🕉️ Daily Bhagavad Gita Wisdom",
+        body: this.truncateText(quoteData.quote, 100) + "...",
+        type: "daily_quote",
+        data: {
+          fullQuote: quoteData.quote,
+          language: user.preferences?.language || 'english',
+          quoteType: user.preferences?.quoteType || 'random',
+          // Add sequential progress data if applicable
+          sequentialProgress: sequentialProgress ? {
+            currentPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead,
+            completedChapters: sequentialProgress.completedChapters
+          } : null,
+          // Add parsed quote data for better tracking
+          parsedQuote: quoteData.parsed || null,
+          metadata: {
+            generatedBy: 'gemini',
+            isScheduled: true,
+            sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
+            userProgress: quoteData.userProgress || null // Store user's verse position
           }
-        }
+        },
+        deliveryStatus: 'pending',
+        priority: 'normal'
+      });
 
-        // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
-        await User.findByIdAndUpdate(userId, {
-          'dailyQuotes.lastSent': new Date()
-        });
+      await notificationRecord.save();
+      console.log(`Notification record created: ${notificationRecord._id}`);
 
-        // Create notification record in database with enhanced data
-        notificationRecord = new Notification({
-          userId: user._id,
+      // Prepare enhanced FCM message with sequential progress
+      const message = {
+        notification: {
           title: "🕉️ Daily Bhagavad Gita Wisdom",
           body: this.truncateText(quoteData.quote, 100) + "...",
+        },
+        data: {
           type: "daily_quote",
-          data: {
-            fullQuote: quoteData.quote,
-            language: user.preferences?.language || 'english',
-            quoteType: user.preferences?.quoteType || 'random',
-            // Add sequential progress data if applicable
-            sequentialProgress: sequentialProgress ? {
-              currentPosition: sequentialProgress.position,
-              totalVersesRead: sequentialProgress.totalRead,
-              completedChapters: sequentialProgress.completedChapters
-            } : null,
-            // Add parsed quote data for better tracking
-            parsedQuote: quoteData.parsed || null,
-            metadata: {
-              generatedBy: 'gemini',
-              isScheduled: true,
-              sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
-              userProgress: quoteData.userProgress || null, // Store user's verse position
-              lockKey: lockKey // Store lock key for debugging
-            }
-          },
-          deliveryStatus: 'pending',
-          priority: 'normal'
-        });
+          fullQuote: quoteData.quote,
+          language: user.preferences?.language || 'english',
+          quoteType: user.preferences?.quoteType || 'random',
+          timestamp: new Date().toISOString(),
+          notificationId: notificationRecord._id.toString(),
+          // Add sequential progress for app to display
+          ...(sequentialProgress && {
+            sequentialPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead.toString(),
+            completedChapters: sequentialProgress.completedChapters.toString()
+          }),
+          // Add parsed data for app usage
+          ...(quoteData.parsed && {
+            verse: quoteData.parsed.verse || '',
+            sanskrit: quoteData.parsed.sanskrit || '',
+            translation: quoteData.parsed.translation || '',
+            wisdom: quoteData.parsed.wisdom || ''
+          })
+        },
+        token: user.fcmToken
+      };
 
-        await notificationRecord.save();
-        console.log(`Notification record created: ${notificationRecord._id}`);
+      try {
+        // Send FCM notification
+        const response = await admin.messaging().send(message);
+        console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
 
-        // Prepare enhanced FCM message with sequential progress
-        const message = {
-          notification: {
-            title: "🕉️ Daily Bhagavad Gita Wisdom",
-            body: this.truncateText(quoteData.quote, 100) + "...",
-          },
-          data: {
-            type: "daily_quote",
-            fullQuote: quoteData.quote,
-            language: user.preferences?.language || 'english',
-            quoteType: user.preferences?.quoteType || 'random',
-            timestamp: new Date().toISOString(),
-            notificationId: notificationRecord._id.toString(),
-            // Add sequential progress for app to display
-            ...(sequentialProgress && {
-              sequentialPosition: sequentialProgress.position,
-              totalVersesRead: sequentialProgress.totalRead.toString(),
-              completedChapters: sequentialProgress.completedChapters.toString()
-            }),
-            // Add parsed data for app usage
-            ...(quoteData.parsed && {
-              verse: quoteData.parsed.verse || '',
-              sanskrit: quoteData.parsed.sanskrit || '',
-              translation: quoteData.parsed.translation || '',
-              wisdom: quoteData.parsed.wisdom || ''
-            })
-          },
-          token: user.fcmToken
+        // Update notification record as delivered
+        await notificationRecord.markAsDelivered(response);
+
+        return {
+          success: true,
+          response,
+          quote: quoteData.quote,
+          notificationId: notificationRecord._id,
+          // Return sequential progress info for logging/tracking
+          sequentialProgress: sequentialProgress,
+          quoteType: user.preferences?.quoteType || 'random',
+          userProgress: quoteData.userProgress
         };
 
-        try {
-          // Send FCM notification
-          const response = await admin.messaging().send(message);
-          console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
-
-          // Update notification record as delivered
-          await notificationRecord.markAsDelivered(response);
-
-          return {
-            success: true,
-            response,
-            quote: quoteData.quote,
-            notificationId: notificationRecord._id,
-            // Return sequential progress info for logging/tracking
-            sequentialProgress: sequentialProgress,
-            quoteType: user.preferences?.quoteType || 'random',
-            userProgress: quoteData.userProgress
-          };
-
-        } catch (fcmError) {
-          console.error(`FCM delivery failed for user ${userId}:`, fcmError);
-          
-          // Mark notification as failed but don't reset lastSent
-          await notificationRecord.markAsFailed(fcmError.message);
-          
-          return {
-            success: false,
-            error: fcmError.message,
-            notificationId: notificationRecord._id,
-            sequentialProgress: sequentialProgress // Still return progress even if FCM failed
-          };
-        }
-      } finally {
-        // Always release the processing lock
-        await this.releaseProcessingLock(lockKey);
+      } catch (fcmError) {
+        console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+        
+        // Mark notification as failed but don't reset lastSent
+        await notificationRecord.markAsFailed(fcmError.message);
+        
+        return {
+          success: false,
+          error: fcmError.message,
+          notificationId: notificationRecord._id,
+          sequentialProgress: sequentialProgress // Still return progress even if FCM failed
+        };
       }
 
     } catch (error) {
@@ -239,21 +206,12 @@ class NotificationService {
       console.log(`Found ${users.length} users eligible for daily quotes (logged in and notifications enabled)`);
       const results = [];
       let skippedLoggedOut = 0;
-      let skippedDuplicate = 0;
       
       for (const user of users) {
         // Double-check login status before sending
         if (!this.isUserLoggedIn(user)) {
           console.log(`Skipping user ${user._id}: User is logged out`);
           skippedLoggedOut++;
-          continue;
-        }
-
-        // Enhanced duplicate check at bulk level
-        const duplicateCheck = await this.checkDuplicateNotifications(user._id);
-        if (duplicateCheck.hasDuplicates) {
-          console.log(`Skipping user ${user._id}: Already has ${duplicateCheck.count} notifications today`);
-          skippedDuplicate++;
           continue;
         }
 
@@ -269,7 +227,7 @@ class NotificationService {
           });
           
           // Add delay between notifications to avoid rate limiting
-          await this.delay(3000); // Increased delay to 3 seconds
+          await this.delay(2000); // Increased delay to 2 seconds
         } else {
           console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
         }
@@ -277,7 +235,7 @@ class NotificationService {
 
       const successCount = results.filter(r => r.success).length;
       const skippedCount = users.length - results.length;
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out), ${skippedDuplicate} skipped (duplicates)`);
+      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out)`);
 
       return {
         success: true,
@@ -285,7 +243,6 @@ class NotificationService {
         sentNotifications: successCount,
         skippedUsers: skippedCount,
         skippedLoggedOut: skippedLoggedOut,
-        skippedDuplicate: skippedDuplicate,
         results
       };
     } catch (error) {
@@ -677,9 +634,9 @@ class NotificationService {
       const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
       const currentTotalMinutes = currentHour * 60 + currentMinute;
       
-      // FIXED: Tighter time window - only send if within exact minute (0-1 minute window)
+      // FIXED: Only send if current time is AT or AFTER scheduled time (within 5-minute window)
       const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
-      const shouldSend = timeDifference >= 0 && timeDifference < 1; // Changed from <= 1 to < 1
+      const shouldSend = timeDifference >= 0 && timeDifference < 1;
       
       console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
       
@@ -740,7 +697,7 @@ class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Enhanced duplicate notification checker with database verification
+  // Additional helper method to check and prevent duplicate notifications
   async checkDuplicateNotifications(userId) {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -762,66 +719,6 @@ class NotificationService {
     } catch (error) {
       console.error('Error checking duplicate notifications:', error);
       return { hasDuplicates: false, count: 0, notifications: [] };
-    }
-  }
-
-  // NEW: Processing lock methods to prevent race conditions
-  async checkProcessingLock(lockKey) {
-    try {
-      // You can implement this using Redis, MongoDB, or in-memory cache
-      // For MongoDB approach:
-      const lock = await Notification.findOne({
-        'data.metadata.lockKey': lockKey,
-        createdAt: {
-          $gte: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
-        }
-      });
-      
-      return !!lock;
-    } catch (error) {
-      console.error('Error checking processing lock:', error);
-      return false;
-    }
-  }
-
-  async setProcessingLock(lockKey) {
-    try {
-      // Store the lock key temporarily
-      // This is a simple implementation - you might want to use Redis for better performance
-      this.processingLocks = this.processingLocks || new Map();
-      this.processingLocks.set(lockKey, Date.now());
-      
-      // Clean up old locks
-      this.cleanupOldLocks();
-    } catch (error) {
-      console.error('Error setting processing lock:', error);
-    }
-  }
-
-  async releaseProcessingLock(lockKey) {
-    try {
-      if (this.processingLocks) {
-        this.processingLocks.delete(lockKey);
-      }
-    } catch (error) {
-      console.error('Error releasing processing lock:', error);
-    }
-  }
-
-  cleanupOldLocks() {
-    try {
-      if (!this.processingLocks) return;
-      
-      const now = Date.now();
-      const fiveMinutesAgo = now - (5 * 60 * 1000);
-      
-      for (const [key, timestamp] of this.processingLocks.entries()) {
-        if (timestamp < fiveMinutesAgo) {
-          this.processingLocks.delete(key);
-        }
-      }
-    } catch (error) {
-      console.error('Error cleaning up old locks:', error);
     }
   }
 }
