@@ -6,40 +6,7 @@ const geminiService = require("./geminiService");
 const moment = require('moment-timezone');
 
 class NotificationService {
-  constructor() {
-    // CRITICAL: Add a semaphore to prevent concurrent notifications to same user
-    this.processingUsers = new Set();
-    // Add a daily tracking set to prevent multiple notifications per day
-    this.dailyProcessedUsers = new Set();
-  }
-
   async sendDailyQuoteToUser(userId) {
-    const userIdStr = userId.toString();
-    
-    // CRITICAL: Prevent concurrent processing for same user
-    if (this.processingUsers.has(userIdStr)) {
-      console.log(`User ${userIdStr} is already being processed, skipping to prevent duplicates`);
-      return { 
-        success: false, 
-        message: "User already being processed",
-        alreadyProcessing: true 
-      };
-    }
-
-    // CRITICAL: Check if user was already processed today
-    const todayKey = `${userIdStr}_${new Date().toISOString().split('T')[0]}`;
-    if (this.dailyProcessedUsers.has(todayKey)) {
-      console.log(`User ${userIdStr} already processed today, skipping`);
-      return { 
-        success: false, 
-        message: "User already processed today",
-        alreadyProcessed: true 
-      };
-    }
-
-    // Lock this user for processing
-    this.processingUsers.add(userIdStr);
-    
     let notificationRecord = null;
     
     try {
@@ -50,9 +17,9 @@ class NotificationService {
         return { success: false, message: "User not eligible for notifications" };
       }
 
-      // Check if user is currently logged in
+      // NEW: Check if user is currently logged in
       if (!this.isUserLoggedIn(user)) {
-        console.log(`User ${userIdStr} is logged out, skipping notification`);
+        console.log(`User ${userId} is logged out, skipping notification`);
         return { 
           success: false, 
           message: "User is logged out",
@@ -60,53 +27,20 @@ class NotificationService {
         };
       }
 
-      // CRITICAL FIX: Enhanced duplicate check that prevents ANY daily quote today
-      const duplicateCheck = await this.checkDuplicateNotifications(userId);
-      const scheduleChanged = this.scheduleChangedAfterLastSent(user);
-      
-      // FIXED: Only allow ONE notification per day, regardless of quote type
-      if (duplicateCheck.hasDuplicates && !scheduleChanged) {
-        console.log(`Daily quote already sent today for user ${userIdStr} - found ${duplicateCheck.count} existing notifications`);
+      // CRITICAL: Check if already sent today AND schedule hasn't changed since last sent
+      if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
+        console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
         return { 
           success: false, 
           message: "Daily quote already sent today",
-          alreadySent: true,
-          existingNotifications: duplicateCheck.count
-        };
-      }
-
-      // CRITICAL: If schedule changed, check if we already sent after the change
-      if (scheduleChanged && duplicateCheck.hasDuplicates) {
-        const latestNotification = duplicateCheck.notifications[0]; // Sorted by newest first
-        const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
-        
-        if (latestNotification.createdAt > scheduleUpdatedAt) {
-          console.log(`User ${userIdStr} already received notification after schedule change`);
-          return { 
-            success: false, 
-            message: "Already sent notification after schedule change",
-            alreadySent: true 
-          };
-        }
-      }
-
-      // LEGACY CHECK: Also check the old way for backward compatibility
-      if (this.wasSentToday(user.dailyQuotes.lastSent) && !scheduleChanged) {
-        console.log(`Daily quote already sent today for user ${userIdStr} (legacy check) and schedule unchanged`);
-        return { 
-          success: false, 
-          message: "Daily quote already sent today (legacy check)",
           alreadySent: true 
         };
       }
 
-      // FIXED: Get the user's SINGLE quote preference, not multiple
-      const userQuoteType = this.getUserQuoteType(user);
-      
-      // Get quote from Gemini with user context
+      // Get quote from Gemini with user context for sequential quotes
       let quoteData = await geminiService.getDailyQuote(
         user.preferences?.language || 'english',
-        userQuoteType,
+        user.preferences?.quoteType || 'random',
         user // Pass user object for sequential progress tracking
       );
       console.log("Gemini Quote Data:", quoteData);
@@ -116,31 +50,28 @@ class NotificationService {
         console.warn("Gemini API failed, using fallback quote");
         quoteData = {
           success: true,
-          quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47",
-          type: userQuoteType
+          quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47"
         };
       }
 
-      // Update sequential progress if needed
+      // IMPORTANT: Update sequential progress if user is on sequential mode
       let sequentialProgress = null;
-      if (userQuoteType === 'sequential' && quoteData.success) {
+      if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
         try {
           sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
-          console.log(`Sequential progress updated for user ${userIdStr}:`, sequentialProgress);
+          console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
         } catch (progressError) {
-          console.error(`Error updating sequential progress for user ${userIdStr}:`, progressError);
+          console.error(`Error updating sequential progress for user ${userId}:`, progressError);
+          // Continue with quote delivery even if progress update fails
         }
       }
 
-      // CRITICAL: Update user's last sent timestamp IMMEDIATELY to prevent race conditions
+      // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
       await User.findByIdAndUpdate(userId, {
         'dailyQuotes.lastSent': new Date()
       });
 
-      // CRITICAL: Mark user as processed today
-      this.dailyProcessedUsers.add(todayKey);
-
-      // Create notification record with the SINGLE quote type
+      // Create notification record in database with enhanced data
       notificationRecord = new Notification({
         userId: user._id,
         title: "🕉️ Daily Bhagavad Gita Wisdom",
@@ -149,21 +80,20 @@ class NotificationService {
         data: {
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
-          quoteType: userQuoteType, // Single quote type
+          quoteType: user.preferences?.quoteType || 'random',
+          // Add sequential progress data if applicable
           sequentialProgress: sequentialProgress ? {
             currentPosition: sequentialProgress.position,
             totalVersesRead: sequentialProgress.totalRead,
             completedChapters: sequentialProgress.completedChapters
           } : null,
+          // Add parsed quote data for better tracking
           parsedQuote: quoteData.parsed || null,
           metadata: {
             generatedBy: 'gemini',
             isScheduled: true,
-            sentDate: new Date().toISOString().split('T')[0],
-            userProgress: quoteData.userProgress || null,
-            scheduleChangeTriggered: scheduleChanged,
-            originalScheduleTime: user.dailyQuotes.time,
-            userTimezone: user.dailyQuotes.timezone
+            sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
+            userProgress: quoteData.userProgress || null // Store user's verse position
           }
         },
         deliveryStatus: 'pending',
@@ -173,7 +103,7 @@ class NotificationService {
       await notificationRecord.save();
       console.log(`Notification record created: ${notificationRecord._id}`);
 
-      // Prepare FCM message
+      // Prepare enhanced FCM message with sequential progress
       const message = {
         notification: {
           title: "🕉️ Daily Bhagavad Gita Wisdom",
@@ -183,14 +113,16 @@ class NotificationService {
           type: "daily_quote",
           fullQuote: quoteData.quote,
           language: user.preferences?.language || 'english',
-          quoteType: userQuoteType,
+          quoteType: user.preferences?.quoteType || 'random',
           timestamp: new Date().toISOString(),
           notificationId: notificationRecord._id.toString(),
+          // Add sequential progress for app to display
           ...(sequentialProgress && {
             sequentialPosition: sequentialProgress.position,
             totalVersesRead: sequentialProgress.totalRead.toString(),
             completedChapters: sequentialProgress.completedChapters.toString()
           }),
+          // Add parsed data for app usage
           ...(quoteData.parsed && {
             verse: quoteData.parsed.verse || '',
             sanskrit: quoteData.parsed.sanskrit || '',
@@ -204,7 +136,7 @@ class NotificationService {
       try {
         // Send FCM notification
         const response = await admin.messaging().send(message);
-        console.log(`FCM notification sent successfully to user ${userIdStr}: ${response}`);
+        console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
 
         // Update notification record as delivered
         await notificationRecord.markAsDelivered(response);
@@ -214,27 +146,30 @@ class NotificationService {
           response,
           quote: quoteData.quote,
           notificationId: notificationRecord._id,
+          // Return sequential progress info for logging/tracking
           sequentialProgress: sequentialProgress,
-          quoteType: userQuoteType,
-          userProgress: quoteData.userProgress,
-          scheduleChangeTriggered: scheduleChanged
+          quoteType: user.preferences?.quoteType || 'random',
+          userProgress: quoteData.userProgress
         };
 
       } catch (fcmError) {
-        console.error(`FCM delivery failed for user ${userIdStr}:`, fcmError);
+        console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+        
+        // Mark notification as failed but don't reset lastSent
         await notificationRecord.markAsFailed(fcmError.message);
         
         return {
           success: false,
           error: fcmError.message,
           notificationId: notificationRecord._id,
-          sequentialProgress: sequentialProgress
+          sequentialProgress: sequentialProgress // Still return progress even if FCM failed
         };
       }
 
     } catch (error) {
-      console.error(`Error sending quote to user ${userIdStr}:`, error);
+      console.error(`Error sending quote to user ${userId}:`, error);
       
+      // Mark notification as failed if it was created
       if (notificationRecord) {
         try {
           await notificationRecord.markAsFailed(error.message);
@@ -248,57 +183,22 @@ class NotificationService {
         error: error.message,
         notificationId: notificationRecord?._id
       };
-    } finally {
-      // CRITICAL: Always remove user from processing set
-      this.processingUsers.delete(userIdStr);
     }
-  }
-
-  // CRITICAL: Fixed method to determine user's single quote preference
-  getUserQuoteType(user) {
-    // Priority order: explicit quoteType preference > derived from categories > default
-    if (user.preferences?.quoteType) {
-      console.log(`User ${user._id} has explicit quoteType: ${user.preferences.quoteType}`);
-      return user.preferences.quoteType;
-    }
-    
-    // Check if user has any specific preferences set
-    if (user.preferences?.categories && user.preferences.categories.length > 0) {
-      // FIXED: Don't just use first category, determine the best single type
-      const categories = user.preferences.categories;
-      console.log(`User ${user._id} has categories:`, categories);
-      
-      // If user has both life_guidance and sacred_journey, they both map to 'themed'
-      // So we should just return 'themed' once, not process both
-      if (categories.includes('life_guidance') || categories.includes('sacred_journey') || categories.includes('spiritual_growth')) {
-        return 'themed';
-      }
-      
-      if (categories.includes('daily_wisdom')) {
-        return 'random';
-      }
-    }
-    
-    // Default fallback
-    console.log(`User ${user._id} using default quote type: random`);
-    return 'random';
   }
 
   async sendDailyQuotesToAllUsers() {
     try {
-      // Clear daily processed users at start of new day
-      this.clearDailyProcessedUsers();
-      
-      // Enhanced query to include active login status checks
+      // Enhanced query to include active login status checks (adapted for your schema)
       const users = await User.find({
         'dailyQuotes.enabled': true,
         fcmToken: { $exists: true, $ne: null },
-        isActive: true,
+        isActive: true, // Only active accounts
+        // Add conditions to filter out logged out users
         $or: [
-          { lastLogin: { $gte: this.getActiveUserThreshold() } },
+          { lastLogin: { $gte: this.getActiveUserThreshold() } }, // Recently active users
           { 
             isDemo: true, 
-            demoExpiresAt: { $gt: new Date() }
+            demoExpiresAt: { $gt: new Date() } // Active demo users
           }
         ]
       });
@@ -306,58 +206,19 @@ class NotificationService {
       console.log(`Found ${users.length} users eligible for daily quotes (logged in and notifications enabled)`);
       const results = [];
       let skippedLoggedOut = 0;
-      let skippedAlreadySent = 0;
-      let skippedAlreadyProcessed = 0;
       
       for (const user of users) {
-        const userIdStr = user._id.toString();
-        
-        // Double-check login status
+        // Double-check login status before sending
         if (!this.isUserLoggedIn(user)) {
-          console.log(`Skipping user ${userIdStr}: User is logged out`);
+          console.log(`Skipping user ${user._id}: User is logged out`);
           skippedLoggedOut++;
           continue;
         }
 
-        // CRITICAL: Check if user is already being processed
-        if (this.processingUsers.has(userIdStr)) {
-          console.log(`Skipping user ${userIdStr}: Already being processed`);
-          skippedAlreadyProcessed++;
-          continue;
-        }
-
-        // CRITICAL: Check if user was already processed today
-        const todayKey = `${userIdStr}_${new Date().toISOString().split('T')[0]}`;
-        if (this.dailyProcessedUsers.has(todayKey)) {
-          console.log(`Skipping user ${userIdStr}: Already processed today`);
-          skippedAlreadyProcessed++;
-          continue;
-        }
-
-        // Enhanced duplicate prevention
-        const duplicateCheck = await this.checkDuplicateNotifications(user._id);
-        const scheduleChanged = this.scheduleChangedAfterLastSent(user);
-        
-        // Check if it's time to send notification
-        const isTimeToSend = this.shouldSendNotification(user);
-        
-        // Comprehensive check for whether to send
-        const shouldSend = isTimeToSend && (!duplicateCheck.hasDuplicates || scheduleChanged);
-        
-        if (shouldSend) {
-          // Additional check for schedule change
-          if (scheduleChanged && duplicateCheck.hasDuplicates) {
-            const latestNotification = duplicateCheck.notifications[0];
-            const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
-            
-            if (latestNotification.createdAt > scheduleUpdatedAt) {
-              console.log(`Skipping user ${userIdStr}: Already sent after schedule change`);
-              skippedAlreadySent++;
-              continue;
-            }
-          }
-          
-          console.log(`Sending notification to user ${userIdStr} (${user.email}) - Schedule changed: ${scheduleChanged}, Existing notifications: ${duplicateCheck.count}`);
+        // Check if it's time to send notification AND (not sent today OR schedule changed after last sent)
+        if (this.shouldSendNotification(user) && 
+            (!this.wasSentToday(user.dailyQuotes.lastSent) || this.scheduleChangedAfterLastSent(user))) {
+          console.log(`Sending notification to user ${user._id} (${user.email})`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
             userId: user._id,
@@ -365,28 +226,23 @@ class NotificationService {
             ...result
           });
           
-          // Add delay between notifications to prevent race conditions
-          await this.delay(1000);
+          // Add delay between notifications to avoid rate limiting
+          await this.delay(2000); // Increased delay to 2 seconds
         } else {
-          const reason = !isTimeToSend ? 'not time yet' : 'already sent today';
-          console.log(`Skipping user ${userIdStr}: ${reason} (existing notifications: ${duplicateCheck.count})`);
-          skippedAlreadySent++;
+          console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
         }
       }
 
       const successCount = results.filter(r => r.success).length;
-      const totalSkipped = users.length - results.length;
-      
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${totalSkipped} total skipped (${skippedLoggedOut} logged out, ${skippedAlreadySent} already sent/not time, ${skippedAlreadyProcessed} already processed)`);
+      const skippedCount = users.length - results.length;
+      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out)`);
 
       return {
         success: true,
         totalUsers: users.length,
         sentNotifications: successCount,
-        skippedUsers: totalSkipped,
+        skippedUsers: skippedCount,
         skippedLoggedOut: skippedLoggedOut,
-        skippedAlreadySent: skippedAlreadySent,
-        skippedAlreadyProcessed: skippedAlreadyProcessed,
         results
       };
     } catch (error) {
@@ -398,139 +254,15 @@ class NotificationService {
     }
   }
 
-  // CRITICAL: Method to clear daily processed users (call this at start of new day)
-  clearDailyProcessedUsers() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    // Remove yesterday's entries
-    const keysToDelete = [];
-    for (const key of this.dailyProcessedUsers) {
-      if (key.includes(yesterdayStr)) {
-        keysToDelete.push(key);
-      }
-    }
-    
-    keysToDelete.forEach(key => this.dailyProcessedUsers.delete(key));
-    console.log(`Cleared ${keysToDelete.length} yesterday's processed user entries`);
-  }
-
-  // Rest of your methods remain the same...
-  async sendImmediateQuote(userId, customMessage = null) {
-    const userIdStr = userId.toString();
-    
-    // Check if already processing
-    if (this.processingUsers.has(userIdStr)) {
-      return { success: false, message: "User already being processed" };
-    }
-
-    this.processingUsers.add(userIdStr);
-    let notificationRecord = null;
-    
-    try {
-      const user = await User.findById(userId);
-      if (!user || !user.fcmToken) {
-        return { success: false, message: "User or FCM token not found" };
-      }
-
-      if (!this.isUserLoggedIn(user) && !customMessage) {
-        return { success: false, message: "User is logged out" };
-      }
-
-      let quoteData;
-      if (customMessage) {
-        quoteData = { success: true, quote: customMessage };
-      } else {
-        const userQuoteType = this.getUserQuoteType(user);
-        quoteData = await geminiService.getDailyQuote(
-          user.preferences?.language || 'english',
-          userQuoteType
-        );
-      }
-
-      notificationRecord = new Notification({
-        userId: user._id,
-        title: "🕉️ Bhagavad Gita Wisdom",
-        body: this.truncateText(quoteData.quote, 100) + "...",
-        type: customMessage ? "system" : "instant_quote",
-        data: {
-          fullQuote: quoteData.quote,
-          language: user.preferences?.language || 'english',
-          quoteType: user.preferences?.quoteType || 'random',
-          metadata: {
-            generatedBy: customMessage ? 'manual' : 'gemini',
-            isScheduled: false,
-            isTestNotification: true
-          }
-        },
-        deliveryStatus: 'pending',
-        priority: 'high'
-      });
-
-      await notificationRecord.save();
-
-      const message = {
-        notification: {
-          title: "🕉️ Bhagavad Gita Wisdom",
-          body: this.truncateText(quoteData.quote, 100) + "...",
-        },
-        data: {
-          type: "instant_quote",
-          fullQuote: quoteData.quote,
-          timestamp: new Date().toISOString(),
-          notificationId: notificationRecord._id.toString()
-        },
-        token: user.fcmToken
-      };
-
-      try {
-        const response = await admin.messaging().send(message);
-        await notificationRecord.markAsDelivered(response);
-        
-        return { 
-          success: true, 
-          response,
-          notificationId: notificationRecord._id 
-        };
-      } catch (fcmError) {
-        await notificationRecord.markAsFailed(fcmError.message);
-        
-        return { 
-          success: false, 
-          error: fcmError.message,
-          notificationId: notificationRecord._id 
-        };
-      }
-
-    } catch (error) {
-      console.error("Error sending immediate quote:", error);
-      
-      if (notificationRecord) {
-        try {
-          await notificationRecord.markAsFailed(error.message);
-        } catch (updateError) {
-          console.error('Failed to update notification status:', updateError);
-        }
-      }
-      
-      return { 
-        success: false, 
-        error: error.message,
-        notificationId: notificationRecord?._id 
-      };
-    } finally {
-      this.processingUsers.delete(userIdStr);
-    }
-  }
-
   isUserLoggedIn(user) {
     try {
+      // Method 1: Check if user account is active
       if (user.isActive === false) {
         console.log(`User ${user._id} account is inactive`);
         return false;
       }
 
+      // Method 2: Check last login time (user was active within last 7 days)
       if (user.lastLogin) {
         const daysSinceLogin = (new Date() - new Date(user.lastLogin)) / (1000 * 60 * 60 * 24);
         if (daysSinceLogin > 7) {
@@ -538,48 +270,52 @@ class NotificationService {
           return false;
         }
       } else {
+        // If no lastLogin recorded, user might never have logged in properly
         console.log(`User ${user._id} has no lastLogin record`);
         return false;
       }
-      
       if(user.isLoggedOut) {
         console.log(`User ${user._id} is marked as logged out`);
         return false;
       }
-      
+      // Method 3: Check if demo user and demo has expired
       if (user.isDemo && user.demoExpiresAt && new Date() > user.demoExpiresAt) {
         console.log(`User ${user._id} demo account has expired`);
         return false;
       }
-      
+      // Method 4: Check if FCM token exists (basic check)
       if (!user.fcmToken) {
         console.log(`User ${user._id} has no FCM token - likely not logged in on any device`);
         return false;
       }
 
+      // Method 5: Check account creation vs last login (if account created but never logged in)
       if (user.createdAt && user.lastLogin) {
         const accountAge = (new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24);
         const daysSinceLogin = (new Date() - new Date(user.lastLogin)) / (1000 * 60 * 60 * 24);
         
+        // If account is old but user hasn't logged in recently, they might be inactive
         if (accountAge > 30 && daysSinceLogin > 14) {
           console.log(`User ${user._id} has old account (${accountAge.toFixed(1)} days) with stale login (${daysSinceLogin.toFixed(1)} days ago)`);
           return false;
         }
       }
 
-      return true;
+      return true; // User is considered logged in
     } catch (error) {
       console.error(`Error checking login status for user ${user._id}:`, error);
-      return false;
+      return false; // Default to not sending if we can't determine status
     }
   }
 
+  // Get threshold date for active users (7 days ago)
   getActiveUserThreshold() {
     const threshold = new Date();
     threshold.setDate(threshold.getDate() - 7);
     return threshold;
   }
 
+  // Helper method to ensure user has sequential progress initialized
   async initializeSequentialProgressIfNeeded(user) {
     if (!user.sequentialProgress || 
         !user.sequentialProgress.currentChapter || 
@@ -598,6 +334,7 @@ class NotificationService {
     }
   }
 
+  // Create notification without sending (for scheduling)
   async createNotification(userId, title, body, type = 'system', data = {}, scheduledFor = null) {
     try {
       const notification = new Notification({
@@ -628,6 +365,7 @@ class NotificationService {
     }
   }
 
+  // Send scheduled notifications
   async sendScheduledNotifications() {
     try {
       const pendingNotifications = await Notification.findPendingDeliveries();
@@ -643,11 +381,13 @@ class NotificationService {
           continue;
         }
 
+        // Check if user is logged in before sending scheduled notifications
         if (!this.isUserLoggedIn(user)) {
           await notification.markAsFailed('User is logged out');
           console.log(`Skipping scheduled notification for logged out user ${user._id}`);
           continue;
         }
+
 
         const message = {
           notification: {
@@ -675,6 +415,7 @@ class NotificationService {
           });
         }
 
+        // Add delay to avoid rate limiting
         await this.delay(1000);
       }
 
@@ -693,6 +434,7 @@ class NotificationService {
     }
   }
 
+  // Retry failed deliveries
   async retryFailedDeliveries(maxAttempts = 3) {
     try {
       const failedNotifications = await Notification.findFailedDeliveries(maxAttempts);
@@ -708,6 +450,7 @@ class NotificationService {
           continue;
         }
 
+        // Check login status before retrying
         if (!this.isUserLoggedIn(user)) {
           await notification.markAsFailed('User is logged out');
           continue;
@@ -757,6 +500,7 @@ class NotificationService {
     }
   }
 
+  // Cleanup old notifications
   async cleanupOldNotifications(daysOld = 30) {
     try {
       const deletedCount = await Notification.deleteOldNotifications(daysOld);
@@ -777,9 +521,10 @@ class NotificationService {
 
   shouldSendNotification(user) {
     try {
-      const scheduledTime = user.dailyQuotes.time;
+      const scheduledTime = user.dailyQuotes.time; // "HH:MM" format
       const timezone = user.dailyQuotes.timezone;
       
+      // Get current time in user's timezone using moment
       const userCurrentTime = moment().tz(timezone);
       
       const [scheduledHour, scheduledMinute] = scheduledTime.split(':').map(Number);
@@ -790,10 +535,9 @@ class NotificationService {
       const scheduledTotalMinutes = scheduledHour * 60 + scheduledMinute;
       const currentTotalMinutes = currentHour * 60 + currentMinute;
       
+      // FIXED: Only send if current time is AT or AFTER scheduled time (within 5-minute window)
       const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
-      
-      // FIXED: Allow a 5-minute window instead of just 1 minute to account for schedule changes
-      const shouldSend = timeDifference >= 0 && timeDifference < 5;
+      const shouldSend = timeDifference >= 0 && timeDifference <= 1;
       
       console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
       
@@ -810,6 +554,7 @@ class NotificationService {
     const today = new Date();
     const lastSentDate = new Date(lastSent);
     
+    // Compare dates in YYYY-MM-DD format to avoid timezone issues
     const todayString = today.toISOString().split('T')[0];
     const lastSentString = lastSentDate.toISOString().split('T')[0];
     
@@ -819,8 +564,10 @@ class NotificationService {
     return wasSent;
   }
 
+  // NEW METHOD: Check if schedule was changed after last notification was sent
   scheduleChangedAfterLastSent(user) {
     try {
+      // Check if scheduleUpdatedAt exists and is after lastSent
       if (!user.dailyQuotes.scheduleUpdatedAt || !user.dailyQuotes.lastSent) {
         return false;
       }
@@ -829,7 +576,7 @@ class NotificationService {
       const lastSent = new Date(user.dailyQuotes.lastSent);
       
       const changed = scheduleUpdated > lastSent;
-      console.log(`Schedule change check for user ${user._id}: Schedule updated: ${scheduleUpdated.toISOString()}, Last sent: ${lastSent.toISOString()}, Changed: ${changed}`);
+      console.log(`Schedule change check for user ${user._id}: Schedule updated: ${scheduleUpdated}, Last sent: ${lastSent}, Changed: ${changed}`);
       
       return changed;
     } catch (error) {
@@ -851,12 +598,11 @@ class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // FIXED: This method now correctly prevents ALL duplicate daily quotes
+  // Additional helper method to check and prevent duplicate notifications
   async checkDuplicateNotifications(userId) {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Check for ALL daily quote notifications today
       const todayNotifications = await Notification.find({
         userId: userId,
         type: 'daily_quote',
@@ -864,14 +610,7 @@ class NotificationService {
           $gte: new Date(today + 'T00:00:00.000Z'),
           $lt: new Date(today + 'T23:59:59.999Z')
         }
-      }).sort({ createdAt: -1 });
-
-      console.log(`Duplicate check for user ${userId}: Found ${todayNotifications.length} daily_quote notifications today`);
-      
-      if (todayNotifications.length > 0) {
-        const quoteTypes = todayNotifications.map(n => n.data?.quoteType || 'unknown');
-        console.log(`Existing quote types today for user ${userId}:`, quoteTypes);
-      }
+      });
 
       return {
         hasDuplicates: todayNotifications.length > 0,
