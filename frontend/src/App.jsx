@@ -55,7 +55,7 @@ const FCMSetup = () => {
             payload.notification.title || '🕉️ Bhagavad Gita Wisdom',
             {
               body: payload.notification.body || 'New spiritual guidance available',
-              icon: '/favicon.ico',
+              icon: '/3.png',
               data: payload.data
             }
           );
