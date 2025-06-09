@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { StorageService } from "./utils/storage";
 import axios from "axios";
 import { toast } from "react-toastify";
-
+import { backend_url} from "./utils/backend";
 const Logout = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
@@ -150,7 +150,12 @@ const Logout = () => {
   const handleLogout = async () => {
   try {
     // Call the logout API endpoint
-    await axios.post('/logout');
+    await axios.post(`${backend_url}/api/auth/logout`, {}, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${await StorageService.get("token")}`
+      }
+    });
     
     // Clear all stored data
     await StorageService.remove("token");
