@@ -353,7 +353,6 @@ class NotificationService {
     }
   }
 
-  // NEW METHOD: Check if user is currently logged in (adapted for your schema)
   isUserLoggedIn(user) {
     try {
       // Method 1: Check if user account is active
@@ -406,7 +405,7 @@ class NotificationService {
     }
   }
 
-  // NEW METHOD: Get threshold date for active users (7 days ago)
+  // Get threshold date for active users (7 days ago)
   getActiveUserThreshold() {
     const threshold = new Date();
     threshold.setDate(threshold.getDate() - 7);

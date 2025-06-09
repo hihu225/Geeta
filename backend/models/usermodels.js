@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date
   },
-  // NEW: Additional login tracking fields (optional but recommended)
   lastActiveAt: {
     type: Date,
     default: Date.now
@@ -52,7 +51,6 @@ const userSchema = new mongoose.Schema({
   fcmTokenUpdatedAt: {
     type: Date
   },
-  // END NEW FIELDS
   resetOTP: String,
   resetOTPExpire: Date,
   deleteOTP: {
@@ -75,7 +73,7 @@ const userSchema = new mongoose.Schema({
     language: { type: String, default: "english" },
     quoteType: { type: String, default: "random" }
   },
-  // ADD SEQUENTIAL PROGRESS TRACKING
+  // SEQUENTIAL PROGRESS TRACKING
   sequentialProgress: {
     currentChapter: { type: Number, default: 1, min: 1, max: 18 },
     currentVerse: { type: Number, default: 1, min: 1 },

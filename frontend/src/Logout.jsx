@@ -149,6 +149,9 @@ const Logout = () => {
 
   const handleLogout = async () => {
   try {
+    // Call the logout API endpoint
+    await axios.post('/logout');
+    
     // Clear all stored data
     await StorageService.remove("token");
     await StorageService.remove("saved_email");
@@ -171,6 +174,15 @@ const Logout = () => {
   } catch (error) {
     console.error("Logout error:", error);
     toast.error("Error during logout, but you've been logged out locally.");
+    
+    // Still clear local data even if API call fails
+    await StorageService.remove("token");
+    await StorageService.remove("saved_email");
+    await StorageService.remove("saved_password");
+    await StorageService.remove("remember_me");
+    localStorage.removeItem("user");
+    localStorage.setItem("loggedOut", "true");
+    delete axios.defaults.headers.common["Authorization"];
     
     // Still redirect even if there's an error
     navigate("/login", { replace: true });
