@@ -9,12 +9,16 @@ class NotificationService {
   constructor() {
     // CRITICAL: Add a semaphore to prevent concurrent notifications to same user
     this.processingUsers = new Set();
+    // Add a daily tracking set to prevent multiple notifications per day
+    this.dailyProcessedUsers = new Set();
   }
 
   async sendDailyQuoteToUser(userId) {
+    const userIdStr = userId.toString();
+    
     // CRITICAL: Prevent concurrent processing for same user
-    if (this.processingUsers.has(userId)) {
-      console.log(`User ${userId} is already being processed, skipping to prevent duplicates`);
+    if (this.processingUsers.has(userIdStr)) {
+      console.log(`User ${userIdStr} is already being processed, skipping to prevent duplicates`);
       return { 
         success: false, 
         message: "User already being processed",
@@ -22,8 +26,19 @@ class NotificationService {
       };
     }
 
+    // CRITICAL: Check if user was already processed today
+    const todayKey = `${userIdStr}_${new Date().toISOString().split('T')[0]}`;
+    if (this.dailyProcessedUsers.has(todayKey)) {
+      console.log(`User ${userIdStr} already processed today, skipping`);
+      return { 
+        success: false, 
+        message: "User already processed today",
+        alreadyProcessed: true 
+      };
+    }
+
     // Lock this user for processing
-    this.processingUsers.add(userId);
+    this.processingUsers.add(userIdStr);
     
     let notificationRecord = null;
     
@@ -37,7 +52,7 @@ class NotificationService {
 
       // Check if user is currently logged in
       if (!this.isUserLoggedIn(user)) {
-        console.log(`User ${userId} is logged out, skipping notification`);
+        console.log(`User ${userIdStr} is logged out, skipping notification`);
         return { 
           success: false, 
           message: "User is logged out",
@@ -51,7 +66,7 @@ class NotificationService {
       
       // FIXED: Only allow ONE notification per day, regardless of quote type
       if (duplicateCheck.hasDuplicates && !scheduleChanged) {
-        console.log(`Daily quote already sent today for user ${userId} - found ${duplicateCheck.count} existing notifications`);
+        console.log(`Daily quote already sent today for user ${userIdStr} - found ${duplicateCheck.count} existing notifications`);
         return { 
           success: false, 
           message: "Daily quote already sent today",
@@ -66,7 +81,7 @@ class NotificationService {
         const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
         
         if (latestNotification.createdAt > scheduleUpdatedAt) {
-          console.log(`User ${userId} already received notification after schedule change`);
+          console.log(`User ${userIdStr} already received notification after schedule change`);
           return { 
             success: false, 
             message: "Already sent notification after schedule change",
@@ -77,7 +92,7 @@ class NotificationService {
 
       // LEGACY CHECK: Also check the old way for backward compatibility
       if (this.wasSentToday(user.dailyQuotes.lastSent) && !scheduleChanged) {
-        console.log(`Daily quote already sent today for user ${userId} (legacy check) and schedule unchanged`);
+        console.log(`Daily quote already sent today for user ${userIdStr} (legacy check) and schedule unchanged`);
         return { 
           success: false, 
           message: "Daily quote already sent today (legacy check)",
@@ -111,9 +126,9 @@ class NotificationService {
       if (userQuoteType === 'sequential' && quoteData.success) {
         try {
           sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
-          console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
+          console.log(`Sequential progress updated for user ${userIdStr}:`, sequentialProgress);
         } catch (progressError) {
-          console.error(`Error updating sequential progress for user ${userId}:`, progressError);
+          console.error(`Error updating sequential progress for user ${userIdStr}:`, progressError);
         }
       }
 
@@ -121,6 +136,9 @@ class NotificationService {
       await User.findByIdAndUpdate(userId, {
         'dailyQuotes.lastSent': new Date()
       });
+
+      // CRITICAL: Mark user as processed today
+      this.dailyProcessedUsers.add(todayKey);
 
       // Create notification record with the SINGLE quote type
       notificationRecord = new Notification({
@@ -186,7 +204,7 @@ class NotificationService {
       try {
         // Send FCM notification
         const response = await admin.messaging().send(message);
-        console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
+        console.log(`FCM notification sent successfully to user ${userIdStr}: ${response}`);
 
         // Update notification record as delivered
         await notificationRecord.markAsDelivered(response);
@@ -203,7 +221,7 @@ class NotificationService {
         };
 
       } catch (fcmError) {
-        console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+        console.error(`FCM delivery failed for user ${userIdStr}:`, fcmError);
         await notificationRecord.markAsFailed(fcmError.message);
         
         return {
@@ -215,7 +233,7 @@ class NotificationService {
       }
 
     } catch (error) {
-      console.error(`Error sending quote to user ${userId}:`, error);
+      console.error(`Error sending quote to user ${userIdStr}:`, error);
       
       if (notificationRecord) {
         try {
@@ -232,38 +250,45 @@ class NotificationService {
       };
     } finally {
       // CRITICAL: Always remove user from processing set
-      this.processingUsers.delete(userId);
+      this.processingUsers.delete(userIdStr);
     }
   }
 
-  // CRITICAL: New method to determine user's single quote preference
+  // CRITICAL: Fixed method to determine user's single quote preference
   getUserQuoteType(user) {
-    // Priority order: user preference > default
+    // Priority order: explicit quoteType preference > derived from categories > default
     if (user.preferences?.quoteType) {
+      console.log(`User ${user._id} has explicit quoteType: ${user.preferences.quoteType}`);
       return user.preferences.quoteType;
     }
     
     // Check if user has any specific preferences set
     if (user.preferences?.categories && user.preferences.categories.length > 0) {
-      // Map categories to quote types
-      const categoryMap = {
-        'life_guidance': 'themed',
-        'sacred_journey': 'themed',
-        'spiritual_growth': 'themed',
-        'daily_wisdom': 'random'
-      };
+      // FIXED: Don't just use first category, determine the best single type
+      const categories = user.preferences.categories;
+      console.log(`User ${user._id} has categories:`, categories);
       
-      // Use the first category preference
-      const firstCategory = user.preferences.categories[0];
-      return categoryMap[firstCategory] || 'random';
+      // If user has both life_guidance and sacred_journey, they both map to 'themed'
+      // So we should just return 'themed' once, not process both
+      if (categories.includes('life_guidance') || categories.includes('sacred_journey') || categories.includes('spiritual_growth')) {
+        return 'themed';
+      }
+      
+      if (categories.includes('daily_wisdom')) {
+        return 'random';
+      }
     }
     
     // Default fallback
+    console.log(`User ${user._id} using default quote type: random`);
     return 'random';
   }
 
   async sendDailyQuotesToAllUsers() {
     try {
+      // Clear daily processed users at start of new day
+      this.clearDailyProcessedUsers();
+      
       // Enhanced query to include active login status checks
       const users = await User.find({
         'dailyQuotes.enabled': true,
@@ -282,19 +307,30 @@ class NotificationService {
       const results = [];
       let skippedLoggedOut = 0;
       let skippedAlreadySent = 0;
+      let skippedAlreadyProcessed = 0;
       
       for (const user of users) {
+        const userIdStr = user._id.toString();
+        
         // Double-check login status
         if (!this.isUserLoggedIn(user)) {
-          console.log(`Skipping user ${user._id}: User is logged out`);
+          console.log(`Skipping user ${userIdStr}: User is logged out`);
           skippedLoggedOut++;
           continue;
         }
 
         // CRITICAL: Check if user is already being processed
-        if (this.processingUsers.has(user._id.toString())) {
-          console.log(`Skipping user ${user._id}: Already being processed`);
-          skippedAlreadySent++;
+        if (this.processingUsers.has(userIdStr)) {
+          console.log(`Skipping user ${userIdStr}: Already being processed`);
+          skippedAlreadyProcessed++;
+          continue;
+        }
+
+        // CRITICAL: Check if user was already processed today
+        const todayKey = `${userIdStr}_${new Date().toISOString().split('T')[0]}`;
+        if (this.dailyProcessedUsers.has(todayKey)) {
+          console.log(`Skipping user ${userIdStr}: Already processed today`);
+          skippedAlreadyProcessed++;
           continue;
         }
 
@@ -315,13 +351,13 @@ class NotificationService {
             const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
             
             if (latestNotification.createdAt > scheduleUpdatedAt) {
-              console.log(`Skipping user ${user._id}: Already sent after schedule change`);
+              console.log(`Skipping user ${userIdStr}: Already sent after schedule change`);
               skippedAlreadySent++;
               continue;
             }
           }
           
-          console.log(`Sending notification to user ${user._id} (${user.email}) - Schedule changed: ${scheduleChanged}, Existing notifications: ${duplicateCheck.count}`);
+          console.log(`Sending notification to user ${userIdStr} (${user.email}) - Schedule changed: ${scheduleChanged}, Existing notifications: ${duplicateCheck.count}`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
             userId: user._id,
@@ -329,11 +365,11 @@ class NotificationService {
             ...result
           });
           
-          // Add delay between notifications
-          await this.delay(2000);
+          // Add delay between notifications to prevent race conditions
+          await this.delay(1000);
         } else {
           const reason = !isTimeToSend ? 'not time yet' : 'already sent today';
-          console.log(`Skipping user ${user._id}: ${reason} (existing notifications: ${duplicateCheck.count})`);
+          console.log(`Skipping user ${userIdStr}: ${reason} (existing notifications: ${duplicateCheck.count})`);
           skippedAlreadySent++;
         }
       }
@@ -341,7 +377,7 @@ class NotificationService {
       const successCount = results.filter(r => r.success).length;
       const totalSkipped = users.length - results.length;
       
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${totalSkipped} total skipped (${skippedLoggedOut} logged out, ${skippedAlreadySent} already sent/not time)`);
+      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${totalSkipped} total skipped (${skippedLoggedOut} logged out, ${skippedAlreadySent} already sent/not time, ${skippedAlreadyProcessed} already processed)`);
 
       return {
         success: true,
@@ -350,6 +386,7 @@ class NotificationService {
         skippedUsers: totalSkipped,
         skippedLoggedOut: skippedLoggedOut,
         skippedAlreadySent: skippedAlreadySent,
+        skippedAlreadyProcessed: skippedAlreadyProcessed,
         results
       };
     } catch (error) {
@@ -361,14 +398,34 @@ class NotificationService {
     }
   }
 
+  // CRITICAL: Method to clear daily processed users (call this at start of new day)
+  clearDailyProcessedUsers() {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Remove yesterday's entries
+    const keysToDelete = [];
+    for (const key of this.dailyProcessedUsers) {
+      if (key.includes(yesterdayStr)) {
+        keysToDelete.push(key);
+      }
+    }
+    
+    keysToDelete.forEach(key => this.dailyProcessedUsers.delete(key));
+    console.log(`Cleared ${keysToDelete.length} yesterday's processed user entries`);
+  }
+
   // Rest of your methods remain the same...
   async sendImmediateQuote(userId, customMessage = null) {
+    const userIdStr = userId.toString();
+    
     // Check if already processing
-    if (this.processingUsers.has(userId)) {
+    if (this.processingUsers.has(userIdStr)) {
       return { success: false, message: "User already being processed" };
     }
 
-    this.processingUsers.add(userId);
+    this.processingUsers.add(userIdStr);
     let notificationRecord = null;
     
     try {
@@ -463,7 +520,7 @@ class NotificationService {
         notificationId: notificationRecord?._id 
       };
     } finally {
-      this.processingUsers.delete(userId);
+      this.processingUsers.delete(userIdStr);
     }
   }
 
@@ -734,7 +791,9 @@ class NotificationService {
       const currentTotalMinutes = currentHour * 60 + currentMinute;
       
       const timeDifference = currentTotalMinutes - scheduledTotalMinutes;
-      const shouldSend = timeDifference >= 0 && timeDifference < 1;
+      
+      // FIXED: Allow a 5-minute window instead of just 1 minute to account for schedule changes
+      const shouldSend = timeDifference >= 0 && timeDifference < 5;
       
       console.log(`User ${user._id}: Current time: ${currentHour}:${currentMinute}, Scheduled: ${scheduledHour}:${scheduledMinute}, Diff: ${timeDifference} minutes, Should send: ${shouldSend}`);
       
