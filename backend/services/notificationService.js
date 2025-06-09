@@ -186,73 +186,73 @@ class NotificationService {
     }
   }
 
-  async sendDailyQuotesToAllUsers() {
-    try {
-      // Enhanced query to include active login status checks (adapted for your schema)
-      const users = await User.find({
-        'dailyQuotes.enabled': true,
-        fcmToken: { $exists: true, $ne: null },
-        isActive: true, // Only active accounts
-        // Add conditions to filter out logged out users
-        $or: [
-          { lastLogin: { $gte: this.getActiveUserThreshold() } }, // Recently active users
-          { 
-            isDemo: true, 
-            demoExpiresAt: { $gt: new Date() } // Active demo users
-          }
-        ]
-      });
+  // async sendDailyQuotesToAllUsers() {
+  //   try {
+  //     // Enhanced query to include active login status checks (adapted for your schema)
+  //     const users = await User.find({
+  //       'dailyQuotes.enabled': true,
+  //       fcmToken: { $exists: true, $ne: null },
+  //       isActive: true, // Only active accounts
+  //       // Add conditions to filter out logged out users
+  //       $or: [
+  //         { lastLogin: { $gte: this.getActiveUserThreshold() } }, // Recently active users
+  //         { 
+  //           isDemo: true, 
+  //           demoExpiresAt: { $gt: new Date() } // Active demo users
+  //         }
+  //       ]
+  //     });
 
-      console.log(`Found ${users.length} users eligible for daily quotes (logged in and notifications enabled)`);
-      const results = [];
-      let skippedLoggedOut = 0;
+  //     console.log(`Found ${users.length} users eligible for daily quotes (logged in and notifications enabled)`);
+  //     const results = [];
+  //     let skippedLoggedOut = 0;
       
-      for (const user of users) {
-        // Double-check login status before sending
-        if (!this.isUserLoggedIn(user)) {
-          console.log(`Skipping user ${user._id}: User is logged out`);
-          skippedLoggedOut++;
-          continue;
-        }
+  //     for (const user of users) {
+  //       // Double-check login status before sending
+  //       if (!this.isUserLoggedIn(user)) {
+  //         console.log(`Skipping user ${user._id}: User is logged out`);
+  //         skippedLoggedOut++;
+  //         continue;
+  //       }
 
-        // Check if it's time to send notification AND (not sent today OR schedule changed after last sent)
-        if (this.shouldSendNotification(user) && 
-            (!this.wasSentToday(user.dailyQuotes.lastSent) || this.scheduleChangedAfterLastSent(user))) {
-          console.log(`Sending notification to user ${user._id} (${user.email})`);
-          const result = await this.sendDailyQuoteToUser(user._id);
-          results.push({
-            userId: user._id,
-            email: user.email,
-            ...result
-          });
+  //       // Check if it's time to send notification AND (not sent today OR schedule changed after last sent)
+  //       if (this.shouldSendNotification(user) && 
+  //           (!this.wasSentToday(user.dailyQuotes.lastSent) || this.scheduleChangedAfterLastSent(user))) {
+  //         console.log(`Sending notification to user ${user._id} (${user.email})`);
+  //         const result = await this.sendDailyQuoteToUser(user._id);
+  //         results.push({
+  //           userId: user._id,
+  //           email: user.email,
+  //           ...result
+  //         });
           
-          // Add delay between notifications to avoid rate limiting
-          await this.delay(2000); // Increased delay to 2 seconds
-        } else {
-          console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
-        }
-      }
+  //         // Add delay between notifications to avoid rate limiting
+  //         await this.delay(2000); // Increased delay to 2 seconds
+  //       } else {
+  //         console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
+  //       }
+  //     }
 
-      const successCount = results.filter(r => r.success).length;
-      const skippedCount = users.length - results.length;
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out)`);
+  //     const successCount = results.filter(r => r.success).length;
+  //     const skippedCount = users.length - results.length;
+  //     console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out)`);
 
-      return {
-        success: true,
-        totalUsers: users.length,
-        sentNotifications: successCount,
-        skippedUsers: skippedCount,
-        skippedLoggedOut: skippedLoggedOut,
-        results
-      };
-    } catch (error) {
-      console.error("Error sending bulk notifications:", error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       totalUsers: users.length,
+  //       sentNotifications: successCount,
+  //       skippedUsers: skippedCount,
+  //       skippedLoggedOut: skippedLoggedOut,
+  //       results
+  //     };
+  //   } catch (error) {
+  //     console.error("Error sending bulk notifications:", error);
+  //     return {
+  //       success: false,
+  //       error: error.message
+  //     };
+  //   }
+  // }
 
   isUserLoggedIn(user) {
     try {
