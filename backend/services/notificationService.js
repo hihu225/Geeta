@@ -27,12 +27,42 @@ class NotificationService {
         };
       }
 
-      // CRITICAL: Check if already sent today AND schedule hasn't changed since last sent
-      if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
-        console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
+      // FIXED: Enhanced duplicate check that considers all daily quote types
+      const duplicateCheck = await this.checkDuplicateNotifications(userId);
+      const scheduleChanged = this.scheduleChangedAfterLastSent(user);
+      
+      // CRITICAL: More robust check for preventing duplicates
+      if (duplicateCheck.hasDuplicates && !scheduleChanged) {
+        console.log(`Daily quote already sent today for user ${userId} - found ${duplicateCheck.count} existing notifications`);
         return { 
           success: false, 
           message: "Daily quote already sent today",
+          alreadySent: true,
+          existingNotifications: duplicateCheck.count
+        };
+      }
+
+      // ADDITIONAL CHECK: If schedule changed but we already sent a notification after the schedule change
+      if (scheduleChanged && duplicateCheck.hasDuplicates) {
+        const latestNotification = duplicateCheck.notifications[duplicateCheck.notifications.length - 1];
+        const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
+        
+        if (latestNotification.createdAt > scheduleUpdatedAt) {
+          console.log(`User ${userId} already received notification after schedule change`);
+          return { 
+            success: false, 
+            message: "Already sent notification after schedule change",
+            alreadySent: true 
+          };
+        }
+      }
+
+      // LEGACY CHECK: Also check the old way for backward compatibility
+      if (this.wasSentToday(user.dailyQuotes.lastSent) && !scheduleChanged) {
+        console.log(`Daily quote already sent today for user ${userId} (legacy check) and schedule unchanged`);
+        return { 
+          success: false, 
+          message: "Daily quote already sent today (legacy check)",
           alreadySent: true 
         };
       }
@@ -93,7 +123,10 @@ class NotificationService {
             generatedBy: 'gemini',
             isScheduled: true,
             sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
-            userProgress: quoteData.userProgress || null // Store user's verse position
+            userProgress: quoteData.userProgress || null, // Store user's verse position
+            scheduleChangeTriggered: scheduleChanged, // Track if this was sent due to schedule change
+            originalScheduleTime: user.dailyQuotes.time,
+            userTimezone: user.dailyQuotes.timezone
           }
         },
         deliveryStatus: 'pending',
@@ -149,7 +182,8 @@ class NotificationService {
           // Return sequential progress info for logging/tracking
           sequentialProgress: sequentialProgress,
           quoteType: user.preferences?.quoteType || 'random',
-          userProgress: quoteData.userProgress
+          userProgress: quoteData.userProgress,
+          scheduleChangeTriggered: scheduleChanged
         };
 
       } catch (fcmError) {
@@ -206,6 +240,7 @@ class NotificationService {
       console.log(`Found ${users.length} users eligible for daily quotes (logged in and notifications enabled)`);
       const results = [];
       let skippedLoggedOut = 0;
+      let skippedAlreadySent = 0;
       
       for (const user of users) {
         // Double-check login status before sending
@@ -215,10 +250,30 @@ class NotificationService {
           continue;
         }
 
-        // Check if it's time to send notification AND (not sent today OR schedule changed after last sent)
-        if (this.shouldSendNotification(user) && 
-            (!this.wasSentToday(user.dailyQuotes.lastSent) || this.scheduleChangedAfterLastSent(user))) {
-          console.log(`Sending notification to user ${user._id} (${user.email})`);
+        // ENHANCED: Better duplicate prevention in bulk sending
+        const duplicateCheck = await this.checkDuplicateNotifications(user._id);
+        const scheduleChanged = this.scheduleChangedAfterLastSent(user);
+        
+        // Check if it's time to send notification
+        const isTimeToSend = this.shouldSendNotification(user);
+        
+        // More comprehensive check for whether to send
+        const shouldSend = isTimeToSend && (!duplicateCheck.hasDuplicates || scheduleChanged);
+        
+        if (shouldSend) {
+          // Additional check: if schedule changed, make sure we haven't already sent after the change
+          if (scheduleChanged && duplicateCheck.hasDuplicates) {
+            const latestNotification = duplicateCheck.notifications[duplicateCheck.notifications.length - 1];
+            const scheduleUpdatedAt = new Date(user.dailyQuotes.scheduleUpdatedAt);
+            
+            if (latestNotification.createdAt > scheduleUpdatedAt) {
+              console.log(`Skipping user ${user._id}: Already sent after schedule change`);
+              skippedAlreadySent++;
+              continue;
+            }
+          }
+          
+          console.log(`Sending notification to user ${user._id} (${user.email}) - Schedule changed: ${scheduleChanged}, Existing notifications: ${duplicateCheck.count}`);
           const result = await this.sendDailyQuoteToUser(user._id);
           results.push({
             userId: user._id,
@@ -229,20 +284,24 @@ class NotificationService {
           // Add delay between notifications to avoid rate limiting
           await this.delay(2000); // Increased delay to 2 seconds
         } else {
-          console.log(`Skipping user ${user._id}: Either not time or already sent today without schedule change`);
+          const reason = !isTimeToSend ? 'not time yet' : 'already sent today';
+          console.log(`Skipping user ${user._id}: ${reason} (existing notifications: ${duplicateCheck.count})`);
+          skippedAlreadySent++;
         }
       }
 
       const successCount = results.filter(r => r.success).length;
-      const skippedCount = users.length - results.length;
-      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${skippedCount} skipped (time/already sent), ${skippedLoggedOut} skipped (logged out)`);
+      const totalSkipped = users.length - results.length;
+      
+      console.log(`Bulk notification complete: ${successCount}/${results.length} sent successfully, ${totalSkipped} total skipped (${skippedLoggedOut} logged out, ${skippedAlreadySent} already sent/not time)`);
 
       return {
         success: true,
         totalUsers: users.length,
         sentNotifications: successCount,
-        skippedUsers: skippedCount,
+        skippedUsers: totalSkipped,
         skippedLoggedOut: skippedLoggedOut,
+        skippedAlreadySent: skippedAlreadySent,
         results
       };
     } catch (error) {
@@ -663,7 +722,7 @@ class NotificationService {
     return wasSent;
   }
 
-  // NEW METHOD: Check if schedule was changed after last notification was sent
+  // FIXED: Enhanced method to check if schedule was changed after last notification was sent
   scheduleChangedAfterLastSent(user) {
     try {
       // Check if scheduleUpdatedAt exists and is after lastSent
@@ -675,7 +734,7 @@ class NotificationService {
       const lastSent = new Date(user.dailyQuotes.lastSent);
       
       const changed = scheduleUpdated > lastSent;
-      console.log(`Schedule change check for user ${user._id}: Schedule updated: ${scheduleUpdated}, Last sent: ${lastSent}, Changed: ${changed}`);
+      console.log(`Schedule change check for user ${user._id}: Schedule updated: ${scheduleUpdated.toISOString()}, Last sent: ${lastSent.toISOString()}, Changed: ${changed}`);
       
       return changed;
     } catch (error) {
@@ -697,19 +756,28 @@ class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Additional helper method to check and prevent duplicate notifications
+  // FIXED: Enhanced duplicate notification checker that considers all daily quote types
   async checkDuplicateNotifications(userId) {
     try {
       const today = new Date().toISOString().split('T')[0];
       
+      // Check for ALL daily quote notifications (regardless of quote type)
       const todayNotifications = await Notification.find({
         userId: userId,
-        type: 'daily_quote',
+        type: 'daily_quote', // This covers all quote types (guidance, sacred journey, random, sequential)
         createdAt: {
           $gte: new Date(today + 'T00:00:00.000Z'),
           $lt: new Date(today + 'T23:59:59.999Z')
         }
-      });
+      }).sort({ createdAt: -1 }); // Sort by newest first
+
+      console.log(`Duplicate check for user ${userId}: Found ${todayNotifications.length} daily_quote notifications today`);
+      
+      // Log the quote types for debugging
+      if (todayNotifications.length > 0) {
+        const quoteTypes = todayNotifications.map(n => n.data?.quoteType || 'unknown');
+        console.log(`Existing quote types today for user ${userId}:`, quoteTypes);
+      }
 
       return {
         hasDuplicates: todayNotifications.length > 0,
