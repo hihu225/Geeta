@@ -320,7 +320,7 @@ router.post('/forgot-password', async (req, res) => {
     user.resetOTPExpire = otpExpire;
     await user.save();
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
@@ -396,7 +396,7 @@ router.post('/reset-password', async (req, res) => {
 router.post('/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
-
+    console.log('Send OTP request:', { email }); // Debug log
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -409,7 +409,7 @@ router.post('/send-otp', async (req, res) => {
       expiresAt: Date.now() + 15 * 60 * 1000, // expires in 15 minutes
     });
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -621,7 +621,7 @@ router.post('/send-delete-otp', auth, async (req, res) => {
     await user.save();
 
     // Send email
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,

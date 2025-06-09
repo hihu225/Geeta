@@ -168,87 +168,77 @@ const Signup = () => {
   };
 
   const handleOTPSignup = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setLoading(true);
-    try {
-      const sendRes = await fetch(`${backend_url}/api/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email.toLowerCase() }),
-      });
+  setLoading(true);
+  try {
+    // Send OTP
+    const sendRes = await axios.post(`${backend_url}/api/auth/send-otp`, {
+      email: formData.email.toLowerCase()
+    });
 
-      const sendData = await sendRes.json();
+    const sendData = sendRes.data;
 
-      if (!sendRes.ok) {
-        toast.error(sendData.message || "Failed to send OTP");
-        setLoading(false);
-        return;
-      }
+    // Ask user to input OTP
+    const { value: otp } = await Swal.fire({
+      title: 'Enter OTP',
+      input: 'text',
+      inputLabel: 'Check your email for the 6-digit OTP',
+      inputPlaceholder: 'Enter OTP here',
+      inputAttributes: {
+        maxlength: 6,
+        autocapitalize: 'off',
+        autocorrect: 'off',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Verify & Create Account',
+      cancelButtonText: 'Cancel',
+      footer: '<span style="color: gray;">Didn\'t see the email? Check your <b>Spam</b> or <b>Promotions</b> folder.</span>'
+    });
 
-      const { value: otp } = await Swal.fire({
-        title: 'Enter OTP',
-        input: 'text',
-        inputLabel: 'Check your email for the 6-digit OTP',
-        inputPlaceholder: 'Enter OTP here',
-        inputAttributes: {
-          maxlength: 6,
-          autocapitalize: 'off',
-          autocorrect: 'off',
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Verify & Create Account',
-        cancelButtonText: 'Cancel',
-        footer: '<span style="color: gray;">Didn\'t see the email? Check your <b>Spam</b> or <b>Promotions</b> folder.</span>'
-      });
-
-      if (!otp) {
-        setLoading(false);
-        return;
-      }
-
-      const signupRes = await fetch(`${backend_url}/api/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email.toLowerCase(),
-          password: formData.password,
-          otp
-        }),
-      });
-
-      const signupData = await signupRes.json();
-
-      if (signupRes.ok) {
-        // Set token using StorageService
-        if (signupData.token) {
-          await StorageService.set("token", signupData.token, {
-            expires: 7, // 7 days for regular accounts
-            sameSite: "strict"
-          });
-          
-          axios.defaults.headers.common["Authorization"] = `Bearer ${signupData.token}`;
-        }
-        
-        // Store user data in localStorage
-        if (signupData.user) {
-          localStorage.setItem("user", JSON.stringify(signupData.user));
-        }
-        
-        toast.success("Signup successful! Welcome aboard! 🎉");
-        navigate("/chat");
-      } else {
-        toast.error(signupData.message || "Signup failed");
-      }
-
-    } catch (err) {
-      console.error("Signup error:", err);
-      toast.error("Something went wrong");
-    } finally {
+    if (!otp) {
       setLoading(false);
+      return;
     }
-  };
+
+    // Final Signup
+    const signupRes = await axios.post(`${backend_url}/api/auth/signup`, {
+      name: formData.name,
+      email: formData.email.toLowerCase(),
+      password: formData.password,
+      otp
+    });
+
+    const signupData = signupRes.data;
+
+    if (signupData.token) {
+      await StorageService.set("token", signupData.token, {
+        expires: 7,
+        sameSite: "strict"
+      });
+
+      axios.defaults.headers.common["Authorization"] = `Bearer ${signupData.token}`;
+    }
+
+    if (signupData.user) {
+      localStorage.setItem("user", JSON.stringify(signupData.user));
+    }
+
+    toast.success("Signup successful! Welcome aboard! 🎉");
+    navigate("/chat");
+
+  } catch (err) {
+    console.error("Signup error:", err);
+    if (err.response && err.response.data?.message) {
+      toast.error(err.response.data.message);
+    } else {
+      toast.error("Something went wrong");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
