@@ -373,13 +373,15 @@ class NotificationService {
         console.log(`User ${user._id} has no lastLogin record`);
         return false;
       }
-
+      if(user.isLoggedOut) {
+        console.log(`User ${user._id} is marked as logged out`);
+        return false;
+      }
       // Method 3: Check if demo user and demo has expired
       if (user.isDemo && user.demoExpiresAt && new Date() > user.demoExpiresAt) {
         console.log(`User ${user._id} demo account has expired`);
         return false;
       }
-
       // Method 4: Check if FCM token exists (basic check)
       if (!user.fcmToken) {
         console.log(`User ${user._id} has no FCM token - likely not logged in on any device`);
@@ -484,6 +486,7 @@ class NotificationService {
           console.log(`Skipping scheduled notification for logged out user ${user._id}`);
           continue;
         }
+
 
         const message = {
           notification: {
