@@ -38,7 +38,21 @@ const auth = async (req, res, next) => {
           message: 'User account is deactivated'
         });
       }
+      // Check if user is logged out
+if (user.isLoggedOut) {
+  return res.status(401).json({
+    success: false,  
+    message: 'User is logged out. Please login again.'
+  });
+}
 
+// Check if demo account has expired
+if (user.isDemo && user.demoExpiresAt && new Date() > user.demoExpiresAt) {
+  return res.status(401).json({
+    success: false,
+    message: 'Demo account has expired'
+  });
+}
       // Add user info to request
       req.user = {
         userId: decoded.userId,
