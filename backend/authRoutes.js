@@ -63,6 +63,8 @@ router.post('/signup', async (req, res) => {
       password, // User model should handle hashing via pre-save middleware
       isDemo: Boolean(skipOTP), // Fix: Ensure proper boolean conversion
       isVerified: true,
+      isLoggedOut: false, // Set initial login state
+      lastLogin: new Date(), // Set initial login time
       demoExpiresAt: skipOTP ? new Date(Date.now() + 60 * 60 * 1000) : null // 1 hour for demo accounts
     });
 
@@ -105,6 +107,7 @@ router.post('/signup', async (req, res) => {
     });
   }
 });
+
 // @route   POST /api/auth/login
 // @desc    Login user
 // @access  Public
@@ -131,8 +134,10 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Update last login
-    await user.updateLastLogin();
+    // UPDATE: Set login state and update last login
+    user.lastLogin = new Date();
+    user.isLoggedOut = false;
+    await user.save();
 
     // Generate JWT token with different expiry based on rememberMe
     const tokenExpiry = rememberMe ? '30d' : '7d';
@@ -195,13 +200,26 @@ router.get('/me', auth, async (req, res) => {
 // @route   POST /api/auth/logout
 // @desc    Logout user (client-side token removal)
 // @access  Private
-router.post('/logout', auth, (req, res) => {
-  // Since we're using JWT, logout is handled client-side
-  // This endpoint is mainly for logging purposes
-  res.json({
-    success: true,
-    message: 'Logged out successfully'
-  });
+router.post('/logout', auth, async (req, res) => {
+  try {
+    // UPDATE: Set logout state in database
+    const user = await User.findById(req.user.userId);
+    if (user) {
+      user.isLoggedOut = true;
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
 });
 
 // @route   PUT /api/auth/profile
@@ -243,6 +261,48 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/update-fcm-token
+// @desc    Update FCM token for push notifications
+// @access  Private
+router.post('/update-fcm-token', auth, async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const userId = req.user.userId;
+
+    if (!fcmToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'FCM token is required'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // UPDATE: Set FCM token and update timestamp
+    user.fcmToken = fcmToken;
+    user.fcmTokenUpdatedAt = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'FCM token updated successfully'
+    });
+
+  } catch (error) {
+    console.error('FCM token update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
 
 router.post('/forgot-password', async (req, res) => {
@@ -260,7 +320,7 @@ router.post('/forgot-password', async (req, res) => {
     user.resetOTPExpire = otpExpire;
     await user.save();
 
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
@@ -349,7 +409,7 @@ router.post('/send-otp', async (req, res) => {
       expiresAt: Date.now() + 15 * 60 * 1000, // expires in 15 minutes
     });
 
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -475,6 +535,7 @@ router.post('/verify-signup-otp', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 // @route   POST /api/auth/delete-account
 // @desc    Delete user account and all associated data
 // @access  Private
@@ -533,6 +594,7 @@ router.post('/delete-account', auth, async (req, res) => {
     });
   }
 });
+
 // @route   POST /api/auth/send-delete-otp
 // @desc    Send OTP for account deletion (when password is forgotten)
 // @access  Private
@@ -559,7 +621,7 @@ router.post('/send-delete-otp', auth, async (req, res) => {
     await user.save();
 
     // Send email
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,

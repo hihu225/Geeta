@@ -40,6 +40,19 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date
   },
+  // NEW: Additional login tracking fields (optional but recommended)
+  lastActiveAt: {
+    type: Date,
+    default: Date.now
+  },
+  isLoggedOut: {
+    type: Boolean,
+    default: false
+  },
+  fcmTokenUpdatedAt: {
+    type: Date
+  },
+  // END NEW FIELDS
   resetOTP: String,
   resetOTPExpire: Date,
   deleteOTP: {
@@ -87,7 +100,12 @@ userSchema.pre('save', async function(next) {
     next(error);
   }
 });
-
+userSchema.pre('save', function(next) {
+  if (this.isModified() && !this.isModified('lastActiveAt')) {
+    this.lastActiveAt = new Date();
+  }
+  next();
+});
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
