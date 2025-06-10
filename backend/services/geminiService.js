@@ -342,59 +342,175 @@ Generate the sequential verse now:`;
 
   getThemedQuotePrompt(language) {
     const languageInstructions = this.getLanguageInstructions(language);
+    
+    // Expanded and more diverse themes covering broader life experiences
     const todayThemes = [
+      // Mental Health & Emotional Wellbeing
       "overcoming stress and anxiety",
-      "finding purpose in work", 
+      "dealing with depression and sadness",
+      "managing overwhelming emotions",
+      "healing from trauma and loss",
+      "building emotional resilience",
+      "conquering self-doubt and insecurity",
+      "finding peace in chaos",
+      "overcoming perfectionism",
+      "dealing with loneliness and isolation",
+      "managing anger and resentment",
+      
+      // Relationships & Social Life
       "building healthy relationships",
-      "developing inner peace",
       "dealing with difficult people",
-      "making important decisions",
-      "finding motivation and energy",
-      "balancing material and spiritual life",
-      "developing patience and tolerance",
-      "cultivating gratitude and contentment",
-      "managing anger and frustration",
+      "healing from betrayal or heartbreak",
+      "improving communication skills",
+      "setting healthy boundaries",
+      "forgiving those who hurt you",
+      "finding your community and belonging",
+      "navigating family conflicts",
+      "building trust after disappointment",
+      "learning to love yourself first",
+      
+      // Career & Purpose
+      "finding purpose in work",
+      "dealing with career uncertainty",
+      "overcoming professional setbacks",
+      "balancing ambition with contentment",
+      "finding meaning beyond success",
+      "navigating workplace challenges",
+      "discovering your true calling",
+      "dealing with imposter syndrome",
+      "making difficult career transitions",
+      "finding fulfillment in service",
+      
+      // Personal Growth & Spirituality
+      "developing inner peace",
+      "cultivating patience and tolerance",
+      "building self-discipline and focus",
+      "developing compassion and kindness",
       "finding strength in adversity",
-      "developing self-discipline",
+      "embracing change and uncertainty",
       "overcoming fear and doubt",
-      "cultivating compassion and kindness"
+      "cultivating gratitude and contentment",
+      "developing wisdom and discernment",
+      "finding balance in extremes",
+      
+      // Life Challenges & Decisions
+      "making important life decisions",
+      "dealing with financial struggles",
+      "coping with health challenges",
+      "navigating major life transitions",
+      "overcoming addiction and bad habits",
+      "dealing with aging and mortality",
+      "finding hope in dark times",
+      "managing time and priorities",
+      "dealing with failure and rejection",
+      "finding motivation when stuck",
+      
+      // Modern Life & Technology
+      "finding balance in digital age",
+      "dealing with information overload",
+      "maintaining focus in distracting world",
+      "building real connections in virtual world",
+      "finding quiet in noisy times",
+      "managing social media comparison",
+      "preserving mental space",
+      "staying grounded in fast-paced life",
+      
+      // Deeper Philosophical Themes
+      "understanding the nature of suffering",
+      "finding meaning in ordinary moments",
+      "accepting what cannot be changed",
+      "discovering your authentic self",
+      "balancing material and spiritual needs",
+      "understanding the impermanence of life",
+      "finding unity in diversity",
+      "cultivating non-attachment",
+      "embracing both joy and sorrow",
+      "discovering the divine within",
+      
+      // Social & Global Awareness
+      "finding your role in helping others",
+      "dealing with injustice and inequality",
+      "maintaining hope despite world problems",
+      "balancing personal growth with social responsibility",
+      "finding peace amid global conflicts",
+      "contributing to positive change",
+      "developing environmental consciousness",
+      "building bridges across differences",
+      
+      // Specific Life Stages & Situations
+      "navigating parenthood challenges",
+      "finding purpose in retirement",
+      "dealing with empty nest syndrome",
+      "managing caregiver responsibilities",
+      "coping with student life pressures",
+      "handling midlife transitions",
+      "embracing new beginnings at any age",
+      "finding strength as a single person",
+      "balancing multiple life roles",
+      
+      // Creative & Intellectual Growth
+      "overcoming creative blocks",
+      "finding inspiration in mundane",
+      "balancing logic and intuition",
+      "developing intellectual humility",
+      "embracing lifelong learning",
+      "finding beauty in imperfection",
+      "cultivating wonder and curiosity",
+      "expressing your unique gifts"
     ];
     
-    const randomTheme = todayThemes[Math.floor(Math.random() * todayThemes.length)];
+    // Randomly select theme with weighted distribution for variety
+    const getRandomTheme = () => {
+      const shuffled = [...todayThemes].sort(() => 0.5 - Math.random());
+      return shuffled[0];
+    };
     
-    return `You are a wise spiritual counselor. Someone is struggling with: ${randomTheme}
+    const randomTheme = getRandomTheme();
+    
+    return `You are a wise spiritual counselor drawing from the profound wisdom of the Bhagavad Gita. Someone is seeking guidance for: ${randomTheme}
 
 CRITICAL FORMATTING RULES:
 - Use EXACTLY these headers: **Today's Challenge:**, **Verse:**, **Sanskrit:**, **Translation:**, **Practical Guidance:**
-- Each section must be on a new line
-- Choose a verse that directly addresses this challenge
-- Make guidance specific and actionable
+- Each section must be on a new line with proper spacing
+- Choose a verse that directly addresses this specific challenge
+- Ensure the guidance is deeply relevant and transformative
 
 LANGUAGE: ${languageInstructions.primary}
 
 EXACT OUTPUT FORMAT:
 **Today's Challenge:** ${randomTheme}
-**Verse:** [Chapter.Verse that directly addresses this challenge]
-**Sanskrit:** [Authentic Sanskrit text in Devanagari]
-**Translation:** [Clear, comforting translation in ${language}]
-**Practical Guidance:** [Structured guidance with four parts:
 
-1. Relevance: Why this verse is perfect for today's challenge (1-2 sentences)
-2. Action Steps: Specific, practical steps to apply the wisdom (2-3 concrete steps)
-3. Expected Benefits: Positive changes to expect from following this guidance (1-2 sentences)
-4. Affirmation: Uplifting reminder to inspire hope and perseverance (1 sentence)]
+**Verse:** [Chapter.Verse that most directly addresses this challenge]
+
+**Sanskrit:** [Authentic Sanskrit text in Devanagari script]
+
+**Translation:** [Clear, comforting, and relevant translation in ${language}]
+
+**Practical Guidance:** [Comprehensive guidance with four distinct parts:
+
+1. **Relevance:** Why this specific verse is perfectly suited for today's challenge - connect the ancient wisdom to the modern struggle (2-3 sentences)
+
+2. **Action Steps:** Three specific, practical steps to apply this wisdom in daily life:
+   • Step 1: [Concrete action with clear instructions]
+   • Step 2: [Practical application with specific examples]
+   • Step 3: [Sustainable practice for long-term benefit]
+
+3. **Expected Benefits:** Positive transformations to anticipate from following this guidance - be specific about the inner and outer changes (2-3 sentences)
+
+4. **Affirmation:** A powerful, uplifting reminder that encapsulates the verse's essence and inspires continued growth (1-2 sentences)]
 
 ${languageInstructions.additional}
 
 QUALITY REQUIREMENTS:
-- Verse must directly relate to the specific challenge
-- Sanskrit must be authentic with proper formatting
-- Translation must be comforting and relevant
-- Guidance must be specific, not generic
-- Tone must be compassionate and encouraging
+- Verse selection must have clear thematic relevance to the specific challenge
+- Sanskrit must be properly formatted with authentic Devanagari text
+- Translation should be both accurate and emotionally resonant
+- Guidance must be specific to the challenge, not generic advice
+- Tone should be compassionate, wise, and genuinely helpful
+- Each section should feel complete and purposeful
 
-Generate the themed quote now:`;
-  }
+Generate the themed spiritual guidance now:`;
+}
 
   getLanguageInstructions(language) {
     const instructions = {

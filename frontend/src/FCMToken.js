@@ -5,9 +5,11 @@ import { backend_url } from "./utils/backend";
 import Cookies from "js-cookie";
 import axios from "axios";
 
-// Global flag to prevent duplicate registrations
+// Global flags to prevent duplicate operations
 let isRegistrationInProgress = false;
 let registrationListeners = [];
+let currentFCMToken = null; // Cache current token
+let tokenSaveInProgress = false;
 
 // Multi-language fallback messages
 const getFallbackMessages = (language) => {
@@ -59,6 +61,49 @@ const getUserLanguagePreference = () => {
   }
 };
 
+// Function to save token to backend with duplicate prevention
+const saveTokenToBackend = async (token) => {
+  // Prevent duplicate saves
+  if (tokenSaveInProgress) {
+    console.log('Token save already in progress, skipping...');
+    return;
+  }
+
+  // Check if token is already cached and same
+  if (currentFCMToken === token) {
+    console.log('Token unchanged, skipping backend save');
+    return;
+  }
+
+  try {
+    tokenSaveInProgress = true;
+    const authToken = Cookies.get("token");
+    
+    const response = await axios.post(
+      `${backend_url}/api/notifications/save-token`,
+      { token: token },
+      {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      }
+    );
+    
+    if (response.status === 200) {
+      if (response.data.alreadyExists) {
+        console.log("Token already exists in backend, no update needed");
+      } else {
+        console.log("Token saved successfully to backend");
+      }
+      // Cache the token after successful save
+      currentFCMToken = token;
+    }
+  } catch (backendError) {
+    console.error("Failed to save token to backend:", backendError);
+    throw backendError;
+  } finally {
+    tokenSaveInProgress = false;
+  }
+};
+
 const FCMToken = async (navigate = null) => {
   try {
     // Only work on native Android platform
@@ -71,6 +116,12 @@ const FCMToken = async (navigate = null) => {
     if (isRegistrationInProgress) {
       console.log('Registration already in progress, skipping...');
       return null;
+    }
+
+    // If we already have a token cached, return it
+    if (currentFCMToken) {
+      console.log('Using cached FCM token:', currentFCMToken);
+      return currentFCMToken;
     }
 
     isRegistrationInProgress = true;
@@ -106,21 +157,11 @@ const FCMToken = async (navigate = null) => {
         console.log('Push registration success, FCM token: ' + token.value);
         
         try {
-          // Save token to backend
-          const authToken = Cookies.get("token");
-          const response = await axios.post(
-            `${backend_url}/api/notifications/save-token`,
-            { token: token.value },
-            {
-              headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-            }
-          );
-          
-          if (response.status === 200) {
-            console.log("Token saved successfully to backend");
-          }
+          // Save token to backend (with duplicate prevention)
+          await saveTokenToBackend(token.value);
         } catch (backendError) {
           console.error("Failed to save token to backend:", backendError);
+          // Don't reject the promise, just log the error
         }
         
         // Clean up and resolve
@@ -616,6 +657,12 @@ const addPageTransitionEffect = () => {
       document.body.removeChild(transition);
     }
   }, 800);
+};
+
+// Export function to reset cached token (useful for testing or logout)
+export const resetFCMToken = () => {
+  currentFCMToken = null;
+  console.log('FCM token cache reset');
 };
 
 export default FCMToken;
