@@ -8,6 +8,7 @@ const notificationService = require("../services/notificationService");
 
 const router = express.Router();
 
+// Backend route with token comparison
 router.post("/save-token", auth, async (req, res) => {
   try {
     console.log("Incoming save-token request");
@@ -18,19 +19,40 @@ router.post("/save-token", auth, async (req, res) => {
       return res.status(400).json({ success: false, message: "FCM token missing" });
     }
 
+    // First, get the current user to check existing token
+    const currentUser = await User.findById(req.user.userId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check if the token is already saved and is the same
+    if (currentUser.fcmToken === token) {
+      console.log(`FCM token already exists for user ${req.user.userId}, skipping save`);
+      return res.status(200).json({
+        success: true,
+        message: "FCM token already exists, no update needed",
+        alreadyExists: true
+      });
+    }
+
+    // Only update if token is different or doesn't exist
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
-      { $set: { fcmToken: token } },
+      { 
+        $set: { 
+          fcmToken: token,
+          fcmTokenUpdatedAt: new Date() // Track when token was last updated
+        } 
+      },
       { new: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    console.log(`FCM token updated for user ${req.user.userId}`);
 
     res.status(200).json({
       success: true,
       message: "FCM token saved successfully",
+      tokenUpdated: true
     });
   } catch (error) {
     console.error("Error saving FCM token:", error);
