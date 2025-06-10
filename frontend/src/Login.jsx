@@ -200,8 +200,7 @@ const Login = () => {
     });
 
     if (!email || !email.trim()) {
-      toast.error("Please enter a valid email address");
-      return;
+      return; // User cancelled or didn't enter email
     }
 
     // Basic email format validation
@@ -214,22 +213,37 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const response = await axios(`${backend_url}/api/auth/forgot-password`, {
-        method: "POST",
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+      const response = await axios.post(`${backend_url}/api/auth/forgot-password`, {
+        email: email.trim().toLowerCase()
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("If an account with that email exists, an OTP has been sent to your email 📧");
-        navigate('/reset-password'); // Optional: only if needed now
+      // Check if the request was successful
+      if (response.data && response.data.success) {
+        toast.success("OTP has been sent to your email! Check your inbox 📧");
+        // Navigate to reset password page immediately after successful OTP send
+        navigate('/reset-password', { 
+          state: { 
+            email: email.trim().toLowerCase() 
+          } 
+        });
       } else {
-        toast.error(data.message || "Error sending OTP");
+        // Handle case where response doesn't have success flag but no error was thrown
+        const message = response.data?.message || "Error sending OTP";
+        toast.error(message);
       }
     } catch (error) {
       console.error("Forgot password error:", error);
-      toast.error("Something went wrong. Please try again later.");
+      
+      // Handle specific error responses
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.status === 404) {
+        toast.error("Email not found in our system");
+      } else if (error.response?.status >= 500) {
+        toast.error("Server error. Please try again later.");
+      } else {
+        toast.error("Something went wrong. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
