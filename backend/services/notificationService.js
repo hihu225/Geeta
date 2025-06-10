@@ -111,7 +111,7 @@ class NotificationService {
         },
         data: {
           type: "daily_quote",
-          quoteId: quoteData._id.toString(),
+          quoteId: quoteData._id?.toString() || '',
           language: user.preferences?.language || 'english',
           quoteType: user.preferences?.quoteType || 'random',
           timestamp: new Date().toISOString(),
