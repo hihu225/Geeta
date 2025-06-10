@@ -111,7 +111,7 @@ class NotificationService {
         },
         data: {
           type: "daily_quote",
-          fullQuote: quoteData.quote,
+          quoteId: quoteData._id.toString(),
           language: user.preferences?.language || 'english',
           quoteType: user.preferences?.quoteType || 'random',
           timestamp: new Date().toISOString(),
@@ -124,11 +124,12 @@ class NotificationService {
           }),
           // Add parsed data for app usage
           ...(quoteData.parsed && {
-            verse: quoteData.parsed.verse || '',
-            sanskrit: quoteData.parsed.sanskrit || '',
-            translation: quoteData.parsed.translation || '',
-            wisdom: quoteData.parsed.wisdom || ''
-          })
+  verse: quoteData.parsed.verse || '',
+  sanskrit: quoteData.parsed.sanskrit?.substring(0, 100) || '',
+  translation: quoteData.parsed.translation?.substring(0, 150) || '',
+  wisdom: quoteData.parsed.wisdom?.substring(0, 150) || ''
+})
+
         },
         token: user.fcmToken
       };

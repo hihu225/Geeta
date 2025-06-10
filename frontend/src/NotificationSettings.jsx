@@ -118,53 +118,74 @@ const NotificationSettings = () => {
 
   // Function to fetch user preferences from the backend
   const fetchPreferences = async () => {
-    try {
-      const response = await axios.get(`${backend_url}/api/notifications/preferences`);
-      const data = response.data;
-      if (data.success) {
-        setSettings({
-          enabled: data.preferences.dailyQuotes?.enabled || false,
-          time: data.preferences.dailyQuotes?.time || '09:00',
-          timezone: data.preferences.dailyQuotes?.timezone || 'Asia/Kolkata',
-          language: data.preferences.preferences?.language || 'english',
-          quoteType: data.preferences.preferences?.quoteType || 'random'
-        });
+  try {
+    const response = await axios.get(`${backend_url}/api/notifications/preferences`);
+    const data = response.data;
+    if (data.success) {
+      const preferences = {
+        enabled: data.preferences.dailyQuotes?.enabled || false,
+        time: data.preferences.dailyQuotes?.time || '09:00',
+        timezone: data.preferences.dailyQuotes?.timezone || 'Asia/Kolkata',
+        language: data.preferences.preferences?.language || 'english',
+        quoteType: data.preferences.preferences?.quoteType || 'random'
+      };
+      
+      setSettings(preferences);
+      
+      // Also save to localStorage for FCM access
+      localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
+      
+      // Optional: Also save language as a cookie for additional fallback
+      Cookies.set('userLanguagePreference', preferences.language, { expires: 365 });
+    }
+  } catch (error) {
+    console.error("Error fetching preferences:", error);
+    setMessage("Failed to load settings. Please refresh the page.");
+    setMessageType("error");
+  }
+};
+
+// Function to update user preferences on the backend
+const updatePreferences = async (newSettings) => {
+  setLoading(true);
+  // Add a key to message to ensure re-render for animation
+  setMessage(""); 
+  try {
+    const response = await axios.post(
+      `${backend_url}/api/notifications/preferences`,
+      newSettings
+    );
+
+    const data = response.data;
+    if (data.success) {
+      setMessage("🙏 Settings updated successfully! Krishna's wisdom will reach you as configured.");
+      setMessageType("success");
+      
+      // Update state
+      const updatedSettings = { ...settings, ...newSettings };
+      setSettings(updatedSettings);
+      
+      // Save to localStorage for FCM access
+      localStorage.setItem('notificationPreferences', JSON.stringify(updatedSettings));
+      
+      // Optional: Also save language as a cookie for additional fallback
+      if (newSettings.language) {
+        Cookies.set('userLanguagePreference', newSettings.language, { expires: 365 });
       }
-    } catch (error) {
-      console.error("Error fetching preferences:", error);
-      setMessage("Failed to load settings. Please refresh the page.");
+      
+      console.log('Preferences saved to localStorage:', updatedSettings);
+    } else {
+      setMessage("Failed to update settings. Please try again.");
       setMessageType("error");
     }
-  };
-
-  // Function to update user preferences on the backend
-  const updatePreferences = async (newSettings) => {
-    setLoading(true);
-    // Add a key to message to ensure re-render for animation
-    setMessage(""); 
-    try {
-      const response = await axios.post(
-        `${backend_url}/api/notifications/preferences`,
-        newSettings
-      );
-
-      const data = response.data;
-      if (data.success) {
-        setMessage("🙏 Settings updated successfully! Krishna's wisdom will reach you as configured.");
-        setMessageType("success");
-        setSettings((prev) => ({ ...prev, ...newSettings }));
-      } else {
-        setMessage("Failed to update settings. Please try again.");
-        setMessageType("error");
-      }
-    } catch (error) {
-      setMessage("Error updating settings. Please check your connection.");
-      setMessageType("error");
-    } finally {
-      setLoading(false);
-      setTimeout(() => setMessage(""), 5000);
-    }
-  };
+  } catch (error) {
+    setMessage("Error updating settings. Please check your connection.");
+    setMessageType("error");
+  } finally {
+    setLoading(false);
+    setTimeout(() => setMessage(""), 5000);
+  }
+};
 
   // Handler for the enable/disable toggle switch
   const handleToggle = () => {

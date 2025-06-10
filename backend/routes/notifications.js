@@ -107,32 +107,6 @@ router.get("/preferences", auth, async (req, res) => {
   }
 });
 
-// Send immediate quote (for testing)
-router.post("/send-quote", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { customMessage } = req.body;
-
-    const result = await notificationService.sendImmediateQuote(
-      userId,
-      customMessage
-    );
-
-    console.log("Send quote result:", result);
-
-    if (result.success) {
-      res
-        .status(200)
-        .json({ success: true, message: "Quote sent successfully" });
-    } else {
-      res.status(400).json({ success: false, message: result.message });
-    }
-  } catch (error) {
-    console.error("Error sending quote:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 // Manual send to all users (Admin only)
 router.post("/send-all", auth, async (req, res) => {
   try {

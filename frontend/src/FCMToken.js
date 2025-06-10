@@ -5,130 +5,228 @@ import { backend_url } from "./utils/backend";
 import Cookies from "js-cookie";
 import axios from "axios";
 
+// Global flag to prevent duplicate registrations
+let isRegistrationInProgress = false;
+let registrationListeners = [];
+
+// Multi-language fallback messages
+const getFallbackMessages = (language) => {
+  const messages = {
+    english: {
+      title: '🕉️ Divine Wisdom Awaits',
+      body: 'A new message from the Bhagavad Gita',
+      readNow: 'Read Now',
+      later: 'Later'
+    },
+    hindi: {
+      title: '🕉️ दिव्य ज्ञान की प्रतीक्षा',
+      body: 'भगवद् गीता से एक नया संदेश',
+      readNow: 'अभी पढ़ें',
+      later: 'बाद में'
+    },
+    sanskrit: {
+      title: '🕉️ दिव्यं ज्ञानम् प्रतीक्षते',
+      body: 'भगवद्गीतायाः नूतनं संदेशम्',
+      readNow: 'अधुना पठतु',
+      later: 'पश्चात्'
+    }
+  };
+  
+  return messages[language] || messages.english;
+};
+
+// Function to get user's language preference
+const getUserLanguagePreference = () => {
+  try {
+    // Try to get from localStorage first
+    const preferences = localStorage.getItem('notificationPreferences');
+    if (preferences) {
+      const parsed = JSON.parse(preferences);
+      return parsed.language || 'english';
+    }
+    
+    // Try to get from cookies as fallback
+    const cookiePrefs = Cookies.get('userLanguagePreference');
+    if (cookiePrefs) {
+      return cookiePrefs;
+    }
+    
+    // Default to English
+    return 'english';
+  } catch (error) {
+    console.warn('Error getting user language preference:', error);
+    return 'english';
+  }
+};
+
 const FCMToken = async (navigate = null) => {
   try {
-    // Check if running on native platform
-    if (Capacitor.isNativePlatform()) {
-      console.log('Running on native platform');
+    // Only work on native Android platform
+    if (!Capacitor.isNativePlatform()) {
+      console.log('FCM notifications only supported on native Android platform');
+      return null;
+    }
+
+    // Prevent duplicate registrations
+    if (isRegistrationInProgress) {
+      console.log('Registration already in progress, skipping...');
+      return null;
+    }
+
+    isRegistrationInProgress = true;
+    console.log('Running on native Android platform');
+    
+    // Clean up any existing listeners first
+    cleanupListeners();
+    
+    // Request permission for push notifications
+    let permStatus = await PushNotifications.checkPermissions();
+    
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+    
+    if (permStatus.receive !== 'granted') {
+      console.warn('Push notification permissions not granted');
+      isRegistrationInProgress = false;
+      return null;
+    }
+    
+    console.log('Push notification permissions granted');
+    
+    // Set up listeners BEFORE calling register
+    return new Promise((resolve, reject) => {
+      let isResolved = false;
       
-      // Request permission for push notifications
-      let permStatus = await PushNotifications.checkPermissions();
-      
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions();
-      }
-      
-      if (permStatus.receive !== 'granted') {
-        console.warn('Push notification permissions not granted');
-        return null;
-      }
-      
-      console.log('Push notification permissions granted');
-      
-      // Set up listeners BEFORE calling register
-      return new Promise((resolve, reject) => {
-        let isResolved = false;
+      // Set up registration success listener
+      const registrationListener = PushNotifications.addListener('registration', async (token) => {
+        if (isResolved) return;
+        isResolved = true;
         
-        // Set up registration success listener
-        const registrationListener = PushNotifications.addListener('registration', async (token) => {
-          if (isResolved) return;
-          isResolved = true;
-          
-          console.log('Push registration success, FCM token: ' + token.value);
-          
-          try {
-            // Save token to backend
-            const response = await axios.post(
-              `${backend_url}/api/notifications/save-token`,
-              { token: token.value }
-            );
-            
-            if (response.status === 200) {
-              console.log("Token saved successfully to backend");
+        console.log('Push registration success, FCM token: ' + token.value);
+        
+        try {
+          // Save token to backend
+          const authToken = Cookies.get("token");
+          const response = await axios.post(
+            `${backend_url}/api/notifications/save-token`,
+            { token: token.value },
+            {
+              headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
             }
-          } catch (backendError) {
-            console.error("Failed to save token to backend:", backendError);
+          );
+          
+          if (response.status === 200) {
+            console.log("Token saved successfully to backend");
           }
-          
-          // Clean up listeners
-          registrationListener.remove();
-          errorListener.remove();
-          
-          resolve(token.value);
-        });
+        } catch (backendError) {
+          console.error("Failed to save token to backend:", backendError);
+        }
         
-        // Set up registration error listener
-        const errorListener = PushNotifications.addListener('registrationError', (error) => {
-          if (isResolved) return;
-          isResolved = true;
-          
-          console.error('Error on registration: ' + JSON.stringify(error));
-          
-          // Clean up listeners
-          registrationListener.remove();
-          errorListener.remove();
-          
-          reject(error);
-        });
-        
-        // Beautiful foreground notifications for native platforms
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received in foreground: ', notification);
-          showPremiumNotification(notification, navigate);
-        });
-        
-        // Handle notification click - Navigate to Notifications page
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed', notification.actionId, notification.inputValue);
-          
-          // Beautiful transition to notifications page
-          addPageTransitionEffect();
-          
-          setTimeout(() => {
-            if (navigate) {
-              navigate('/notifications');
-            } else {
-              window.location.href = '/notifications';
-            }
-          }, 200);
-        });
-        
-        // Set timeout to avoid hanging forever
-        setTimeout(() => {
-          if (!isResolved) {
-            isResolved = true;
-            registrationListener.remove();
-            errorListener.remove();
-            reject(new Error('Registration timeout - no response after 15 seconds'));
-          }
-        }, 15000);
-        
-        // Now register for push notifications
-        PushNotifications.register().catch((error) => {
-          if (!isResolved) {
-            isResolved = true;
-            registrationListener.remove();
-            errorListener.remove();
-            reject(error);
-          }
-        });
+        // Clean up and resolve
+        cleanup();
+        resolve(token.value);
       });
       
-    } else {
-      // Fallback to web implementation for browsers
-      console.log('Running on web platform, using beautiful web implementation');
-      return await getBeautifulWebFCMToken(navigate);
-    }
+      // Set up registration error listener
+      const errorListener = PushNotifications.addListener('registrationError', (error) => {
+        if (isResolved) return;
+        isResolved = true;
+        
+        console.error('Error on registration: ' + JSON.stringify(error));
+        cleanup();
+        reject(error);
+      });
+      
+      // Store listeners for cleanup
+      registrationListeners.push(registrationListener, errorListener);
+      
+      // Set up one-time notification listeners (only if not already set)
+      if (!window.fcmNotificationListenersSet) {
+        setupNotificationListeners(navigate);
+        window.fcmNotificationListenersSet = true;
+      }
+      
+      // Set timeout to avoid hanging forever
+      const timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject(new Error('Registration timeout - no response after 15 seconds'));
+        }
+      }, 15000);
+      
+      // Cleanup function
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        cleanupListeners();
+        isRegistrationInProgress = false;
+      };
+      
+      // Now register for push notifications
+      PushNotifications.register().catch((error) => {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject(error);
+        }
+      });
+    });
     
   } catch (err) {
     console.error("An error occurred while retrieving token: ", err);
+    isRegistrationInProgress = false;
     return null;
   }
 };
 
-// Premium notification display for all platforms
+// Clean up existing listeners
+const cleanupListeners = () => {
+  registrationListeners.forEach(listener => {
+    try {
+      listener.remove();
+    } catch (e) {
+      console.warn('Failed to remove listener:', e);
+    }
+  });
+  registrationListeners = [];
+};
+
+// Set up notification listeners (only once)
+const setupNotificationListeners = (navigate) => {
+  // Handle foreground notifications
+  PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    console.log('Push notification received in foreground: ', notification);
+    showPremiumNotification(notification, navigate);
+  });
+  
+  // Handle notification click - Navigate to Notifications page
+  PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+    console.log('Push notification action performed', notification.actionId, notification.inputValue);
+    
+    // Add transition effect and navigate
+    addPageTransitionEffect();
+    
+    setTimeout(() => {
+      if (navigate) {
+        navigate('/notifications');
+      } else {
+        window.location.href = '/notifications';
+      }
+    }, 200);
+  });
+};
+
+// Premium notification display for Android with multi-language support
 const showPremiumNotification = (notification, navigate) => {
-  // Remove any existing notifications first
+  // Get user's language preference
+  const userLanguage = getUserLanguagePreference();
+  const fallbackMessages = getFallbackMessages(userLanguage);
+  
+  console.log('Showing notification in language:', userLanguage);
+  console.log('Notification data:', notification);
+  
+  // Prevent duplicate notifications - remove any existing ones first
   const existing = document.querySelectorAll('.premium-notification');
   existing.forEach(el => el.remove());
   
@@ -139,6 +237,10 @@ const showPremiumNotification = (notification, navigate) => {
   // Get current time for beautiful timestamp
   const now = new Date();
   const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Use notification data if available, otherwise use language-appropriate fallbacks
+  const title = notification.title || fallbackMessages.title;
+  const body = notification.body || fallbackMessages.body;
   
   notificationContainer.innerHTML = `
     <div class="notification-backdrop"></div>
@@ -159,16 +261,16 @@ const showPremiumNotification = (notification, navigate) => {
       </div>
       
       <div class="notification-content">
-        <div class="notification-title">${notification.title || '🕉️ Divine Wisdom Awaits'}</div>
-        <div class="notification-body">${notification.body || 'A new message from the Bhagavad Gita'}</div>
+        <div class="notification-title">${title}</div>
+        <div class="notification-body">${body}</div>
       </div>
       
       <div class="notification-actions">
         <button class="action-btn secondary" onclick="this.closest('.premium-notification').remove()">
-          Later
+          ${fallbackMessages.later}
         </button>
-        <button class="action-btn primary" onclick="handleNotificationClick('${escape(JSON.stringify(notification))}')">
-          Read Now
+        <button class="action-btn primary" onclick="handleNotificationClick()">
+          ${fallbackMessages.readNow}
         </button>
       </div>
       
@@ -205,10 +307,8 @@ const showPremiumNotification = (notification, navigate) => {
   }, 8000);
 };
 
-// Global function for notification button clicks
-window.handleNotificationClick = (notificationData) => {
-  const notification = JSON.parse(unescape(notificationData));
-  
+// Global function for notification button clicks (simplified)
+window.handleNotificationClick = () => {
   // Remove notification with beautiful animation
   const notificationEl = document.querySelector('.premium-notification');
   if (notificationEl) {
@@ -516,364 +616,6 @@ const addPageTransitionEffect = () => {
       document.body.removeChild(transition);
     }
   }, 800);
-};
-
-// Beautiful web implementation
-const getBeautifulWebFCMToken = async (navigate = null) => {
-  try {
-    // Import Firebase messaging only for web
-    const { getToken, onMessage } = await import("firebase/messaging");
-    const { messaging } = await import("./firebase");
-    
-    // Request notification permission with beautiful UI
-    const permission = await requestNotificationPermissionBeautifully();
-    console.log("Notification permission:", permission);
-
-    if (permission !== "granted") {
-      console.warn("Notifications not allowed");
-      return null;
-    }
-
-    // Register service worker if not already registered
-    if ("serviceWorker" in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js"
-        );
-        console.log("Service Worker registered:", registration);
-        await navigator.serviceWorker.ready;
-      } catch (error) {
-        console.error("Service Worker registration failed:", error);
-      }
-    }
-
-    const currentToken = await getToken(messaging, {
-      vapidKey:
-        "BB4_1ASpKcUEyiBS5B8hWK-BZVvN2TOB2eWBGx-XPC5tJXp5VrD22EmyF7u_DmLoI3jHaAi6NTtX8WXYCYF-_sw",
-    });
-
-    if (currentToken) {
-      console.log("FCM Token:", currentToken);
-
-      // Handle foreground messages with beautiful notifications
-      onMessage(messaging, (payload) => {
-        console.log('Message received in foreground: ', payload);
-        
-        // Show premium notification
-        showPremiumNotification({
-          title: payload.notification?.title,
-          body: payload.notification?.body,
-          data: payload.data
-        }, navigate);
-      });
-
-      // Beautiful welcome notification
-      setTimeout(() => {
-        showPremiumNotification({
-          title: "🕉️ Geeta GPT Ready!",
-          body: "You will now receive daily Bhagavad Gita wisdom and divine guidance"
-        }, navigate);
-      }, 1000);
-
-      // Save token to backend
-      try {
-        const authToken = Cookies.get("token");
-        const response = await axios.post(
-          `${backend_url}/api/notifications/save-token`,
-          { token: currentToken },
-          {
-            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-          }
-        );
-        
-        if (response.status === 200) {
-          console.log("Token saved successfully to backend");
-        }
-      } catch (backendError) {
-        console.error("Failed to save token to backend:", backendError);
-      }
-
-      return currentToken;
-    } else {
-      console.warn("No registration token available.");
-      return null;
-    }
-  } catch (err) {
-    console.error("Web FCM token error:", err);
-    return null;
-  }
-};
-
-// Beautiful permission request
-const requestNotificationPermissionBeautifully = async () => {
-  if (Notification.permission === 'granted') {
-    return 'granted';
-  }
-  
-  if (Notification.permission === 'denied') {
-    return 'denied';
-  }
-  
-  // Show beautiful permission dialog
-  return new Promise((resolve) => {
-    showPermissionDialog(resolve);
-  });
-};
-
-// Beautiful permission dialog
-const showPermissionDialog = (callback) => {
-  const dialog = document.createElement('div');
-  dialog.className = 'permission-dialog';
-  
-  dialog.innerHTML = `
-    <div class="permission-backdrop"></div>
-    <div class="permission-card">
-      <div class="permission-icon">
-        <div class="om-icon">🕉️</div>
-        <div class="notification-bell">🔔</div>
-      </div>
-      
-      <div class="permission-content">
-        <h3 class="permission-title">Stay Connected to Divine Wisdom</h3>
-        <p class="permission-message">
-          Allow Geeta GPT to send you daily verses from the Bhagavad Gita 
-          and spiritual insights to guide your journey.
-        </p>
-      </div>
-      
-      <div class="permission-actions">
-        <button class="permission-btn secondary" onclick="handlePermissionResponse(false)">
-          Not Now
-        </button>
-        <button class="permission-btn primary" onclick="handlePermissionResponse(true)">
-          Allow Notifications
-        </button>
-      </div>
-    </div>
-  `;
-  
-  // Add permission dialog styles
-  addPermissionDialogStyles();
-  
-  document.body.appendChild(dialog);
-  
-  // Store callback
-  window.permissionCallback = callback;
-  
-  // Animate in
-  requestAnimationFrame(() => {
-    dialog.classList.add('show');
-  });
-};
-
-// Handle permission response
-window.handlePermissionResponse = async (allow) => {
-  const dialog = document.querySelector('.permission-dialog');
-  
-  if (allow) {
-    // Request actual permission
-    const permission = await Notification.requestPermission();
-    window.permissionCallback(permission);
-  } else {
-    window.permissionCallback('denied');
-  }
-  
-  // Remove dialog
-  if (dialog) {
-    dialog.classList.add('hide');
-    setTimeout(() => {
-      if (document.body.contains(dialog)) {
-        document.body.removeChild(dialog);
-      }
-    }, 300);
-  }
-};
-
-// Add permission dialog styles
-const addPermissionDialogStyles = () => {
-  if (document.getElementById('permission-dialog-styles')) return;
-  
-  const styles = document.createElement('style');
-  styles.id = 'permission-dialog-styles';
-  styles.textContent = `
-    .permission-dialog {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 999999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transform: scale(0.9);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    .permission-dialog.show {
-      opacity: 1;
-      transform: scale(1);
-    }
-    
-    .permission-dialog.hide {
-      opacity: 0;
-      transform: scale(0.95);
-      transition: all 0.2s ease;
-    }
-    
-    .permission-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    
-    .permission-card {
-      position: relative;
-      background: white;
-      border-radius: 24px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 90%;
-      margin: 0 20px;
-      text-align: center;
-      overflow: hidden;
-    }
-    
-    .permission-icon {
-      position: relative;
-      padding: 32px 32px 16px 32px;
-    }
-    
-    .om-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-      display: block;
-      animation: gentle-pulse 2s ease-in-out infinite;
-    }
-    
-    .notification-bell {
-      position: absolute;
-      top: 24px;
-      right: 32px;
-      font-size: 24px;
-      animation: bell-ring 2s ease-in-out infinite;
-    }
-    
-    @keyframes gentle-pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    
-    @keyframes bell-ring {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(10deg); }
-      75% { transform: rotate(-10deg); }
-    }
-    
-    .permission-content {
-      padding: 0 32px 24px 32px;
-    }
-    
-    .permission-title {
-      font-size: 22px;
-      font-weight: 600;
-      color: #1a202c;
-      margin: 0 0 12px 0;
-      line-height: 1.3;
-    }
-    
-    .permission-message {
-      font-size: 16px;
-      color: #4a5568;
-      line-height: 1.5;
-      margin: 0;
-    }
-    
-    .permission-actions {
-      display: flex;
-      gap: 12px;
-      padding: 0 32px 32px 32px;
-    }
-    
-    .permission-btn {
-      flex: 1;
-      padding: 14px 24px;
-      border-radius: 14px;
-      border: none;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .permission-btn.secondary {
-      background: #f7fafc;
-      color: #718096;
-    }
-    
-    .permission-btn.secondary:hover {
-      background: #edf2f7;
-      color: #4a5568;
-      transform: translateY(-1px);
-    }
-    
-    .permission-btn.primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
-    }
-    
-    .permission-btn.primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-    
-    @media (max-width: 480px) {
-      .permission-card {
-        border-radius: 20px;
-      }
-      
-      .permission-icon {
-        padding: 24px 24px 12px 24px;
-      }
-      
-      .om-icon {
-        font-size: 40px;
-      }
-      
-      .notification-bell {
-        top: 20px;
-        right: 24px;
-        font-size: 20px;
-      }
-      
-      .permission-content {
-        padding: 0 24px 20px 24px;
-      }
-      
-      .permission-title {
-        font-size: 20px;
-      }
-      
-      .permission-message {
-        font-size: 15px;
-      }
-      
-      .permission-actions {
-        flex-direction: column;
-        padding: 0 24px 24px 24px;
-      }
-    }
-  `;
-  
-  document.head.appendChild(styles);
 };
 
 export default FCMToken;
