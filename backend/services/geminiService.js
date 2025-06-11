@@ -26,88 +26,80 @@ class GeminiService {
   }
 
   // Updated method to accept user for sequential quotes
-async getDailyQuote(language = "english", quoteType = "random", user = null) {
-  try {
-    // For true randomness, use database approach occasionally
-    if (quoteType === "random" && Math.random() < 0.3) {
-      const dbVerse = this.getRandomQuoteFromDatabase();
-      const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
-      
-      const formattedQuote =
-        `🕉️ Verse: ${dbVerse.reference}\n` +
-        `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
-        `💬 Translation:\n${translation}\n\n` +
-        `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+  async getDailyQuote(language = "english", quoteType = "random", user = null) {
+    try {
+      // For true randomness, use database approach occasionally
+      if (quoteType === "random" && Math.random() < 0.3) {
+        const dbVerse = this.getRandomQuoteFromDatabase();
+        const translation = language === "hindi" ? dbVerse.hindi : dbVerse.english;
+        
+        const formattedQuote =
+          `🕉️ Verse: ${dbVerse.reference}\n` +
+          `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+          `💬 Translation:\n${translation}\n\n` +
+          `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
 
-      // RETURN IMMEDIATELY - don't continue to Gemini API
+        return {
+          success: true,
+          quote: formattedQuote,
+          parsed: {
+            verse: dbVerse.reference,
+            sanskrit: dbVerse.sanskrit,
+            translation: translation,
+            wisdom: "This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions."
+          },
+          timestamp: new Date(),
+          type: quoteType,
+          language: language,
+          source: "database"
+        };
+      }
+
+      const prompts = {
+        random: this.getRandomQuotePrompt(language),
+        sequential: this.getSequentialQuotePrompt(language, user),
+        themed: this.getThemedQuotePrompt(language)
+      };
+
+      const prompt = prompts[quoteType] || prompts.random;
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      
+      const rawText = response.text();
+      console.log("Raw Gemini Response:", rawText);
+      
+      const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
+      console.log("Parsed Quote:", parsedQuote);
+      
+      if (!rawText || rawText.trim().length < 50) {
+        console.warn("Response too short or empty, using fallback");
+        return this.getFallbackQuote();
+      }
+      
+      const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
+      
+      if (!hasBasicContent) {
+        console.warn("No meaningful content found, using fallback");
+        return this.getFallbackQuote();
+      }
+      
       return {
         success: true,
-        quote: formattedQuote,
-        parsed: {
-          verse: dbVerse.reference,
-          sanskrit: dbVerse.sanskrit,
-          translation: translation,
-          wisdom: "This verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions."
-        },
+        quote: this.cleanFormattedText(rawText),
+        parsed: parsedQuote,
         timestamp: new Date(),
         type: quoteType,
         language: language,
-        source: "database"
+        userProgress: user && quoteType === 'sequential' ? {
+          chapter: user.sequentialProgress.currentChapter,
+          verse: user.sequentialProgress.currentVerse
+        } : null
       };
-    }
-
-    // Only execute Gemini API if we didn't return database quote above
-    const prompts = {
-      random: this.getRandomQuotePrompt(language),
-      sequential: this.getSequentialQuotePrompt(language, user),
-      themed: this.getThemedQuotePrompt(language)
-    };
-
-    const prompt = prompts[quoteType] || prompts.random;
-    const result = await this.model.generateContent(prompt);
-    const response = result.response;
-    
-    const rawText = response.text();
-    console.log("Raw Gemini Response:", rawText);
-    
-    const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
-    console.log("Parsed Quote:", parsedQuote);
-    
-    // Improved validation - check for meaningful content
-    if (!rawText || rawText.trim().length < 50) {
-      console.warn("Response too short or empty, using fallback");
+    } catch (error) {
+      console.error("Gemini API Error:", error);
       return this.getFallbackQuote();
     }
-    
-    // More robust content validation
-    const hasBasicContent = parsedQuote.verse || parsedQuote.sanskrit || parsedQuote.translation || rawText.includes('Verse:');
-    
-    if (!hasBasicContent) {
-      console.warn("No meaningful content found, using fallback");
-      return this.getFallbackQuote();
-    }
-    
-    // SUCCESS: Return Gemini-generated quote
-    return {
-      success: true,
-      quote: this.cleanFormattedText(rawText),
-      parsed: parsedQuote,
-      timestamp: new Date(),
-      type: quoteType,
-      language: language,
-      source: "gemini",
-      userProgress: user && quoteType === 'sequential' ? {
-        chapter: user.sequentialProgress.currentChapter,
-        verse: user.sequentialProgress.currentVerse
-      } : null
-    };
-    
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    // ONLY return fallback on error
-    return this.getFallbackQuote();
   }
-}
 
 
   // Method to advance user's sequential progress
@@ -581,7 +573,7 @@ QUALITY REQUIREMENTS:
 Generate the personalized quote now:`;
       
       const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await result.response;
       const rawText = response.text();
       const parsedQuote = this.parsePersonalizedResponse(rawText);
       
@@ -626,7 +618,7 @@ QUALITY REQUIREMENTS:
 Generate the situational wisdom now:`;
 
       const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      const response = await result.response;
       const rawText = response.text();
       const parsedQuote = this.parseSituationalResponse(rawText);
       
@@ -839,49 +831,50 @@ Generate the thematic quote now:`;
   }
 
   getFallbackQuote() {
-  const fallbackQuotes = [
-    {
-      verse: "2.47",
-      sanskrit: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
-      translation: "You have the right to perform your actions, but you are not entitled to the fruits of action. Never let the fruits of action be your motive, nor let your attachment be to inaction.",
-      wisdom: "Focus on your efforts and duties without being attached to the outcomes. This brings peace and reduces anxiety about results. When you work without attachment to success or failure, you find true freedom and inner calm."
-    },
-    {
-      verse: "2.14",
-      sanskrit: "मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः। आगमापायिनोऽनित्यास्तांस्तितिक्षस्व भारत॥",
-      translation: "The experiences of heat and cold, pleasure and pain, are temporary. They come and go, so learn to endure them with patience.",
-      wisdom: "Remember that all difficulties are temporary. Maintain your inner stability through life's ups and downs. Just as seasons change, your current challenges will also pass."
-    },
-    {
-      verse: "6.5",
-      sanskrit: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्। आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
-      translation: "One should lift oneself by one's own efforts and not degrade oneself. The mind alone is one's friend as well as one's enemy.",
-      wisdom: "You have the power to elevate yourself through your own efforts. Be your own best friend and supporter. Your mind can either be your greatest ally or your worst enemy - train it to work for you."
-    }
-  ];
+    const fallbackQuotes = [
+      {
+        verse: "2.47",
+        sanskrit: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
+        translation: "You have the right to perform your actions, but you are not entitled to the fruits of action. Never let the fruits of action be your motive, nor let your attachment be to inaction.",
+        wisdom: "Focus on your efforts and duties without being attached to the outcomes. This brings peace and reduces anxiety about results. When you work without attachment to success or failure, you find true freedom and inner calm."
+      },
+      {
+        verse: "2.14",
+        sanskrit: "मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः। आगमापायिनोऽनित्यास्तांस्तितिक्षस्व भारत॥",
+        translation: "The experiences of heat and cold, pleasure and pain, are temporary. They come and go, so learn to endure them with patience.",
+        wisdom: "Remember that all difficulties are temporary. Maintain your inner stability through life's ups and downs. Just as seasons change, your current challenges will also pass."
+      },
+      {
+        verse: "6.5",
+        sanskrit: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्। आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
+        translation: "One should lift oneself by one's own efforts and not degrade oneself. The mind alone is one's friend as well as one's enemy.",
+        wisdom: "You have the power to elevate yourself through your own efforts. Be your own best friend and supporter. Your mind can either be your greatest ally or your worst enemy - train it to work for you."
+      }
+    ];
 
-  const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
-  
-  // FIXED: Use randomQuote instead of undefined dbVerse
-  const formattedQuote =
-    `🕉️ Verse: ${randomQuote.verse}\n` +
-    `📜 Sanskrit:\n${randomQuote.sanskrit}\n\n` +
-    `💬 Translation:\n${randomQuote.translation}\n\n` +
-    `🧘 Today's Wisdom:\n${randomQuote.wisdom}`;
-  
-  return {
-    success: false,
-    quote: formattedQuote, 
-    parsed: {
-      verse: randomQuote.verse,
-      sanskrit: randomQuote.sanskrit,
-      translation: randomQuote.translation,
-      wisdom: randomQuote.wisdom
-    },
-    fallback: true,
-    timestamp: new Date()
-  };
-}
+    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+    
+    // Create formatted response without stars
+    const formattedQuote =
+  `🕉️ Verse: ${dbVerse.reference}\n` +
+  `📜 Sanskrit:\n${dbVerse.sanskrit}\n\n` +
+  `💬 Translation:\n${translation}\n\n` +
+  `🧘 Today's Wisdom:\nThis verse reminds us of the eternal truths that guide our daily lives. Apply this wisdom to find peace and purpose in your actions.`;
+
+    
+    return {
+      success: false,
+      quote: formattedQuote, 
+      parsed: {
+        verse: randomQuote.verse,
+        sanskrit: randomQuote.sanskrit,
+        translation: randomQuote.translation,
+        wisdom: randomQuote.wisdom
+      },
+      fallback: true,
+      timestamp: new Date()
+    };
+  }
 
   advanceSequentialVerse() {
     const verseCounts = {

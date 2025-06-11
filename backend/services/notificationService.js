@@ -7,194 +7,185 @@ const moment = require('moment-timezone');
 
 class NotificationService {
   async sendDailyQuoteToUser(userId) {
-  let notificationRecord = null;
-  
-  try {
-    const user = await User.findById(userId);
+    let notificationRecord = null;
     
-    // Enhanced user eligibility check including login status
-    if (!user || !user.fcmToken || !user.dailyQuotes.enabled) {
-      return { success: false, message: "User not eligible for notifications" };
-    }
-
-    // Check if user is currently logged in
-    if (!this.isUserLoggedIn(user)) {
-      console.log(`User ${userId} is logged out, skipping notification`);
-      return { 
-        success: false, 
-        message: "User is logged out",
-        userLoggedOut: true 
-      };
-    }
-
-    // Check if already sent today AND schedule hasn't changed since last sent
-    if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
-      console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
-      return { 
-        success: false, 
-        message: "Daily quote already sent today",
-        alreadySent: true 
-      };
-    }
-
-    // Get quote from Gemini with user context for sequential quotes
-    let quoteData = await geminiService.getDailyQuote(
-      user.preferences?.language || 'english',
-      user.preferences?.quoteType || 'random',
-      user // Pass user object for sequential progress tracking
-    );
-    
-    console.log("Gemini Quote Data:", quoteData);
-    
-    // IMPROVED: Better fallback handling
-    if (!quoteData || !quoteData.success) {
-      console.warn("Gemini API failed, using fallback quote");
-      quoteData = {
-        success: true,
-        quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥\n\nYou have the right to perform your actions, but you are not entitled to the fruits of action. Never let the fruits of action be your motive, nor let your attachment be to inaction.\n\n- Bhagavad Gita 2.47",
-        parsed: {
-          verse: "2.47",
-          sanskrit: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
-          translation: "You have the right to perform your actions, but you are not entitled to the fruits of action.",
-          wisdom: "Focus on your efforts without attachment to results."
-        },
-        source: "fallback"
-      };
-    }
-
-    // Update sequential progress ONLY if user is on sequential mode AND quote was successful
-    let sequentialProgress = null;
-    if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
-      try {
-        sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
-        console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
-      } catch (progressError) {
-        console.error(`Error updating sequential progress for user ${userId}:`, progressError);
-        // Continue with quote delivery even if progress update fails
+    try {
+      const user = await User.findById(userId);
+      
+      // Enhanced user eligibility check including login status
+      if (!user || !user.fcmToken || !user.dailyQuotes.enabled) {
+        return { success: false, message: "User not eligible for notifications" };
       }
-    }
 
-    // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
-    await User.findByIdAndUpdate(userId, {
-      'dailyQuotes.lastSent': new Date()
-    });
+      // NEW: Check if user is currently logged in
+      if (!this.isUserLoggedIn(user)) {
+        console.log(`User ${userId} is logged out, skipping notification`);
+        return { 
+          success: false, 
+          message: "User is logged out",
+          userLoggedOut: true 
+        };
+      }
 
-    // Create notification record in database with enhanced data
-    notificationRecord = new Notification({
-      userId: user._id,
-      title: "🕉️ Daily Bhagavad Gita Wisdom",
-      body: this.truncateText(quoteData.quote, 100) + "...",
-      type: "daily_quote",
-      data: {
-        fullQuote: quoteData.quote,
-        language: user.preferences?.language || 'english',
-        quoteType: user.preferences?.quoteType || 'random',
-        source: quoteData.source || 'gemini',
-        // Add sequential progress data if applicable
-        sequentialProgress: sequentialProgress ? {
-          currentPosition: sequentialProgress.position,
-          totalVersesRead: sequentialProgress.totalRead,
-          completedChapters: sequentialProgress.completedChapters
-        } : null,
-        // Add parsed quote data for better tracking
-        parsedQuote: quoteData.parsed || null,
-        metadata: {
-          generatedBy: quoteData.source || 'gemini',
-          isScheduled: true,
-          sentDate: new Date().toISOString().split('T')[0],
-          userProgress: quoteData.userProgress || null
+      // CRITICAL: Check if already sent today AND schedule hasn't changed since last sent
+      if (this.wasSentToday(user.dailyQuotes.lastSent) && !this.scheduleChangedAfterLastSent(user)) {
+        console.log(`Daily quote already sent today for user ${userId} and schedule unchanged`);
+        return { 
+          success: false, 
+          message: "Daily quote already sent today",
+          alreadySent: true 
+        };
+      }
+
+      // Get quote from Gemini with user context for sequential quotes
+      let quoteData = await geminiService.getDailyQuote(
+        user.preferences?.language || 'english',
+        user.preferences?.quoteType || 'random',
+        user // Pass user object for sequential progress tracking
+      );
+      //console.log("Gemini Quote Data:", quoteData);
+      
+      // If Gemini API fails, use fallback quote
+      if (!quoteData.success) {
+        console.warn("Gemini API failed, using fallback quote");
+        quoteData = {
+          success: true,
+          quote: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (You have the right to perform your actions, but you are not entitled to the fruits of action.) - Bhagavad Gita 2.47"
+        };
+      }
+
+      // IMPORTANT: Update sequential progress if user is on sequential mode
+      let sequentialProgress = null;
+      if (user.preferences?.quoteType === 'sequential' && quoteData.success) {
+        try {
+          sequentialProgress = await geminiService.advanceUserSequentialVerse(user);
+          console.log(`Sequential progress updated for user ${userId}:`, sequentialProgress);
+        } catch (progressError) {
+          console.error(`Error updating sequential progress for user ${userId}:`, progressError);
+          // Continue with quote delivery even if progress update fails
         }
-      },
-      deliveryStatus: 'pending',
-      priority: 'normal'
-    });
+      }
 
-    await notificationRecord.save();
-    console.log(`Notification record created: ${notificationRecord._id}`);
+      // Update user's last sent timestamp IMMEDIATELY to prevent race conditions
+      await User.findByIdAndUpdate(userId, {
+        'dailyQuotes.lastSent': new Date()
+      });
 
-    // Prepare enhanced FCM message
-    const message = {
-      notification: {
+      // Create notification record in database with enhanced data
+      notificationRecord = new Notification({
+        userId: user._id,
         title: "🕉️ Daily Bhagavad Gita Wisdom",
         body: this.truncateText(quoteData.quote, 100) + "...",
-      },
-      data: {
         type: "daily_quote",
-        quoteId: quoteData._id?.toString() || '',
-        language: user.preferences?.language || 'english',
-        quoteType: user.preferences?.quoteType || 'random',
-        timestamp: new Date().toISOString(),
-        notificationId: notificationRecord._id.toString(),
-        source: quoteData.source || 'gemini',
-        // Add sequential progress for app to display
-        ...(sequentialProgress && {
-          sequentialPosition: sequentialProgress.position,
-          totalVersesRead: sequentialProgress.totalRead.toString(),
-          completedChapters: sequentialProgress.completedChapters.toString()
-        }),
-        // Add parsed data for app usage - with null checks
-        ...(quoteData.parsed && {
-          verse: quoteData.parsed.verse || '',
-          sanskrit: quoteData.parsed.sanskrit?.substring(0, 100) || '',
-          translation: quoteData.parsed.translation?.substring(0, 150) || '',
-          wisdom: quoteData.parsed.wisdom?.substring(0, 150) || ''
-        })
-      },
-      token: user.fcmToken
-    };
+        data: {
+          fullQuote: quoteData.quote,
+          language: user.preferences?.language || 'english',
+          quoteType: user.preferences?.quoteType || 'random',
+          // Add sequential progress data if applicable
+          sequentialProgress: sequentialProgress ? {
+            currentPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead,
+            completedChapters: sequentialProgress.completedChapters
+          } : null,
+          // Add parsed quote data for better tracking
+          parsedQuote: quoteData.parsed || null,
+          metadata: {
+            generatedBy: 'gemini',
+            isScheduled: true,
+            sentDate: new Date().toISOString().split('T')[0], // Store date for tracking
+            userProgress: quoteData.userProgress || null // Store user's verse position
+          }
+        },
+        deliveryStatus: 'pending',
+        priority: 'normal'
+      });
 
-    try {
-      // Send FCM notification
-      const response = await admin.messaging().send(message);
-      console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
+      await notificationRecord.save();
+      console.log(`Notification record created: ${notificationRecord._id}`);
 
-      // Update notification record as delivered
-      await notificationRecord.markAsDelivered(response);
+      // Prepare enhanced FCM message with sequential progress
+      const message = {
+        notification: {
+          title: "🕉️ Daily Bhagavad Gita Wisdom",
+          body: this.truncateText(quoteData.quote, 100) + "...",
+        },
+        data: {
+          type: "daily_quote",
+          quoteId: quoteData._id?.toString() || '',
+          language: user.preferences?.language || 'english',
+          quoteType: user.preferences?.quoteType || 'random',
+          timestamp: new Date().toISOString(),
+          notificationId: notificationRecord._id.toString(),
+          // Add sequential progress for app to display
+          ...(sequentialProgress && {
+            sequentialPosition: sequentialProgress.position,
+            totalVersesRead: sequentialProgress.totalRead.toString(),
+            completedChapters: sequentialProgress.completedChapters.toString()
+          }),
+          // Add parsed data for app usage
+          ...(quoteData.parsed && {
+  verse: quoteData.parsed.verse || '',
+  sanskrit: quoteData.parsed.sanskrit?.substring(0, 100) || '',
+  translation: quoteData.parsed.translation?.substring(0, 150) || '',
+  wisdom: quoteData.parsed.wisdom?.substring(0, 150) || ''
+})
 
-      return {
-        success: true,
-        response,
-        quote: quoteData.quote,
-        notificationId: notificationRecord._id,
-        sequentialProgress: sequentialProgress,
-        quoteType: user.preferences?.quoteType || 'random',
-        userProgress: quoteData.userProgress,
-        source: quoteData.source
+        },
+        token: user.fcmToken
       };
 
-    } catch (fcmError) {
-      console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+      try {
+        // Send FCM notification
+        const response = await admin.messaging().send(message);
+        console.log(`FCM notification sent successfully to user ${userId}: ${response}`);
+
+        // Update notification record as delivered
+        await notificationRecord.markAsDelivered(response);
+
+        return {
+          success: true,
+          response,
+          quote: quoteData.quote,
+          notificationId: notificationRecord._id,
+          // Return sequential progress info for logging/tracking
+          sequentialProgress: sequentialProgress,
+          quoteType: user.preferences?.quoteType || 'random',
+          userProgress: quoteData.userProgress
+        };
+
+      } catch (fcmError) {
+        console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+        
+        // Mark notification as failed but don't reset lastSent
+        await notificationRecord.markAsFailed(fcmError.message);
+        
+        return {
+          success: false,
+          error: fcmError.message,
+          notificationId: notificationRecord._id,
+          sequentialProgress: sequentialProgress // Still return progress even if FCM failed
+        };
+      }
+
+    } catch (error) {
+      console.error(`Error sending quote to user ${userId}:`, error);
       
-      // Mark notification as failed but don't reset lastSent
-      await notificationRecord.markAsFailed(fcmError.message);
+      // Mark notification as failed if it was created
+      if (notificationRecord) {
+        try {
+          await notificationRecord.markAsFailed(error.message);
+        } catch (updateError) {
+          console.error('Failed to update notification status:', updateError);
+        }
+      }
       
       return {
         success: false,
-        error: fcmError.message,
-        notificationId: notificationRecord._id,
-        sequentialProgress: sequentialProgress
+        error: error.message,
+        notificationId: notificationRecord?._id
       };
     }
-
-  } catch (error) {
-    console.error(`Error sending quote to user ${userId}:`, error);
-    
-    // Mark notification as failed if it was created
-    if (notificationRecord) {
-      try {
-        await notificationRecord.markAsFailed(error.message);
-      } catch (updateError) {
-        console.error('Failed to update notification status:', updateError);
-      }
-    }
-    
-    return {
-      success: false,
-      error: error.message,
-      notificationId: notificationRecord?._id
-    };
   }
-}
 
   async sendDailyQuotesToAllUsers() {
     try {
