@@ -133,6 +133,7 @@ class NotificationService {
         },
         token: user.fcmToken
       };
+      console.log(`Prepared FCM message for user ${userId}:`, message);
 
       try {
         // Send FCM notification
