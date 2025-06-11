@@ -180,14 +180,12 @@ notificationSchema.virtual('timeAgo').get(function() {
 notificationSchema.methods.markAsRead = function() {
   this.isRead = true;
   this.readAt = new Date();
-  return this.save();
 };
 
 notificationSchema.methods.markAsDelivered = function(fcmMessageId = null) {
   this.deliveryStatus = 'delivered';
   this.fcmMessageId = fcmMessageId;
   this.lastDeliveryAttempt = new Date();
-  return this.save();
 };
 
 notificationSchema.methods.markAsFailed = function(errorMessage) {
@@ -195,7 +193,6 @@ notificationSchema.methods.markAsFailed = function(errorMessage) {
   this.errorMessage = errorMessage;
   this.deliveryAttempts += 1;
   this.lastDeliveryAttempt = new Date();
-  return this.save();
 };
 
 notificationSchema.methods.toClientObject = function() {

@@ -90,6 +90,9 @@ router.post("/preferences", auth, async (req, res) => {
       updateData["dailyQuotes.scheduleUpdatedAt"] = new Date();
       console.log(`Schedule updated for user ${userId}: time=${time}, timezone=${timezone}`);
     }
+    //also update the lastSent in dailyQuotes to a default value 15 jan 2023
+    updateData["dailyQuotes.lastSent"] = new Date("2023-01-15T00:00:00Z");
+
 
     await User.findByIdAndUpdate(userId, updateData);
 
