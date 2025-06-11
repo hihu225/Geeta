@@ -161,7 +161,7 @@ class NotificationService {
         notificationRecord.deliveryStatus = "delivered";
         notificationRecord.fcmMessageId = response;
         notificationRecord.lastDeliveryAttempt = new Date();
-
+        await notificationRecord.save();
         return {
           success: true,
           response,
