@@ -9,18 +9,29 @@ class Scheduler {
 
   start() {
     // Run every 1 minutes to check for scheduled notifications
-    const cronJob = cron.schedule('*/1 * * * *', async () => {
-      console.log('Checking for scheduled notifications...');
-      try {
-        const result = await notificationService.sendDailyQuotesToAllUsers();
-        console.log(`Notification check completed: ${result.sentNotifications}/${result.totalUsers} notifications sent`);
-      } catch (error) {
-        console.error('Scheduler error:', error);
-      }
-    }, {
-      scheduled: true,
-      timezone: "Asia/Kolkata"
-    });
+    let isRunning = false;
+
+const cronJob = cron.schedule('*/1 * * * *', async () => {
+  if (isRunning) {
+    console.log('Previous notification job still running. Skipping this cycle.');
+    return;
+  }
+
+  console.log('Checking for scheduled notifications...');
+  isRunning = true;
+  try {
+    const result = await notificationService.sendDailyQuotesToAllUsers();
+    console.log(`Notification check completed: ${result.sentNotifications}/${result.totalUsers} notifications sent`);
+  } catch (error) {
+    console.error('Scheduler error:', error);
+  } finally {
+    isRunning = false;
+  }
+}, {
+  scheduled: true,
+  timezone: "Asia/Kolkata"
+});
+
 
     this.jobs.set('dailyQuotes', cronJob);
     console.log('Daily quotes scheduler started');
