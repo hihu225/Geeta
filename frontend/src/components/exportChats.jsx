@@ -4,7 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import Swal from "sweetalert2";
-
+import "../hihu.css"
 const exportChats = ({ chats, visibleChats }) => {
   const handleExportAllChats = async () => {
     try {
@@ -305,9 +305,13 @@ const exportChats = ({ chats, visibleChats }) => {
 
   return (
     <>
-      <button onClick={handleExportAllChats}>
-        <FaBookOpen style={{ marginRight: "8px" }} /> Export All Conversations
-      </button>
+      <div style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}>
+  <button className="export-button" onClick={handleExportAllChats}>
+    <FaBookOpen style={{ marginRight: "8px" }} /> Export All Conversations
+  </button>
+</div>
+
+
     </>
   );
 };

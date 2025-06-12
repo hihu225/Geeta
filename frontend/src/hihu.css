@@ -340,7 +340,7 @@ body.dark-theme .verse-card {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 2.35rem;
   cursor: pointer;
   font-weight: 600;
   transition: background-color 0.2s, transform 0.2s;
@@ -351,6 +351,15 @@ body.dark-theme .verse-card {
   margin: 0 auto;
   width: 100%;
   max-width: 200px;
+}
+.themes-button.small{
+  font-size: 1rem;
+}
+.themes-button.medium{
+  font-size: 1.1rem;
+}
+.themes-button.large{
+  font-size: 1.2rem;
 }
 
 .themes-button:hover {
@@ -781,3 +790,227 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
     padding: 0 0.25rem;
   }
 }
+.container {
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #FDF5E6, #F8E8C8, #F5DEB3); /* default light theme */
+  font-family: 'Palatino Linotype', 'Book Antiqua', 'Baskerville', serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 5px 70px 5px;
+  flex-direction: column;
+  background-attachment: fixed;
+  transition: all 0.5s ease;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Dark theme */
+body.dark .container {
+  background: linear-gradient(135deg, #2A2A2A, #1A1A1A, #121212);
+}
+
+.paper {
+  width: 100vw;
+  margin: 0.5rem auto;
+  padding: 1.5rem 5px 2.2rem 5px;
+  border-radius: 12px;
+  background-color: rgba(255, 252, 240, 0.97); /* default light theme */
+  border: 2px solid #D4A017;
+  box-shadow: 0 10px 20px rgba(139, 0, 0, 0.1), 0 5px 10px rgba(139, 0, 0, 0.08);
+  text-align: center;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Dark theme */
+body.dark .paper {
+  background-color: rgba(40, 40, 40, 0.97);
+  border: 2px solid #664D00;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25), 0 5px 10px rgba(0, 0, 0, 0.15);
+}
+.title {
+  color: #8B0000; /* Light theme default */
+  font-weight: bold;
+  font-size: 4rem;
+  text-shadow: 1px 1px 3px rgba(139, 0, 0, 0.15), 0 0 1px rgba(139, 0, 0, 0.1);
+  margin-bottom: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
+  font-family: 'Palatino Linotype', 'Book Antiqua', serif;
+  flex-wrap: wrap;
+}
+.title.small{
+  font-size: 2.6rem;
+}
+.title.medium{
+  font-size: 3.4rem;
+}
+.title.large{
+  font-size: 4rem;
+}
+/* Dark theme */
+body.dark .title {
+  color: #FF6B6B;
+  text-shadow: 1px 1px 3px rgba(255, 107, 107, 0.15), 0 0 1px rgba(255, 107, 107, 0.1);
+}
+.title-icon {
+  font-size: 3.8rem;
+  color: #8B0000;
+}
+.title-icon.small{
+  font-size: 2.4rem;
+}
+.title-icon.medium{
+  font-size: 3.2rem;
+}
+.title-icon.large{
+  font-size: 3.8rem;
+}
+.subtitle {
+  font-size: 2rem; /* Default: large */
+  color: #663300;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  letter-spacing: 0.4px;
+  font-weight: 500;
+  text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Theme override */
+body.dark .subtitle {
+  color: #D2B48C;
+  text-shadow: none;
+}
+
+/* Optional sizes using additional classes */
+.subtitle.small {
+  font-size: 1.4rem;
+}
+
+.subtitle.medium {
+  font-size: 1.8rem;
+}
+
+.subtitle.large {
+  font-size: 2rem;
+}
+.greeting {
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  text-align: center;
+  font-style: italic;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'Palatino Linotype', 'Book Antiqua', serif;
+  color: #8B0000;
+  text-shadow: 1px 1px 2px rgba(139, 0, 0, 0.3);
+}
+
+/* Dark theme */
+body.dark .greeting {
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+
+/* Font sizes */
+.greeting.small {
+  font-size: 1.2rem;
+}
+.greeting.medium {
+  font-size: 1.6rem;
+}
+.greeting.large {
+  font-size: 1.8rem;
+}
+.export-button {
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 8px rgba(139, 0, 0, 0.3);
+  background-color: #8B0000; /* Light theme default */
+}
+
+body.dark .export-button {
+  background-color: #B22222; /* Dark theme */
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .paper {
+    padding: 1.5rem 5px 2.2rem 5px; 
+    width: 100%;
+    margin: 0.5rem auto;
+  }
+  .title {
+    font-size: 2rem;
+    gap: 8px;
+  }
+  .title.small{
+  font-size: 1.6rem;
+}
+.title.medium{
+  font-size: 2rem;
+}
+.title.large{
+  font-size: 2.4rem;
+}
+  .title-icon {
+    font-size: 1.8rem;
+  }
+  .title-icon.small{
+  font-size: 1.4rem;
+}
+.title-icon.medium{
+  font-size: 1.8rem;
+}
+.title-icon.large{
+  font-size: 2.2rem;
+}
+  .subtitle {
+    font-size: 1.05rem;
+  }
+  .subtitle.small {
+  font-size: 0.85rem;
+}
+
+.subtitle.medium {
+  font-size: 1.05rem;
+}
+
+.subtitle.large {
+  font-size: 1.25rem;
+}
+.greeting.small {
+    font-size: 0.75rem;
+  }
+  .greeting.medium {
+    font-size: 0.95rem;
+  }
+  .greeting.large {
+    font-size: 1.15rem;
+  }
+}
+

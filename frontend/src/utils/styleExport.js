@@ -18,25 +18,6 @@ export const getStyles = (theme, fontSize, isOpen, isListening) => ({
     textShadow: theme === "light" ? "0.5px 0.5px 1px rgba(0,0,0,0.05)" : "none",
   },
 
-  // Refined container with smoother gradients and responsive width
-  container: {
-  position: "relative", // Make container the reference for absolute elements
-  minHeight: "100vh",
-  width: "100%",
-  background: theme === "light" 
-    ? "linear-gradient(135deg, #FDF5E6, #F8E8C8, #F5DEB3)"
-    : "linear-gradient(135deg, #2A2A2A, #1A1A1A, #121212)",
-  fontFamily: "'Palatino Linotype', 'Book Antiqua', 'Baskerville', serif",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: "5px",
-  flexDirection: "column",
-  backgroundAttachment: "fixed",
-  transition: "all 0.5s ease",
-  overflowX: "hidden",
-  boxSizing: "border-box"
-},
 
 scrollToTopStyle: {
   position: "fixed",
@@ -64,26 +45,6 @@ upstyle: {
   width: '40px', height: '40px',
   color:  "#8B0000", // White or dark purple text
 },
-
-paper: {
-  width: "100%",           // Use full width of the container
-  maxWidth: "600px",       // Max width for larger screens
-  marginLeft: "auto",
-  marginRight: "auto",
-  padding: "1.5rem 5px 2.2rem 5px",  // Reduced side padding for small devices
-  borderRadius: "12px",
-  backgroundColor: theme === "light" ? "rgba(255, 252, 240, 0.97)" : "rgba(40, 40, 40, 0.97)",
-  border: theme === "light" ? "2px solid #D4A017" : "2px solid #664D00",
-  boxShadow: theme === "light" 
-    ? "0 10px 20px rgba(139, 0, 0, 0.1), 0 5px 10px rgba(139, 0, 0, 0.08)"
-    : "0 10px 20px rgba(0, 0, 0, 0.25), 0 5px 10px rgba(0, 0, 0, 0.15)",
-  textAlign: "center",
-  transition: "all 0.3s ease",
-  margin: "0.5rem auto",
-  boxSizing: "border-box",  // Prevent overflow due to padding
-  overflowX : "hidden", // Prevent horizontal overflow
-},
-
 
   // Refined small button with better proportions for mobile
   smallButtonStyle: {
@@ -158,23 +119,6 @@ paper: {
     accentColor: theme === "light" ? "#8B0000" : "#B22222",
   },
 
-  // Enhanced title with mobile-friendly font sizing
-  title: {
-    color: theme === "light" ? "#8B0000" : "#FF6B6B",
-    fontWeight: "bold",
-    fontSize: "2rem",
-    textShadow: theme === "light" 
-      ? "1px 1px 3px rgba(139, 0, 0, 0.15), 0 0 1px rgba(139, 0, 0, 0.1)"
-      : "1px 1px 3px rgba(255, 107, 107, 0.15), 0 0 1px rgba(255, 107, 107, 0.1)",
-    marginBottom: "1.2rem",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "10px",
-    letterSpacing: "0.5px",
-    fontFamily: "'Palatino Linotype', 'Book Antiqua', serif",
-    flexWrap: "wrap", // Allow wrapping on small screens
-  },
 
   // Refined edit button with improved accessibility for touch
   editButton: {
@@ -262,16 +206,6 @@ paper: {
     minWidth: "60px", // Ensure reasonable touch target
   },
 
-  // Refined subtitle with better typography for mobile
-  subtitle: {
-    fontSize: fontSize === "small" ? "1rem" : fontSize === "medium" ? "1.1rem" : "1.2rem",
-    color: theme === "light" ? "#663300" : "#D2B48C",
-    marginBottom: "1.5rem",
-    fontStyle: "italic",
-    letterSpacing: "0.4px",
-    fontWeight: "500",
-    textShadow: theme === "light" ? "0.5px 0.5px 1px rgba(0,0,0,0.05)" : "none",
-  },
 
   // Enhanced Geeta quote with mobile-friendly sizing
   geetaQuote: {
@@ -444,19 +378,20 @@ scrollingText: {
   backgroundColor: theme === "light" ? "#8B0000" : "#B22222",
   color: "white",
   border: "none",
-  padding: "0.8rem 1.5rem",
-  borderRadius: "10px",
+  padding: "0.5rem 5.5rem", 
+  borderRadius: "12px",
   cursor: "pointer",
-  fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.1rem",
+  fontSize: fontSize === "small" ? "1rem" : fontSize === "medium" ? "1.1rem" : "1.2rem",
   fontWeight: "bold",
-  boxShadow: "0 4px 8px rgba(139, 0, 0, 0.3)",
+  boxShadow: "0 4px 12px rgba(139, 0, 0, 0.3)",
   display: "flex",
   alignItems: "center",
-  justifyContent: "center", // ✅ This centers the content horizontally
-  gap: "8px",
+  justifyContent: "center",
+  gap: "10px",
   transition: "all 0.3s ease",
-  letterSpacing: "0.3px",
+  letterSpacing: "0.4px",
 },
+
 smallSubmit: {
   backgroundColor: theme === "light" ? "#8B0000" : "#B22222",
   color: "white",
@@ -548,22 +483,6 @@ voiceButton : {
                 cursor: 'pointer',
                 fontSize: '0.9rem',
   },
-    greeting: {
-  fontSize: '18px',
-  color: theme === "light" ? '#8B0000' : '#FFD700',        // Dark red in light, gold in dark
-  fontWeight: '600',
-  marginTop: '12px',
-  marginBottom: '24px',
-  lineHeight: 1.5,
-  letterSpacing: '0.03em',
-  textAlign: 'center',
-  fontStyle: 'italic',
-  padding: '4px 12px',
-  borderRadius: '8px',
-  textShadow: theme === "dark" 
-    ? '0 0 8px rgba(255, 215, 0, 0.7)'    // stronger gold glow in dark mode
-    : '1px 1px 2px rgba(139, 0, 0, 0.3)', // soft shadow in light mode for contrast
-},
 
 
 

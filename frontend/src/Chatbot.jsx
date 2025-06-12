@@ -1856,8 +1856,30 @@ const getRandomQuote = () => {
       {/* <div style={styles.paper
     } */}
 
-      <div style={styles.container}>
-        <div style={styles.paper}>
+      <div
+  className="container"
+  style={{
+    background:
+      theme === "light"
+        ? "linear-gradient(135deg, #FDF5E6, #F8E8C8, #F5DEB3)"
+        : "linear-gradient(135deg, #2A2A2A, #1A1A1A, #121212)",
+    color: theme === "light" ? "#333" : "#ccc",
+  }}
+>
+
+        <div
+  className="paper"
+  style={{
+    backgroundColor: theme === "light"
+      ? "rgba(255, 252, 240, 0.97)"
+      : "rgba(40, 40, 40, 0.97)",
+    border: theme === "light"
+      ? "2px solid #D4A017"
+      : "2px solid #664D00",
+    color: theme === "light" ? "#333" : "#ccc", // optional text color
+  }}
+>
+
           <button
             style={{
               ...styles.logoutbutton,
@@ -1867,15 +1889,18 @@ const getRandomQuote = () => {
           >
             Account Settings
           </button>
-          <h1 style={styles.title}>
-  <FaOm size={36} color="#8B0000" /> Divine Wisdom: Bhagavad Gita
+          <h1 className={`title ${fontSize}`}>
+  <FaOm className={`title-icon ${fontSize}`} /> Divine Wisdom: Bhagavad Gita
 </h1>
-<p style={styles.subtitle}>
+
+<p className={`subtitle ${fontSize}`}>
   Seek timeless guidance from Lord Krishna's teachings
 </p>
-<p style={styles.greeting}>
+
+<p className={`greeting ${fontSize}`}>
   {getISTGreeting()}, {user?.name || "seeker of wisdom"}! 🙏
 </p>
+
 
 
           <div style={styles.geetaQuote}>
@@ -1891,7 +1916,7 @@ const getRandomQuote = () => {
 </div>
 
           <button
-            className="themes-button"
+            className={`themes-button ${fontSize}`}
             onClick={() => setShowThemeSection(!showThemeSection)}
           >
             {showThemeSection ? "Hide Themes" : "Explore Themes"}
@@ -1928,24 +1953,26 @@ const getRandomQuote = () => {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={styles.submitButton}
-            >
-              {loading ? (
-                <>
-                  Contemplating...{" "}
-                  <FaDharmachakra
-                    style={{ animation: "spin 2s linear infinite" }}
-                  />
-                </>
-              ) : (
-                <>
-                  Ask Krishna <FaRegPaperPlane />
-                </>
-              )}
-            </button>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
+  <button
+    type="submit"
+    disabled={loading}
+    style={styles.submitButton}
+  >
+    {loading ? (
+      <>
+        Contemplating...{" "}
+        <FaDharmachakra style={{ animation: "spin 2s linear infinite" }} />
+      </>
+    ) : (
+      <>
+        Ask Krishna <FaRegPaperPlane />
+      </>
+    )}
+  </button>
+</div>
+
+
           </form>
 
           <div style={styles.preferencesBar}>
@@ -2737,20 +2764,24 @@ const getRandomQuote = () => {
               <span>and ancient wisdom.</span>
             </p>
             
-            <p className="text-sm italic text-gray-500">
-              <em>
-                Disclaimer: This chatbot may occasionally generate incorrect
-                information.{" "}
-                <a
-                  href="https://ai.google.dev/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-red-700 underline"
-                >
-                  Learn more
-                </a>
-              </em>
-            </p>
+            <p
+  className="text-sm italic text-gray-500"
+  style={{ textAlign: "center" }}
+>
+  <em>
+    Disclaimer: This chatbot may occasionally generate incorrect
+    information.{" "}
+    <a
+      href="https://ai.google.dev/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-red-700 underline"
+    >
+      Learn more
+    </a>
+  </em>
+</p>
+
             <ScrollToTop theme={theme} />
           </div>
         </div>
