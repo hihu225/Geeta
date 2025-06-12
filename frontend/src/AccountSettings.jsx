@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { ArrowLeft,Bell, Settings } from 'lucide-react';
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
+import "./hihu.css";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -714,7 +715,7 @@ const handleCloseModal = (setter) => {
   }
 
   return (
-    <div style={styles.container}>
+    <div className="container-acc">
       <button
         onClick={handleBack}
         style={styles.backButton}

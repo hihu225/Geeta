@@ -5,7 +5,7 @@ import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-
+import "./hihu.css"; 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,12 +18,7 @@ const Notifications = () => {
 
   // Enhanced styles with Bhagavad Gita theme
   const styles = {
-    container: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #fef7ed 0%, #fff7ed 100%)",
-      padding: "20px",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    },
+    
 
     header: {
       maxWidth: "1200px",
@@ -688,7 +683,7 @@ const formatNotificationBody = (text) => {
   }
 
   return (
-    <div style={styles.container}>
+    <div className="container-not">
       {/* Header */}
       <div style={styles.header}>
         <button

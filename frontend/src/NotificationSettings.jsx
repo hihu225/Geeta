@@ -550,14 +550,17 @@ const updatePreferences = async (newSettings) => {
 
     /* Base Styles */
     .page-container {
-      min-height: 100vh;
-      background: linear-gradient(to bottom right, #FFF8E1, #FFFBEB, #FFFDEB); /* from-saffron-50 via-orange-50 to-amber-50 */
-      padding: 1rem; /* p-4 */
-      position: relative;
-      overflow-x: hidden; /* Important for preventing horizontal overflow */
-      font-family: 'Inter', sans-serif;
-      color: #374151; /* Default text color, similar to gray-700 */
-    }
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #FFF8E1, #FFFBEB, #FFFDEB); 
+  padding: 2rem; 
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  color: #374151; /* gray-700 */
+  box-sizing: border-box;
+  width:100vw
+}
+
     .back-button {
   display: flex;
   align-items: center;
@@ -1496,7 +1499,8 @@ const updatePreferences = async (newSettings) => {
     /* ******************************************************************* */
     @media (max-width: 480px) {
         .page-container {
-            padding: 0.5rem; /* Reduce overall padding for very small screens */
+            padding: 0.5rem; 
+            background: linear-gradient(to bottom right, #FFFDF5, #FFFBF0);
         }
 
         /* Adjust font sizes for readability on small screens */
