@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect , useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ArrowLeft,Bell, Settings } from 'lucide-react';
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
 import "./hihu.css";
+import { ThemeContext } from "./ThemeContext";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -14,6 +15,7 @@ const AccountSettings = () => {
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const { theme } = useContext(ThemeContext);
   const [feedbackText, setFeedbackText] = useState('');
   const [notifications, setNotifications] = useState([
   {
@@ -57,7 +59,6 @@ const AccountSettings = () => {
 ];
 
 
-  // Enhanced styles with Bhagavad Gita theme
   const styles = {
     container: {
       minHeight: "100vh",
