@@ -1907,17 +1907,15 @@ const getRandomQuote = () => {
 
 
 
-          <div style={styles.geetaQuote}>
+          <div className={`geeta-quote ${theme} ${fontSize}`}>
   <div style={{ marginBottom: "8px" }}>{currentQuote?.verse}</div>
-  <div style={{
-    fontSize: "0.95rem",
-    fontWeight: "normal",
-    color: theme === "light" ? "#333" : "#ccc",
-    fontStyle: "italic"
-  }}>
-    <div style={{fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.1rem"}}>{currentQuote?.meaning}</div>
+  <div className={`geeta-meaning ${theme}`}>
+    <div className={`geeta-meaning-text ${fontSize}`}>
+      {currentQuote?.meaning}
+    </div>
   </div>
 </div>
+
 
           <button
             className={`themes-button ${fontSize}`}
