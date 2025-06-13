@@ -24,6 +24,7 @@ import FCMToken from "./FCMToken";
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
 import { UserProvider } from "./UserContext";
+import { ThemeProvider } from "./ThemeContext";
 // Component to handle navigation-aware FCM setup
 const FCMSetup = () => {
   const navigate = useNavigate();
@@ -256,6 +257,7 @@ function App() {
   }, []);
 
   return (
+    <ThemeProvider>
     <UserProvider>
     <>
       <Router>
@@ -264,6 +266,7 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
     </>
     </UserProvider>
+    </ThemeProvider>
   );
 }
 

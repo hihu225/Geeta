@@ -36,6 +36,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {UserContext} from "./UserContext.jsx";
+import { ThemeContext } from "./ThemeContext";
 const REACT_APP_API_URL = import.meta.env.VITE_APP_API_URL;
 const testApi = async () => {
   try {
@@ -1535,7 +1536,6 @@ const getISTGreeting = () => {
   const [isListening, setIsListening] = useState(false);
   const [currentQuote, setCurrentQuote] = useState("");
   const [showSkeleton, setShowSkeleton] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [fontSize, setFontSize] = useState(() => {
     return localStorage.getItem("fontSize") || "medium";
   });
@@ -1546,7 +1546,7 @@ const getISTGreeting = () => {
   const [selectMode, setSelectMode] = useState(false);
   const [showThemeSection, setShowThemeSection] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(null);
-  const [themeData, setThemeData] = useState(null);
+  const { theme, setTheme } = useContext(ThemeContext);
   const [loadingStates, setLoadingStates] = useState({});
   // Add ref for auto-
   const { user } = useContext(UserContext);
@@ -1979,22 +1979,18 @@ const getRandomQuote = () => {
 
           <div style={styles.preferencesBar}>
             <button
-              onClick={() => {
-                toggleSound.play();
-
-                const newTheme = theme === "light" ? "dark" : "light";
-                localStorage.setItem("theme", newTheme);
-                setTheme(newTheme);
-              }}
-              style={styles.preferencesButton}
-              title={
-                theme === "light"
-                  ? "Switch to Dark Mode"
-                  : "Switch to Light Mode"
-              }
-            >
-              {theme === "light" ? <FaMoon /> : <FaSun />}
-            </button>
+      onClick={() => {
+        toggleSound.play();
+        const newTheme = theme === "light" ? "dark" : "light";
+        setTheme(newTheme);
+      }}
+      style={styles.preferencesButton}
+      title={
+        theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"
+      }
+    >
+      {theme === "light" ? <FaMoon /> : <FaSun />}
+    </button>
 
             <div style={styles.fontSizeControls}>
               <button
