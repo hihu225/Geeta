@@ -576,7 +576,7 @@ voiceButton : {
 
   fontButton: {
     backgroundColor: "transparent",
-    color: theme === "light" ? "#8B0000" : "white",
+    color: theme === "light" ? "#FFF8DC" : "white",
     border: "none",
     padding: "0.5rem 0.6rem",
     borderRadius: "8px",

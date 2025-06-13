@@ -1880,7 +1880,7 @@ const getRandomQuote = () => {
     border: theme === "light"
       ? "2px solid #D4A017"
       : "2px solid #664D00",
-    color: theme === "light" ? "#333" : "#ccc", // optional text color
+    color: theme === "light" ? "#333" : "#ccc", 
   }}
 >
 
