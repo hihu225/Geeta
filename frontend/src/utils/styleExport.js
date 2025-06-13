@@ -437,8 +437,9 @@ voiceButton : {
               borderRadius: '5px',
               cursor: 'pointer',
               zIndex: 900,
-              fontSize: '0.9rem',
+              fontSize: '1rem',
               boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+              fontFamily: "'Times New Roman', serif",
   },
   logoutbutton: {
     position: 'fixed',
@@ -450,7 +451,7 @@ voiceButton : {
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
-              fontSize: '0.9rem',
+              fontSize: '1rem',
               boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
               zIndex: 900,
   },
@@ -464,23 +465,6 @@ voiceButton : {
                 fontSize: '0.9rem',
   },
 
-
-  viewMoreButton: {
-    backgroundColor: theme === "light" ? "#B8860B" : "#CD853F",
-    color: "white",
-    border: "none",
-    padding: "0.8rem 1.5rem",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.1rem",
-    fontWeight: "600",
-    boxShadow: "0 4px 8px rgba(139, 69, 19, 0.25)",
-    margin: "1.5rem auto",
-    display: "block",
-    transition: "all 0.2s ease",
-    letterSpacing: "0.3px",
-    minWidth: "150px",
-  },
   
   chatContainer: {
     marginTop: "2rem",
@@ -550,19 +534,6 @@ voiceButton : {
     lineHeight: "1.6",
     letterSpacing: "0.2px",
     textShadow: theme === "light" ? "0.5px 0.5px 1px rgba(0,0,0,0.05)" : "none",
-  },
-
-  footer: {
-    marginTop: "2rem",
-    fontSize: fontSize === "small" ? "0.8rem" : fontSize === "medium" ? "0.85rem" : "0.9rem",
-    color: theme === "light" ? "#8B4513" : "#D2B48C",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-    letterSpacing: "0.2px",
-    opacity: "0.9",
   },
 
   preferencesBar: {

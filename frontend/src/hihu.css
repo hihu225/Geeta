@@ -1031,7 +1031,106 @@ body.dark .export-button {
 .geeta-meaning-text.large {
   font-size: 1.5rem;
 }
+.export-button {
+  display: inline-flex;
+  align-items: center;
+  background-color: #8B0000;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Times New Roman', serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease, background-color 0.2s;
+}
 
+.export-button:hover {
+  background-color: #a30000;
+}
+
+.export-button.small {
+  padding: 12px 25px;
+  font-size: 1.2rem;
+}
+
+.export-button.medium {
+  padding: 15px 30px;
+  font-size: 1.4rem;
+}
+
+.export-button.large {
+  padding: 18px 35px;
+  font-size: 1.6rem;
+}
+.view-more-button {
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(139, 69, 19, 0.25);
+  margin: 1.5rem auto;
+  display: block;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  min-width: 150px;
+  font-family: 'Times New Roman', serif;
+}
+
+.view-more-button.light {
+  background-color: #B8860B;
+  color: white;
+}
+
+.view-more-button.dark {
+  background-color: #CD853F;
+  color: white;
+}
+
+.view-more-button.small {
+  font-size: 1rem;
+  padding: 10px 20px;
+}
+
+.view-more-button.medium {
+  font-size: 1.2rem;
+  padding: 12px 24px;
+}
+
+.view-more-button.large {
+  font-size: 1.4rem;
+  padding: 14px 28px;
+}
+.footer {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+  text-align: center;
+  font-family: 'Times New Roman', serif;
+}
+.footer.light {
+  color: #8B4513;
+}
+
+.footer.dark {
+  color: #D2B48C;
+}
+
+.footer.small {
+  font-size:1rem;
+}
+
+.footer.medium {
+  font-size: 1.1rem;
+}
+
+.footer.large {
+  font-size: 1.2rem;
+}
 @media (max-width: 480px) {
   .container {
     width: 100%;
@@ -1129,5 +1228,44 @@ body.dark .export-button {
 .themes-button.large{
   font-size: 1.1rem;
 }
+.export-button.small {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+  }
+
+  .export-button.medium {
+    padding: 10px 18px;
+    font-size: 1rem;
+  }
+
+  .export-button.large {
+    padding: 14px 22px;
+    font-size: 1.15rem;
+  }
+  .view-more-button.small {
+    font-size: 0.8rem;
+    padding: 7px 14px;
+  }
+
+  .view-more-button.medium {
+    font-size: 0.95rem;
+    padding: 9px 18px;
+  }
+
+  .view-more-button.large {
+    font-size: 1rem;
+    padding: 12px 20px;
+  }
+  .footer.small {
+    font-size: 0.78rem;
+  }
+
+  .footer.medium {
+    font-size: 0.82rem;
+  }
+
+  .footer.large {
+    font-size: 0.88rem;
+  }
 }
 

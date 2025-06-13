@@ -2753,39 +2753,36 @@ const getRandomQuote = () => {
                   moreSound.play();
                   loadMoreChats();
                 }}
-                style={styles.viewMoreButton}
+                className={`view-more-button ${theme} ${fontSize}`}
               >
                 View More Conversations
               </button>
             )}
           </div>
-          {chats.length > 0 && <ExportChats chats={chats} visibleChats={visibleChats}/>}
-          <div style={styles.footer}>
-            <p>
-              <span>Made with</span> <FaHeart color="#8B0000" />{" "}
-              <span>and ancient wisdom.</span>
-            </p>
-            
-            <p
-  className="text-sm italic text-gray-500"
-  style={{ textAlign: "center" }}
->
-  <em>
-    Disclaimer: This chatbot may occasionally generate incorrect
-    information.{" "}
-    <a
-      href="https://ai.google.dev/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-red-700 underline"
-    >
-      Learn more
-    </a>
-  </em>
-</p>
+          {chats.length > 0 && <ExportChats fontSize={fontSize} chats={chats} visibleChats={visibleChats}/>}
+          <div className={`footer ${theme} ${fontSize}`}>
+  <p>
+    <span>Made with</span> <FaHeart color="#8B0000" />{" "}
+    <span>and ancient wisdom.</span>
+  </p>
 
-            <ScrollToTop theme={theme} />
-          </div>
+  <p className="text-sm italic text-gray-500">
+    <em>
+      Disclaimer: This chatbot may occasionally generate incorrect information.{" "}
+      <a
+        href="https://ai.google.dev/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-red-700 underline"
+      >
+        Learn more
+      </a>
+    </em>
+  </p>
+
+  <ScrollToTop theme={theme} />
+</div>
+
         </div>
       </div>
       {/* </div> */}

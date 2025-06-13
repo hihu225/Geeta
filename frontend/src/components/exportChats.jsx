@@ -5,7 +5,7 @@ import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import Swal from "sweetalert2";
 import "../hihu.css"
-const exportChats = ({ chats, visibleChats }) => {
+const exportChats = ({ chats, visibleChats,fontSize }) => {
   const handleExportAllChats = async () => {
     try {
       const doc = new jsPDF();
@@ -306,7 +306,7 @@ const exportChats = ({ chats, visibleChats }) => {
   return (
     <>
       <div style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}>
-  <button className="export-button" onClick={handleExportAllChats}>
+  <button className={`export-button ${fontSize}`} onClick={handleExportAllChats}>
     <FaBookOpen style={{ marginRight: "8px" }} /> Export All Conversations
   </button>
 </div>
