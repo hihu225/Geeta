@@ -1,7 +1,9 @@
 import { useState, useEffect , useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft,Bell, Settings } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { FiSettings } from 'react-icons/fi';
+import { MdNotificationsActive } from "react-icons/md";
 import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
 import "./hihu.css";
@@ -60,63 +62,16 @@ const AccountSettings = () => {
 
 
   const styles = {
-    container: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #fef7ed 0%, #fff7ed 100%)",
-      padding: "20px 10px 20px 10px",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    },
 
     header: {
-      maxWidth: "800px",
+      maxWidth: "600px",
       margin: "50px auto 40px auto",
       textAlign: "center",
-    },
-
-    backButton: {
-      position: "absolute",
-      top: "18px",
-      left: "15px",
-      backgroundColor: "#fff7ed",
-      border: "1px solid #fed7aa",
-      borderRadius: "8px",
-      padding: "8px 16px",
-      cursor: "pointer",
-      fontSize: "14px",
-      fontWeight: "500",
-      color: "#9a3412",
-      transition: "all 0.2s ease",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-
-    title: {
-      fontSize: "32px",
-      fontWeight: "800",
-      color: "#9a3412",
-      marginBottom: "8px",
-      letterSpacing: "-0.5px",
-    },
-
-    subtitle: {
-      fontSize: "16px",
-      color: "#c2410c",
-      fontWeight: "400",
     },
 
     mainContent: {
       maxWidth: "600px",
       margin: "0 auto",
-    },
-
-    userCard: {
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      padding: "24px",
-      marginBottom: "32px",
-      boxShadow: "0 4px 12px rgba(154, 52, 18, 0.08)",
-      border: "1px solid #fed7aa",
     },
 
     userInfo: {
@@ -162,68 +117,10 @@ const AccountSettings = () => {
       flex: 1,
     },
 
-    userName: {
-      fontSize: "20px",
-      fontWeight: "700",
-      color: "#9a3412",
-      marginBottom: "4px",
-    },
-
-    userEmail: {
-      fontSize: "14px",
-      color: "#c2410c",
-    },
-
-    demoTag: {
-      display: "inline-block",
-      backgroundColor: "#fef3c7",
-      color: "#92400e",
-      padding: "4px 8px",
-      borderRadius: "4px",
-      fontSize: "12px",
-      fontWeight: "600",
-      marginTop: "8px",
-    },
-
-    actionsCard: {
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      padding: "24px",
-      boxShadow: "0 4px 12px rgba(154, 52, 18, 0.08)",
-      border: "1px solid #fed7aa",
-    },
-
-    sectionTitle: {
-      fontSize: "18px",
-      fontWeight: "700",
-      color: "#9a3412",
-      marginBottom: "16px",
-    },
-
     buttonGroup: {
       display: "flex",
       flexDirection: "column",
       gap: "12px",
-    },
-
-    actionButton: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "16px 20px",
-      borderRadius: "12px",
-      border: "1px solid #fed7aa",
-      backgroundColor: "#ffffff",
-      cursor: "pointer",
-      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-      fontSize: "15px",
-      fontWeight: "500",
-      textAlign: "left",
-    },
-
-    logoutButton: {
-      borderColor: "#fed7aa",
-      color: "#9a3412",
     },
 
     deleteButton: {
@@ -412,14 +309,6 @@ const AccountSettings = () => {
   color: "#9a3412",
 },
 
-supportSection: {
-  backgroundColor: "#ffffff",
-  borderRadius: "16px",
-  padding: "24px",
-  marginBottom: "32px",
-  boxShadow: "0 4px 12px rgba(154, 52, 18, 0.08)",
-  border: "1px solid #fed7aa",
-},
 
 supportGrid: {
   display: "grid",
@@ -444,12 +333,6 @@ supportIcon: {
   display: "block",
 },
 
-supportTitle: {
-  fontSize: "16px",
-  fontWeight: "600",
-  color: "#9a3412",
-  marginBottom: "8px",
-},
 
 supportDescription: {
   fontSize: "14px",
@@ -501,27 +384,6 @@ verse: {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-
-      .back-btn:hover {
-        background-color: #fed7aa !important;
-        border-color: #fb923c !important;
-        transform: translateY(-1px) !important;
-      }
-
-      .logout-btn:hover {
-        background-color: #fff7ed !important;
-        border-color: #fb923c !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(154, 52, 18, 0.15) !important;
-      }
-
-      .delete-btn:hover {
-        background-color: #fee2e2 !important;
-        border-color: #fca5a5 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15) !important;
-      }
-
       .action-btn:active {
         transform: translateY(0) !important;
       }
@@ -544,15 +406,6 @@ verse: {
       .popup-btn-secondary:hover {
         background-color: #fff7ed !important;
         border-color: #fb923c !important;
-      }
-      .support-card:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 16px rgba(154, 52, 18, 0.15) !important;
-        background-color: #fed7aa !important;
-      }
-
-      .support-card:active {
-        transform: translateY(0) !important;
       }
     `;
     document.head.appendChild(styleElement);
@@ -716,24 +569,26 @@ const handleCloseModal = (setter) => {
   }
 
   return (
-    <div className="container-acc">
-      <button
-        onClick={handleBack}
-        style={styles.backButton}
-        className="back-btn"
-      >
-        <ArrowLeft size={20} className="icon" />
-        Back
-      </button>
+    <div className={`container-acc ${theme}`}>
+      <button onClick={handleBack} className={`back-btn-acc ${theme}`}>
+  <ArrowLeft size={20} className="icon" />
+  Back
+</button>
+
 
       <div style={styles.header}>
-        <h1 style={styles.title}>Profile Settings</h1>
-        <p style={styles.subtitle}>Manage your spiritual journey preferences</p>
+        <div className={`title-container ${theme}`}>
+  <h1 className={`title-text ${theme}`}>Profile Settings</h1>
+  <div className={`subtitle-acc ${theme}`}>
+    Manage your spiritual journey preferences
+  </div>
+</div>
+
       </div>
 
       <div style={styles.mainContent}>
         {/* User Info Card */}
-        <div style={styles.userCard}>
+        <div className={`user-card ${theme}`}>
           <div style={styles.userInfo}>
             <div 
               style={styles.avatar}
@@ -745,36 +600,39 @@ const handleCloseModal = (setter) => {
               <div style={styles.avatarEdit}>✏️</div>
             </div>
             <div style={styles.userDetails}>
-              <div style={styles.userName}>{user.name}</div>
-              <div style={styles.userEmail}>{user.email}</div>
+              <div className={`user-name ${theme}`}>{user.name}</div>
+              <div className={`user-email ${theme}`}>{user.email}</div>
               {user.isDemo && (
-                <div style={styles.demoTag}>Demo Seeker</div>
+                <div className={`demo-tag ${theme}`}>Demo Seeker</div>
               )}
             </div>
           </div>
         </div>
-        <div style={styles.supportSection}>
-  <h2 style={styles.sectionTitle}>Notifications & Alerts</h2>
+        <div className={`support-section ${theme}`}>
+  <h2 className={`section-title ${theme}`}>Notifications & Alerts</h2>
   <div style={styles.supportGrid}>
     <div 
-      style={styles.supportCard} 
-      className="support-card"
+  className={`support-card ${theme}`}
       onClick={handleNotificationSettings}
     >
-      <span style={styles.supportIcon}><Settings size={32} color="#9a3412" /></span>
-      <div style={styles.supportTitle}>Notification Settings</div>
+      <FiSettings size={32} color={theme === "dark" ? "#fcd34d" : "#9a3412"} style={{marginBottom: "18px", marginTop:"7px"}} />
+      <div
+  className={`support-title ${theme}`}
+>
+  Notification Settings
+</div>
+
       <div style={styles.supportDescription}>
         Customize your spiritual reminders and guidance alerts
       </div>
     </div>
 
     <div 
-  style={styles.supportCard} 
-  className="support-card"
+  className={`support-card ${theme}`}
   onClick={handleViewNotifications}
 >
   <span style={styles.supportIcon}>
-    <Bell size={32} color="#9a3412" />
+    <MdNotificationsActive size={32} color={theme === "dark" ? "#fcd34d" : "#9a3412"} />
     {getUnreadNotificationCount() > 0 && (
       <span style={{
         position: 'absolute',
@@ -795,7 +653,7 @@ const handleCloseModal = (setter) => {
       </span>
     )}
   </span>
-  <div style={styles.supportTitle}>
+  <div className={`support-title ${theme}`}>
     View Notifications
   </div>
   <div style={styles.supportDescription}>
@@ -807,28 +665,26 @@ const handleCloseModal = (setter) => {
 </div>
   </div>
 </div>
-        <div style={styles.supportSection}>
-  <h2 style={styles.sectionTitle}>Support & Information</h2>
+        <div className={`support-section ${theme}`}>
+  <h2 className={`section-title ${theme}`}>Support & Information</h2>
   <div style={styles.supportGrid}>
     <div 
-      style={styles.supportCard} 
-      className="support-card"
+      className={`support-card ${theme}`}
       onClick={handleAboutClick}
     >
       <span style={styles.supportIcon}>📖</span>
-      <div style={styles.supportTitle}>About This App</div>
+      <div className={`section-title ${theme}`}>About This App</div>
       <div style={styles.supportDescription}>
         Learn about our spiritual guidance system powered by Bhagavad Gita wisdom
       </div>
     </div>
 
     <div 
-      style={styles.supportCard} 
-      className="support-card"
+      className={`support-card ${theme}`}
       onClick={handleContactSupport}
     >
       <span style={styles.supportIcon}>📧</span>
-      <div style={styles.supportTitle}>Contact Support</div>
+      <div className={`section-title ${theme}`}>Contact Support</div>
 <div style={styles.supportDescription}>
   Having trouble? Get in touch for technical assistance or general inquiries.
 </div>
@@ -836,24 +692,22 @@ const handleCloseModal = (setter) => {
     </div>
 
     <div 
-      style={styles.supportCard} 
-      className="support-card"
+      className={`support-card ${theme}`}
       onClick={handleFeedbackClick}
     >
       <span style={styles.supportIcon}>💭</span>
-      <div style={styles.supportTitle}>Share Feedback</div>
+      <div className={`section-title ${theme}`}>Share Feedback</div>
       <div style={styles.supportDescription}>
         Help us improve your spiritual journey experience
       </div>
     </div>
 
     <div 
-      style={styles.supportCard} 
-      className="support-card"
+      className={`support-card ${theme}`}
       onClick={handlePrivacyClick}
     >
       <span style={styles.supportIcon}>🔒</span>
-      <div style={styles.supportTitle}>Privacy & Terms</div>
+      <div className={`section-title ${theme}`}>Privacy & Terms</div>
       <div style={styles.supportDescription}>
         Understand how we protect your spiritual journey data
       </div>
@@ -861,47 +715,42 @@ const handleCloseModal = (setter) => {
   </div>
 </div>
         {/* Actions Card */}
-        <div style={styles.actionsCard}>
-          <h2 style={styles.sectionTitle}>Account Actions</h2>
+        <div className={`actions-card ${theme}`}>
+          <h2 className={`section-title ${theme}`}>Account Actions</h2>
           
           <div style={styles.buttonGroup}>
             {/* Logout Button */}
             <button
-              onClick={handleLogout}
-              style={{
-                ...styles.actionButton,
-                ...styles.logoutButton,
-              }}
-              className="logout-btn action-btn"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                <span style={styles.buttonIcon}>🚪</span>
-                <div style={styles.buttonText}>
-                  <div>End Session</div>
-                  <div style={styles.buttonSubtext}>Sign out of your spiritual journey</div>
-                </div>
-              </div>
-              <span style={styles.chevron}>›</span>
-            </button>
+  onClick={handleLogout}
+  className={`logout-btn ${theme}`}
+>
+  <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+    <span style={styles.buttonIcon}>🚪</span>
+    <div style={styles.buttonText}>
+      <div>End Session</div>
+      <div style={styles.buttonSubtext}>Sign out of your spiritual journey</div>
+    </div>
+  </div>
+  <span style={styles.chevron}>›</span>
+</button>
+
+
 
             {/* Delete Account Button */}
             <button
-              onClick={handleDeleteAccount}
-              style={{
-                ...styles.actionButton,
-                ...styles.deleteButton,
-              }}
-              className="delete-btn action-btn"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                <span style={styles.buttonIcon}>⚠️</span>
-                <div style={styles.buttonText}>
-                  <div>Delete Profile</div>
-                  <div style={styles.buttonSubtext}>Permanently remove your account and journey data</div>
-                </div>
-              </div>
-              <span style={styles.chevron}>›</span>
-            </button>
+  onClick={handleDeleteAccount}
+  className={`delete-btn ${theme}`}
+>
+  <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+    <span style={styles.buttonIcon}>⚠️</span>
+    <div style={styles.buttonText}>
+      <div>Delete Profile</div>
+      <div style={styles.buttonSubtext}>Permanently remove your account and journey data</div>
+    </div>
+  </div>
+  <span style={styles.chevron}>›</span>
+</button>
+
           </div>
         </div>
       </div>
