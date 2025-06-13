@@ -1567,6 +1567,10 @@ const getISTGreeting = () => {
     };
     fetchChats();
   }, []);
+  useEffect(() => {
+  document.body.classList.remove("light", "dark");
+  document.body.classList.add(theme);
+}, [theme]);
 
   const loadMoreChats = () => {
     setVisibleChats((prev) => Math.min(prev + 3, chats.length));
@@ -1911,7 +1915,7 @@ const getRandomQuote = () => {
     color: theme === "light" ? "#333" : "#ccc",
     fontStyle: "italic"
   }}>
-    {currentQuote?.meaning}
+    <div style={{fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.1rem"}}>{currentQuote?.meaning}</div>
   </div>
 </div>
 

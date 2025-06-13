@@ -5,7 +5,6 @@
 
 
 export const getStyles = (theme, fontSize, isOpen, isListening) => ({
-  // Enhanced translation style with more elegant borders and spacing
   shlokaTranslation: {
     fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.15rem",
     color: theme === "light" ? "#3A5311" : "#9ACD32",
@@ -26,13 +25,13 @@ scrollToTopStyle: {
   backgroundColor: "white",
   border: "none",
   padding: "0",
-  borderRadius: "999px", // Fully rounded pill shape
+  borderRadius: "999px", 
 
   cursor: "pointer",
   fontSize: "0.95rem",
   fontWeight: "600",
 
-  boxShadow: "0 6px 12px rgba(106, 27, 154, 0.3)", // Soft purple glow
+  boxShadow: "0 6px 12px rgba(106, 27, 154, 0.3)", 
   transition: "all 0.25s ease-in-out",
   letterSpacing: "0.5px",
   zIndex: 1000,
@@ -43,10 +42,9 @@ scrollToTopStyle: {
 },
 upstyle: {
   width: '40px', height: '40px',
-  color:  "#8B0000", // White or dark purple text
+  color:  "#8B0000", 
 },
 
-  // Refined small button with better proportions for mobile
   smallButtonStyle: {
     padding: "0.6rem 1.2rem",
     fontSize: "0.9rem",
@@ -94,7 +92,6 @@ upstyle: {
     },
   },
 
-  // Enhanced selected chat bubble with more distinct styling
   selectedChatBubble: {
     borderLeft: `4px solid ${theme === "light" ? "#8B0000" : "#B22222"}`,
     backgroundColor: theme === "light" ? 'rgba(255, 240, 205, 0.65)' : 'rgba(61, 61, 61, 0.65)',
@@ -103,7 +100,6 @@ upstyle: {
       : "0 4px 12px rgba(0, 0, 0, 0.15)",
   },
 
-  // Improved checkbox container positioning for mobile
   checkboxContainer: {
     position: 'absolute',
     top: '12px',
@@ -111,7 +107,6 @@ upstyle: {
     zIndex: 5,
   },
 
-  // Refined checkbox style
   checkbox: {
     width: '18px',
     height: '18px',
@@ -119,8 +114,6 @@ upstyle: {
     accentColor: theme === "light" ? "#8B0000" : "#B22222",
   },
 
-
-  // Refined edit button with improved accessibility for touch
   editButton: {
     position: "absolute",
     top: "12px",
@@ -138,11 +131,10 @@ upstyle: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "36px", // Increased touch target
-    height: "36px", // Increased touch target
+    width: "36px",
+    height: "36px", 
   },
 
-  // Better structured edit form
   editForm: {
     marginTop: "0.8rem",
     marginBottom: "1rem",
@@ -152,7 +144,6 @@ upstyle: {
     width: "100%",
   },
 
-  // Enhanced edit input with better focus states
   editInput: {
     width: "100%",
     padding: "0.7rem",
@@ -166,7 +157,6 @@ upstyle: {
     outline: "none",
   },
 
-  // Better organized edit buttons container
   editButtonsContainer: {
     display: "flex",
     gap: "10px",
@@ -174,7 +164,6 @@ upstyle: {
     marginTop: "8px",
   },
 
-  // Enhanced save button with better touch targets
   editSaveButton: {
     backgroundColor: theme === "light" ? "#006400" : "#2E8B57",
     color: "white",
@@ -187,10 +176,9 @@ upstyle: {
     boxShadow: "0 3px 6px rgba(0,100,0,0.2)",
     transition: "all 0.2s ease",
     letterSpacing: "0.3px",
-    minWidth: "60px", // Ensure reasonable touch target
+    minWidth: "60px", 
   },
 
-  // Enhanced cancel button with better touch targets
   editCancelButton: {
     backgroundColor: theme === "light" ? "#8B0000" : "#B22222",
     color: "white",
@@ -203,11 +191,9 @@ upstyle: {
     boxShadow: "0 3px 6px rgba(139,0,0,0.2)",
     transition: "all 0.2s ease",
     letterSpacing: "0.3px",
-    minWidth: "60px", // Ensure reasonable touch target
+    minWidth: "60px", 
   },
 
-
-  // Enhanced Geeta quote with mobile-friendly sizing
   geetaQuote: {
     fontSize: fontSize === "small" ? "1.1rem" : fontSize === "medium" ? "1.2rem" : "1.3rem",
     color: theme === "light" ? "#8B0000" : "#FF6B6B",
@@ -227,17 +213,15 @@ upstyle: {
     letterSpacing: "0.2px",
   },
 
-  // Better organized language toggle with improved spacing for mobile
   languageToggle: {
     display: "flex",
     justifyContent: "center",
     marginTop: "1rem",
     marginBottom: "1rem",
     gap: "8px",
-    flexWrap: "wrap", // Allow wrapping on small screens
+    flexWrap: "wrap", 
   },
 
-  // Refined language button with better hover states and touch targets
   languageButton: {
     backgroundColor: theme === "light" ? "#B8860B" : "#CD853F",
     color: "white",
@@ -250,17 +234,15 @@ upstyle: {
     boxShadow: "0 3px 6px rgba(0,0,0,0.15)",
     transition: "all 0.2s ease",
     letterSpacing: "0.2px",
-    minWidth: "60px", // Ensure reasonable touch target
+    minWidth: "60px", 
   },
 
-  // Better defined favorites section with improved spacing
   favoritesSection: {
     marginTop: "2rem",
     borderTop: `2px solid ${theme === "light" ? "#D4A017" : "#B8860B"}`,
     paddingTop: "1.5rem",
   },
 
-  // Enhanced form with better alignment and spacing for mobile
  form: {
   marginBottom: "2rem",
   display: "flex",
@@ -268,11 +250,11 @@ upstyle: {
   gap: "1rem",
   width: "100%",
   boxSizing: "border-box",
-  padding: "0 1rem", // adds breathing room on both sides for mobile
+  padding: "0 1rem", 
 },
 floatingLabel: {
   position: "absolute",
-  left: "2.8rem",       // same as input's left padding
+  left: "2.8rem",      
   top: "50%",
   transform: "translateY(-50%)",
   color: theme === "light" ? "#999" : "#bbb",
@@ -282,7 +264,7 @@ floatingLabel: {
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  maxWidth: "calc(100% - 3rem)",  // leaves some right padding
+  maxWidth: "calc(100% - 3rem)",
 },
 floatingLabelActive: {
   top: "0.3rem",
@@ -319,16 +301,17 @@ inputWrap: {
 scrollingPlaceholder: {
   position: "absolute",
   top: "50%",
-  left: "2.8rem", // after icon
+  left: "2.8rem", 
   transform: "translateY(-50%)",
   whiteSpace: "nowrap",
   overflow: "hidden",
   pointerEvents: "none",
+  right:"0.7rem",
 },
 scrollingPlaceholder2: {
   position: "absolute",
   top: "50%",
-  left: "2.8rem", // after icon
+  left: "2.8rem", 
   right: "4rem",
   transform: "translateY(-50%)",
   whiteSpace: "nowrap",
@@ -346,10 +329,9 @@ scrollingText: {
 },
 
 
-  // Refined input field with better focus states for mobile
   input: {
   width: "100%",
-  padding: "0.8rem 1rem 0.8rem 2.8rem", // leave room for icon
+  padding: "0.8rem 1rem 0.8rem 2.8rem",
   fontSize: "1rem",
   borderRadius: "0.8rem",
   border: "2px solid #b29600",
@@ -360,7 +342,6 @@ scrollingText: {
   flexgrow: 1,
 },
 
-  // Enhanced book icon with better positioning for mobile
   bookIcon: {
   position: "absolute",
   top: "50%",
@@ -373,7 +354,6 @@ scrollingText: {
 },
 
 
-  // Enhanced submit button with better hover effects and sizing for mobile
   submitButton: {
   backgroundColor: theme === "light" ? "#8B0000" : "#B22222",
   color: "white",
@@ -423,8 +403,8 @@ voiceButton : {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  width: "40px", // Adjusted for mobile
-  height: "40px", // Adjusted for mobile
+  width: "40px", 
+  height: "40px", 
   transform: isListening ? "scale(1.1)" : "scale(1)",
   boxShadow: isListening ? "0 0 15px 5px rgba(255, 69, 0, 0.7)" : "0 4px 8px rgba(139, 0, 0, 0.25)",
   ...(isListening ? pulseAnimation : {}),
@@ -485,8 +465,6 @@ voiceButton : {
   },
 
 
-
-    // Enhanced view more button with better hover effects and mobile sizing
   viewMoreButton: {
     backgroundColor: theme === "light" ? "#B8860B" : "#CD853F",
     color: "white",
@@ -504,13 +482,11 @@ voiceButton : {
     minWidth: "150px",
   },
   
-  // Better organized chat container with improved spacing
   chatContainer: {
     marginTop: "2rem",
     width: "100%",
   },
 
-  // Enhanced delete button with better hover effects and touch target
   deleteButton: {
     position: "absolute",
     top: "12px",
@@ -527,11 +503,10 @@ voiceButton : {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "36px", // Increased touch target
-    height: "36px", // Increased touch target
+    width: "36px", 
+    height: "36px", 
   },
 
-  // Enhanced user message with better typography for mobile
   userMessage: {
     color: theme === "light" ? "#006400" : "#4CAF50",
     fontWeight: "600",
@@ -540,7 +515,6 @@ voiceButton : {
     letterSpacing: "0.2px",
   },
 
-  // Enhanced timestamp with better typography for mobile
   timestamp: {
     fontSize: fontSize === "small" ? "0.7rem" : fontSize === "medium" ? "0.75rem" : "0.8rem",
     color: theme === "light" ? "#996633" : "#CD853F",
@@ -549,7 +523,6 @@ voiceButton : {
     opacity: "0.9",
   },
 
-  // Enhanced bot response with better typography and spacing for mobile
   botResponse: {
     color: theme === "light" ? "#8B4513" : "#D2B48C",
     marginBottom: "1rem",
@@ -558,7 +531,6 @@ voiceButton : {
     letterSpacing: "0.2px",
   },
 
-  // Enhanced shloka container with more elegant styling for mobile
   shlokaContainer: {
     backgroundColor: theme === "light" ? "#FDF6E3" : "#333",
     border: theme === "light" ? "2px solid #D4A017" : "2px solid #B8860B",
@@ -572,7 +544,6 @@ voiceButton : {
       : "0 4px 10px rgba(0,0,0,0.15)",
   },
 
-  // Enhanced shloka with better typography for mobile
   shloka: {
     fontSize: fontSize === "small" ? "1rem" : fontSize === "medium" ? "1.1rem" : "1.2rem",
     color: theme === "light" ? "#8B0000" : "#FF6B6B",
@@ -581,7 +552,6 @@ voiceButton : {
     textShadow: theme === "light" ? "0.5px 0.5px 1px rgba(0,0,0,0.05)" : "none",
   },
 
-  // Enhanced footer with better spacing and typography for mobile
   footer: {
     marginTop: "2rem",
     fontSize: fontSize === "small" ? "0.8rem" : fontSize === "medium" ? "0.85rem" : "0.9rem",
@@ -595,7 +565,6 @@ voiceButton : {
     opacity: "0.9",
   },
 
-  // Enhanced preferences bar with better spacing and styling for mobile
   preferencesBar: {
     display: "flex",
     justifyContent: "space-between",
@@ -608,11 +577,10 @@ voiceButton : {
     boxShadow: theme === "light" 
       ? "0 3px 6px rgba(0,0,0,0.05)"
       : "0 3px 6px rgba(0,0,0,0.1)",
-    flexWrap: "wrap", // Allow wrapping on small screens
-    gap: "8px", // Add gap for wrapped content
+    flexWrap: "wrap", 
+    gap: "8px", 
   },
 
-  // Enhanced preferences button with better hover states and touch targets
   preferencesButton: {
     backgroundColor: "transparent",
     color: theme === "light" ? "#8B0000" : "white",
@@ -626,17 +594,15 @@ voiceButton : {
     transition: "all 0.2s ease",
     boxShadow: "none",
     opacity: "0.9",
-    minWidth: "36px", // Ensure reasonable touch target
-    minHeight: "36px", // Ensure reasonable touch target
+    minWidth: "36px", 
+    minHeight: "36px", 
   },
 
-  // Better organized font size controls with improved spacing for mobile
   fontSizeControls: {
     display: "flex",
     gap: "6px",
   },
 
-  // Enhanced font button with better hover states and touch targets
   fontButton: {
     backgroundColor: "transparent",
     color: theme === "light" ? "#8B0000" : "white",
@@ -649,11 +615,10 @@ voiceButton : {
     fontWeight: "600",
     fontSize: index => ["0.85rem", "1rem", "1.15rem"][index],
     opacity: "0.9",
-    minWidth: "30px", // Ensure reasonable touch target
-    minHeight: "30px", // Ensure reasonable touch target
+    minWidth: "30px", 
+    minHeight: "30px", 
   },
 
-  // Enhanced favorite button with better hover states and touch target
   favoriteButton: {
     position: "absolute",
     top: "12px",
@@ -669,11 +634,10 @@ voiceButton : {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "36px", // Increased touch target
-    height: "36px", // Increased touch target
+    width: "36px",
+    height: "36px",
   },
 
-  // Enhanced spinner with smoother animation
   spinner: {
     animation: "spin 1.8s ease-in-out infinite",
   },
@@ -683,19 +647,18 @@ voiceButton : {
     "100%": { transform: "rotate(360deg)" }
   },
 
-  // Better organized button container with improved spacing for mobile
   buttonContainer: {
     display: "flex",
     justifyContent: "center",
     gap: "10px",
-    flexWrap: "wrap", // Allow wrapping on small screens
+    flexWrap: "wrap",
   },
   favend:{
     position: 'absolute',
     top: '-0.8rem',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: '#fdf6e3', // soft parchment-like background
+    backgroundColor: '#fdf6e3',
     padding: '0 1rem',
     color: '#5C4033',
     fontStyle: 'italic',
@@ -710,7 +673,7 @@ voiceButton : {
             fontSize: '0.8rem',
             fontWeight: 'bold',
   },
-  // Enhanced chat bubble with more elegant styling for mobile
+  
   chatBubble: {
     backgroundColor: theme === "light" ? "#FFF8DC" : "#2D2D2D",
     padding: "1.5rem",
@@ -725,7 +688,6 @@ voiceButton : {
     transition: "all 0.3s ease",
   },
 
-  // Enhanced verse info with better typography for mobile
   verseInfo: {
     fontSize: fontSize === "small" ? "0.9rem" : fontSize === "medium" ? "1rem" : "1.1rem",
     color: theme === "light" ? "#8B4513" : "#D2B48C",
@@ -736,7 +698,6 @@ voiceButton : {
     opacity: "0.9",
   },
 
-  // Enhanced share button with better hover effects and touch targets
   shareButton: {
     backgroundColor: theme === "light" ? "#006400" : "#2E8B57",
     color: "white",
@@ -753,6 +714,6 @@ voiceButton : {
     transition: "all 0.2s ease",
     fontWeight: "600",
     letterSpacing: "0.2px",
-    minWidth: "80px", // Ensure reasonable touch target
+    minWidth: "80px", 
   },
 });
