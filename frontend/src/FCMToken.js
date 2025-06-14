@@ -350,7 +350,6 @@ const showPremiumNotification = (notification, navigate) => {
 
 // Global function for notification button clicks (simplified)
 window.handleNotificationClick = () => {
-  // Remove notification with beautiful animation
   const notificationEl = document.querySelector('.premium-notification');
   if (notificationEl) {
     notificationEl.classList.add('hide');
@@ -360,18 +359,16 @@ window.handleNotificationClick = () => {
       }
     }, 300);
   }
-  
-  // Add page transition effect
-  addPageTransitionEffect();
-  
-  // Navigate after transition
+
+  // Delay navigation slightly to allow for smooth transition
   setTimeout(() => {
     if (window.notificationNavigate) {
       window.notificationNavigate('/notifications');
     } else {
-      window.location.href = '/notifications';
+      // Only fallback if necessary
+      window.location.assign('/notifications'); // safer than href
     }
-  }, 200);
+  }, 300);
 };
 
 // Add premium notification styles

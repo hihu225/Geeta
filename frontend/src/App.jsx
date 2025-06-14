@@ -30,10 +30,16 @@ const FCMSetup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize FCM with navigation function
+    // Expose global navigate handler for use outside React
+    window.notificationNavigate = (path) => {
+      requestAnimationFrame(() => {
+        navigate(path);
+      });
+    };
+
     const initializeFCM = async () => {
       try {
-        await FCMToken(navigate);
+        await FCMToken(window.notificationNavigate); // pass safe nav function
         console.log('FCM initialized with navigation');
       } catch (error) {
         console.error('FCM initialization failed:', error);
@@ -43,14 +49,12 @@ const FCMSetup = () => {
     initializeFCM();
   }, [navigate]);
 
-  // Set up foreground message listener with navigation
+  // Foreground message listener
   useEffect(() => {
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground message received: ", payload);
-      
-      // Show notification even when app is in foreground
+
       if (payload.notification) {
-        // Create a custom notification
         if ('Notification' in window && Notification.permission === 'granted') {
           const notification = new Notification(
             payload.notification.title || '🕉️ Bhagavad Gita Wisdom',
@@ -64,20 +68,24 @@ const FCMSetup = () => {
           notification.onclick = () => {
             window.focus();
             notification.close();
-            // Navigate to notifications page when clicked
-            navigate('/notifications');
+
+            if (window.notificationNavigate) {
+              window.location.href = '/notifications';
+
+            } else {
+              window.location.assign('/notifications');
+            }
           };
 
-          // Auto close after 5 seconds
           setTimeout(() => notification.close(), 5000);
         }
       }
     });
 
-    return () => unsubscribe(); // Cleanup listener
-  }, [navigate]);
+    return () => unsubscribe();
+  }, []);
 
-  return null; // This component doesn't render anything
+  return null; // doesn't render anything
 };
 
 // Component to handle async token checking for root route
