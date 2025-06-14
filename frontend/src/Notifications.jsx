@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Bell, Clock, BookOpen, X, RotateCcw, Trash2, ArrowLeft, Sparkles, Heart, Star } from 'lucide-react';
 import { backend_url } from './utils/backend';
 import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { ThemeContext } from "./ThemeContext";
 import "./hihu.css"; 
+
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,13 +15,12 @@ const Notifications = () => {
   const [filter, setFilter] = useState('all'); // all, unread, read
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useContext(ThemeContext);
   
   const token = Cookies.get('token');
 
-  // Enhanced styles with Bhagavad Gita theme
-  const styles = {
-    
-
+  // Enhanced styles with Bhagavad Gita theme and dark mode support
+  const getStyles = (isDark) => ({
     header: {
       maxWidth: "1200px",
       margin: "0 auto",
@@ -30,14 +31,14 @@ const Notifications = () => {
       display: "flex",
       alignItems: "center",
       gap: "8px",
-      backgroundColor: "#fff7ed",
-      border: "1px solid #fed7aa",
+      backgroundColor: isDark ? "#1f2937" : "#fff7ed",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
       borderRadius: "8px",
       padding: "8px 16px",
       cursor: "pointer",
       fontSize: "14px",
       fontWeight: "500",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       transition: "all 0.2s ease",
       marginBottom: "24px",
       width: "fit-content",
@@ -60,21 +61,21 @@ const Notifications = () => {
     mainTitle: {
       fontSize: "32px",
       fontWeight: "800",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       margin: 0,
       letterSpacing: "-0.5px",
     },
 
     subtitle: {
       fontSize: "16px",
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
       fontWeight: "400",
       marginTop: "4px",
     },
 
     unreadBadge: {
-      backgroundColor: "#f97316",
-      color: "white",
+      backgroundColor: isDark ? "#f59e0b" : "#f97316",
+      color: isDark ? "#111827" : "white",
       fontSize: "14px",
       fontWeight: "600",
       padding: "4px 12px",
@@ -104,14 +105,14 @@ const Notifications = () => {
     },
 
     primaryButton: {
-      backgroundColor: "#f97316",
-      borderColor: "#f97316",
-      color: "white",
+      backgroundColor: isDark ? "#f59e0b" : "#f97316",
+      borderColor: isDark ? "#f59e0b" : "#f97316",
+      color: isDark ? "#111827" : "white",
     },
 
     dangerButton: {
-      backgroundColor: "#dc2626",
-      borderColor: "#dc2626",
+      backgroundColor: isDark ? "#dc2626" : "#dc2626",
+      borderColor: isDark ? "#dc2626" : "#dc2626",
       color: "white",
     },
 
@@ -124,12 +125,14 @@ const Notifications = () => {
     filterTabs: {
       display: "flex",
       gap: "4px",
-      backgroundColor: "#ffffff",
+      backgroundColor: isDark ? "#1f2937" : "#ffffff",
       padding: "4px",
       borderRadius: "12px",
       width: "fit-content",
-      border: "1px solid #fed7aa",
-      boxShadow: "0 2px 8px rgba(154, 52, 18, 0.08)",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      boxShadow: isDark 
+        ? "0 2px 8px rgba(0, 0, 0, 0.3)" 
+        : "0 2px 8px rgba(154, 52, 18, 0.08)",
     },
 
     filterTab: {
@@ -144,13 +147,15 @@ const Notifications = () => {
     },
 
     filterTabActive: {
-      backgroundColor: "#f97316",
-      color: "white",
-      boxShadow: "0 2px 4px rgba(249, 115, 22, 0.3)",
+      backgroundColor: isDark ? "#f59e0b" : "#f97316",
+      color: isDark ? "#111827" : "white",
+      boxShadow: isDark 
+        ? "0 2px 4px rgba(245, 158, 11, 0.5)" 
+        : "0 2px 4px rgba(249, 115, 22, 0.3)",
     },
 
     filterTabInactive: {
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
     },
 
     mainContent: {
@@ -165,19 +170,23 @@ const Notifications = () => {
     },
 
     notificationCard: {
-      backgroundColor: "#ffffff",
+      backgroundColor: isDark ? "#1f2937" : "#ffffff",
       borderRadius: "16px",
       padding: "20px",
       cursor: "pointer",
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-      border: "1px solid #fed7aa",
-      boxShadow: "0 2px 8px rgba(154, 52, 18, 0.06)",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      boxShadow: isDark 
+        ? "0 2px 8px rgba(0, 0, 0, 0.2)" 
+        : "0 2px 8px rgba(154, 52, 18, 0.06)",
     },
 
     notificationCardUnread: {
-      backgroundColor: "#fff7ed",
-      borderColor: "#fb923c",
-      boxShadow: "0 4px 12px rgba(154, 52, 18, 0.12)",
+      backgroundColor: isDark ? "#0f172a" : "#fff7ed",
+      borderColor: isDark ? "#f59e0b" : "#fb923c",
+      boxShadow: isDark 
+        ? "0 4px 12px rgba(245, 158, 11, 0.2)" 
+        : "0 4px 12px rgba(154, 52, 18, 0.12)",
     },
 
     notificationHeader: {
@@ -199,18 +208,18 @@ const Notifications = () => {
     },
 
     wisdomIcon: {
-      backgroundColor: "#fef3c7",
-      color: "#f59e0b",
+      backgroundColor: isDark ? "#1e3a8a" : "#fef3c7",
+      color: isDark ? "#fbbf24" : "#f59e0b",
     },
 
     reminderIcon: {
-      backgroundColor: "#dbeafe",
-      color: "#3b82f6",
+      backgroundColor: isDark ? "#1e40af" : "#dbeafe",
+      color: isDark ? "#60a5fa" : "#3b82f6",
     },
 
     defaultIcon: {
-      backgroundColor: "#f3f4f6",
-      color: "#6b7280",
+      backgroundColor: isDark ? "#374151" : "#f3f4f6",
+      color: isDark ? "#9ca3af" : "#6b7280",
     },
 
     notificationContent: {
@@ -221,14 +230,14 @@ const Notifications = () => {
     notificationTitle: {
       fontSize: "16px",
       fontWeight: "600",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       marginBottom: "4px",
       lineHeight: "1.4",
     },
 
     notificationBody: {
       fontSize: "14px",
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
       lineHeight: "1.5",
       marginBottom: "8px",
     },
@@ -242,14 +251,14 @@ const Notifications = () => {
 
     notificationTime: {
       fontSize: "12px",
-      color: "#a16207",
+      color: isDark ? "#d97706" : "#a16207",
       fontWeight: "500",
     },
 
     unreadDot: {
       width: "8px",
       height: "8px",
-      backgroundColor: "#f97316",
+      backgroundColor: isDark ? "#f59e0b" : "#f97316",
       borderRadius: "50%",
       flexShrink: 0,
     },
@@ -258,8 +267,8 @@ const Notifications = () => {
       display: "inline-flex",
       alignItems: "center",
       gap: "4px",
-      backgroundColor: "#fef3c7",
-      color: "#a16207",
+      backgroundColor: isDark ? "#1e3a8a" : "#fef3c7",
+      color: isDark ? "#fbbf24" : "#a16207",
       fontSize: "11px",
       fontWeight: "500",
       padding: "2px 8px",
@@ -282,10 +291,12 @@ const Notifications = () => {
     },
 
     modalContent: {
-      backgroundColor: "#ffffff",
+      backgroundColor: isDark ? "#1f2937" : "#ffffff",
       borderRadius: "20px",
-      border: "1px solid #fed7aa",
-      boxShadow: "0 20px 40px rgba(154, 52, 18, 0.15)",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      boxShadow: isDark 
+        ? "0 20px 40px rgba(0, 0, 0, 0.4)" 
+        : "0 20px 40px rgba(154, 52, 18, 0.15)",
       maxWidth: "600px",
       width: "100%",
       maxHeight: "80vh",
@@ -298,21 +309,21 @@ const Notifications = () => {
       alignItems: "center",
       justifyContent: "space-between",
       padding: "24px",
-      borderBottom: "1px solid #fed7aa",
-      backgroundColor: "#fff7ed",
+      borderBottom: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      backgroundColor: isDark ? "#0f172a" : "#fff7ed",
     },
 
     modalTitle: {
       fontSize: "20px",
       fontWeight: "700",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       display: "flex",
       alignItems: "center",
       gap: "8px",
     },
 
     closeButton: {
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
       cursor: "pointer",
       padding: "8px",
       borderRadius: "8px",
@@ -334,7 +345,7 @@ const Notifications = () => {
     detailSectionTitle: {
       fontSize: "16px",
       fontWeight: "600",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       marginBottom: "12px",
       display: "flex",
       alignItems: "center",
@@ -343,33 +354,33 @@ const Notifications = () => {
 
     detailText: {
       fontSize: "15px",
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
       lineHeight: "1.6",
     },
 
     quoteBox: {
-      backgroundColor: "#fff7ed",
-      border: "1px solid #fed7aa",
+      backgroundColor: isDark ? "#0f172a" : "#fff7ed",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
       borderRadius: "12px",
       padding: "20px",
-      borderLeft: "4px solid #f97316",
+      borderLeft: `4px solid ${isDark ? "#f59e0b" : "#f97316"}`,
       margin: "12px 0",
     },
 
     quoteText: {
       fontSize: "15px",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       fontStyle: "italic",
       lineHeight: "1.7",
     },
 
     metaInfo: {
-      backgroundColor: "#fefbf5",
+      backgroundColor: isDark ? "#111827" : "#fefbf5",
       borderRadius: "12px",
       padding: "16px",
       fontSize: "13px",
-      color: "#a16207",
-      border: "1px solid #fed7aa",
+      color: isDark ? "#d97706" : "#a16207",
+      border: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
     },
 
     metaRow: {
@@ -381,8 +392,8 @@ const Notifications = () => {
 
     modalFooter: {
       padding: "20px 24px",
-      borderTop: "1px solid #fed7aa",
-      backgroundColor: "#fefbf5",
+      borderTop: `1px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      backgroundColor: isDark ? "#111827" : "#fefbf5",
     },
 
     deleteButton: {
@@ -405,26 +416,26 @@ const Notifications = () => {
     emptyState: {
       textAlign: "center",
       padding: "64px 20px",
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
     },
 
     emptyIcon: {
       width: "80px",
       height: "80px",
-      color: "#fed7aa",
+      color: isDark ? "#374151" : "#fed7aa",
       marginBottom: "16px",
     },
 
     emptyTitle: {
       fontSize: "20px",
       fontWeight: "600",
-      color: "#9a3412",
+      color: isDark ? "#f59e0b" : "#9a3412",
       marginBottom: "8px",
     },
 
     emptyMessage: {
       fontSize: "14px",
-      color: "#c2410c",
+      color: isDark ? "#fbbf24" : "#c2410c",
     },
 
     loadingContainer: {
@@ -437,15 +448,18 @@ const Notifications = () => {
     loadingSpinner: {
       width: "40px",
       height: "40px",
-      border: "3px solid #fed7aa",
-      borderTop: "3px solid #f97316",
+      border: `3px solid ${isDark ? "#374151" : "#fed7aa"}`,
+      borderTop: `3px solid ${isDark ? "#f59e0b" : "#f97316"}`,
       borderRadius: "50%",
       animation: "spin 1s linear infinite",
     },
-  };
+  });
+
+  const isDark = theme === 'dark';
+  const styles = getStyles(isDark);
 
   useEffect(() => {
-    // Add CSS animations
+    // Add CSS animations with theme-aware hover effects
     const styleElement = document.createElement('style');
     styleElement.textContent = `
       @keyframes spin {
@@ -466,12 +480,14 @@ const Notifications = () => {
 
       .notification-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(154, 52, 18, 0.15) !important;
+        box-shadow: ${isDark 
+          ? '0 8px 20px rgba(0, 0, 0, 0.4) !important' 
+          : '0 8px 20px rgba(154, 52, 18, 0.15) !important'};
       }
 
       .back-btn:hover {
-        background-color: #fed7aa !important;
-        border-color: #fb923c !important;
+        background-color: ${isDark ? '#374151' : '#fed7aa'} !important;
+        border-color: ${isDark ? '#4b5563' : '#fb923c'} !important;
         transform: translateY(-1px);
       }
 
@@ -481,12 +497,12 @@ const Notifications = () => {
       }
 
       .filter-tab:hover {
-        background-color: #fff7ed !important;
+        background-color: ${isDark ? '#374151' : '#fff7ed'} !important;
       }
 
       .close-btn:hover {
-        background-color: #fed7aa !important;
-        color: #9a3412 !important;
+        background-color: ${isDark ? '#374151' : '#fed7aa'} !important;
+        color: ${isDark ? '#f59e0b' : '#9a3412'} !important;
       }
 
       .delete-btn:hover {
@@ -496,13 +512,28 @@ const Notifications = () => {
       .modal-overlay {
         backdrop-filter: blur(4px);
       }
+
+      .container-not {
+  min-height: 100vh;
+  width: 100vw;
+  padding: 20px 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+  transition: background 0.3s ease;
+  background: linear-gradient(135deg, #fef7ed 0%, #fff7ed 100%);
+}
+
+.dark .container-not {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
     `;
     document.head.appendChild(styleElement);
 
     return () => {
       document.head.removeChild(styleElement);
     };
-  }, []);
+  }, [isDark]);
 
   useEffect(() => {
     fetchNotifications();
@@ -514,24 +545,27 @@ const Notifications = () => {
       markAsRead(notificationId);
     }
   }, [location]);
-function renderFormattedQuote(text) {
-  const html = text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold markdown
-    .replace(/\n/g, '<br /><br />');                        // line breaks
-  return { __html: html };
-}
-function formatBody(text) {
-  return {
-    __html: text
-      .replace(/''/g, '<strong>$1</strong>') // Bold
+
+  function renderFormattedQuote(text) {
+    const html = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold markdown
+      .replace(/\n/g, '<br /><br />');                        // line breaks
+    return { __html: html };
+  }
+
+  function formatBody(text) {
+    return {
+      __html: text
+        .replace(/''/g, '<strong>$1</strong>') // Bold
+    };
+  }
+
+  const formatNotificationBody = (text) => {
+    return {
+      __html: text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold
+    };
   };
-}
-const formatNotificationBody = (text) => {
-  return {
-    __html: text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold
-  };
-};
 
   const fetchNotifications = async () => {
     try {
@@ -594,32 +628,46 @@ const formatNotificationBody = (text) => {
   };
 
   const clearAllNotifications = async () => {
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: 'This will delete all notifications and cannot be undone!',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete all',
-  });
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will delete all notifications and cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete all',
+      background: isDark ? '#1f2937' : '#ffffff',
+      color: isDark ? '#f59e0b' : '#9a3412',
+    });
 
-  if (result.isConfirmed) {
-    try {
-      await axios(`${backend_url}/api/notifications/clear-all`, {
-        method: 'DELETE',
-      });
+    if (result.isConfirmed) {
+      try {
+        await axios(`${backend_url}/api/notifications/clear-all`, {
+          method: 'DELETE',
+        });
 
-      setNotifications([]);
-      setSelectedNotification(null);
+        setNotifications([]);
+        setSelectedNotification(null);
 
-      Swal.fire('Deleted!', 'All notifications have been cleared.', 'success');
-    } catch (error) {
-      console.error('Error clearing all notifications:', error);
-      Swal.fire('Error', 'Failed to clear notifications.', 'error');
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'All notifications have been cleared.',
+          icon: 'success',
+          background: isDark ? '#1f2937' : '#ffffff',
+          color: isDark ? '#f59e0b' : '#9a3412',
+        });
+      } catch (error) {
+        console.error('Error clearing all notifications:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to clear notifications.',
+          icon: 'error',
+          background: isDark ? '#1f2937' : '#ffffff',
+          color: isDark ? '#f59e0b' : '#9a3412',
+        });
+      }
     }
-  }
-};
+  };
 
   const filteredNotifications = notifications.filter(notif => {
     if (filter === 'unread') return !notif.isRead;
@@ -674,7 +722,7 @@ const formatNotificationBody = (text) => {
 
   if (loading) {
     return (
-      <div style={styles.container}>
+      <div className="container-not">
         <div style={styles.loadingContainer}>
           <div style={styles.loadingSpinner}></div>
         </div>
@@ -803,10 +851,9 @@ const formatNotificationBody = (text) => {
                       </h3>
                       
                       <p
-  style={styles.notificationBody}
-  dangerouslySetInnerHTML={formatNotificationBody(notification.body)}
-/>
-
+                        style={styles.notificationBody}
+                        dangerouslySetInnerHTML={formatNotificationBody(notification.body)}
+                      />
                       
                       <div style={styles.notificationMeta}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -860,7 +907,6 @@ const formatNotificationBody = (text) => {
                   {selectedNotification.title}
                 </h3>
                 <p style={styles.detailText} dangerouslySetInnerHTML={formatBody(selectedNotification.body)} />
-
               </div>
               
               {selectedNotification.data?.fullQuote && (
@@ -870,12 +916,11 @@ const formatNotificationBody = (text) => {
                     Sacred Verse
                   </h4>
                   <div style={styles.quoteBox}>
-  <p
-    style={styles.quoteText}
-    dangerouslySetInnerHTML={renderFormattedQuote(selectedNotification.data.fullQuote)}
-  />
-</div>
-
+                    <p
+                      style={styles.quoteText}
+                      dangerouslySetInnerHTML={renderFormattedQuote(selectedNotification.data.fullQuote)}
+                    />
+                  </div>
                 </div>
               )}
               
