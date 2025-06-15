@@ -248,13 +248,7 @@ const setupNotificationListeners = (navigate) => {
     // Add transition effect and navigate
     addPageTransitionEffect();
     
-    setTimeout(() => {
-      if (navigate) {
-        navigate('/notifications');
-      } else {
-        window.location.href = '/notifications';
-      }
-    }, 200);
+  window.location.href = '/notifications';
   });
 };
 
@@ -362,12 +356,7 @@ window.handleNotificationClick = () => {
 
   // Delay navigation slightly to allow for smooth transition
   setTimeout(() => {
-    if (window.notificationNavigate) {
-      window.notificationNavigate('/notifications');
-    } else {
-      // Only fallback if necessary
-      window.location.assign('/notifications'); // safer than href
-    }
+    window.location.href = '/notifications';
   }, 300);
 };
 
