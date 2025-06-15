@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { ThemeContext } from "./ThemeContext";
-import "./hihu.css"; 
+// import "./hihu.css"; 
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
