@@ -651,8 +651,43 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
   background-color: #facc15; /* glowing yellow */
   box-shadow: 0 0 6px rgba(250, 204, 21, 0.4);
 }
+.popup-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
 
-/* Mobile Responsive Design - Key Fixes */
+/* 🌞 Light Theme */
+.popup-title.light {
+  color: #9a3412; 
+}
+.popup-title.light:hover {
+  text-shadow: 0 0 10px rgba(154, 52, 18, 0.5);
+}
+.popup-title.light span {
+  color: #b45309; 
+  font-weight: 500;
+  font-size: 90%;
+}
+
+/* 🌙 Dark Theme */
+.popup-title.dark {
+  color: #fb923c; /* Vibrant warm orange */
+  text-shadow: 0 0 6px rgba(251, 146, 60, 0.3); /* subtle glow */
+}
+
+.popup-title.dark span {
+  color: #fdba74; 
+  font-weight: 500;
+  font-size: 90%;
+}
+.popup-title.dark:hover {
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+}
+
+
 @media (max-width: 480px) {
   /* Fix theme navigation container */
   .theme-navigation {

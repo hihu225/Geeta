@@ -250,14 +250,6 @@ const AccountSettings = () => {
       fontSize: "48px",
       marginBottom: "16px",
     },
-
-    popupTitle: {
-      fontSize: "20px",
-      fontWeight: "700",
-      marginBottom: "12px",
-      color: "yellow"
-    },
-
     popupMessage: {
       fontSize: "15px",
       color: "#c2410c",
@@ -794,7 +786,7 @@ const handleCloseModal = (setter) => {
         <div style={styles.popupOverlay} onClick={handleDemoPopupClose}>
           <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
             <div style={styles.popupIcon}>🕉️</div>
-            <h3 style={styles.popupTitle}>Demo Seeker Account</h3>
+            <h3 className={`popup-title ${theme}`}>Demo Seeker Account</h3>
             <p style={styles.popupMessage}>
               Your demo spiritual journey will naturally conclude in 1 hour. 
               You may simply end your session instead of deletion.
@@ -829,7 +821,7 @@ const handleCloseModal = (setter) => {
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowAboutModal)}>
     <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>🕉️</div>
-      <h3 style={styles.popupTitle}>
+      <h3 className={`popup-title ${theme}`}>
   About Geeta Gpt <br />
   <span>(Spiritual Guidance Chatbot)</span>
 </h3>
@@ -873,7 +865,7 @@ const handleCloseModal = (setter) => {
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowPrivacyModal)}>
     <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>🔒</div>
-      <h3 style={styles.popupTitle}>Privacy & Data Protection</h3>
+      <h3 className={`popup-title ${theme}`}>Privacy & Data Protection</h3>
       <div style={styles.modalContent}>
         <p style={styles.modalText}>
           <strong>Your Privacy Matters:</strong><br/>
@@ -913,7 +905,7 @@ const handleCloseModal = (setter) => {
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowFeedbackModal)}>
     <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>💭</div>
-      <h3 style={styles.popupTitle}>Share Your Experience</h3>
+      <h3 className={`popup-title ${theme}`}>Share Your Experience</h3>
       <div style={styles.modalContent}>
         <p style={styles.modalText}>
           Your feedback helps us improve the spiritual guidance experience for all seekers.
