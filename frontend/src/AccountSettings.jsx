@@ -246,17 +246,6 @@ const AccountSettings = () => {
       padding: "20px",
     },
 
-    popupContainer: {
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      padding: "32px",
-      maxWidth: "420px",
-      width: "100%",
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      border: "1px solid #fed7aa",
-      textAlign: "center",
-    },
-
     popupIcon: {
       fontSize: "48px",
       marginBottom: "16px",
@@ -265,7 +254,6 @@ const AccountSettings = () => {
     popupTitle: {
       fontSize: "20px",
       fontWeight: "700",
-      color: "#9a3412",
       marginBottom: "12px",
     },
 
@@ -348,7 +336,6 @@ modalContent: {
 
 modalText: {
   fontSize: "15px",
-  color: "#c2410c",
   lineHeight: "1.6",
   marginBottom: "16px",
 },
@@ -804,7 +791,7 @@ const handleCloseModal = (setter) => {
       {/* Demo Account Popup */}
       {showDemoPopup && (
         <div style={styles.popupOverlay} onClick={handleDemoPopupClose}>
-          <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+          <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
             <div style={styles.popupIcon}>🕉️</div>
             <h3 style={styles.popupTitle}>Demo Seeker Account</h3>
             <p style={styles.popupMessage}>
@@ -839,7 +826,7 @@ const handleCloseModal = (setter) => {
       {/* About Modal */}
 {showAboutModal && (
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowAboutModal)}>
-    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>🕉️</div>
       <h3 style={styles.popupTitle}>
   About Geeta Gpt <br />
@@ -883,7 +870,7 @@ const handleCloseModal = (setter) => {
 {/* Privacy Modal */}
 {showPrivacyModal && (
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowPrivacyModal)}>
-    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>🔒</div>
       <h3 style={styles.popupTitle}>Privacy & Data Protection</h3>
       <div style={styles.modalContent}>
@@ -923,7 +910,7 @@ const handleCloseModal = (setter) => {
 {/* Feedback Modal */}
 {showFeedbackModal && (
   <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowFeedbackModal)}>
-    <div style={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
+    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
       <div style={styles.popupIcon}>💭</div>
       <h3 style={styles.popupTitle}>Share Your Experience</h3>
       <div style={styles.modalContent}>

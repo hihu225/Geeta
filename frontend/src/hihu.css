@@ -607,6 +607,50 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
 .theme-details-container[data-theme="action"] .krishna-advice-container h3 {
   color: #FF6B3D;
 }
+.popup-container.light {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+.popup-container.dark {
+  background-color: #1e1e1e;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(255, 255, 255, 0.04),
+              0 10px 10px -5px rgba(255, 255, 255, 0.02);
+  border: 1px solid #444;
+  color: #fcd34d; /* Soft golden-yellow */
+}
+.popup-container.light::before,
+.popup-container.dark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 5px;
+  border-radius: 4px;
+}
+
+.popup-container.light::before {
+  background-color: #f97316; /* orange */
+  box-shadow: 0 0 6px rgba(251, 146, 60, 0.3);
+}
+
+.popup-container.dark::before {
+  background-color: #facc15; /* glowing yellow */
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.4);
+}
 
 /* Mobile Responsive Design - Key Fixes */
 @media (max-width: 480px) {
