@@ -255,6 +255,7 @@ const AccountSettings = () => {
       fontSize: "20px",
       fontWeight: "700",
       marginBottom: "12px",
+      color: "yellow"
     },
 
     popupMessage: {

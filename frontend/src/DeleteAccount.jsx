@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import { toast } from "react-toastify";
 import { backend_url } from "./utils/backend";
 import { StorageService } from "./utils/storage";
-
+import { ThemeContext } from "./ThemeContext";
 const DeleteAccount = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
@@ -16,7 +16,7 @@ const DeleteAccount = () => {
   const [deleteMethod, setDeleteMethod] = useState("password"); // "password" or "otp"
   const [otpSent, setOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
-
+  const { theme } = useContext(ThemeContext);
   // Enhanced styles
   const styles = {
     overlay: {
@@ -32,23 +32,6 @@ const DeleteAccount = () => {
       alignItems: "center",
       zIndex: 2000,
       animation: "fadeIn 0.2s ease-out",
-    },
-    
-    modal: {
-      background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
-      padding: "32px",
-      borderRadius: "16px",
-      width: "450px",
-      maxWidth: "90vw",
-      boxShadow: `
-        0 20px 40px rgba(0, 0, 0, 0.15),
-        0 8px 16px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(255, 255, 255, 0.05)
-      `,
-      textAlign: "center",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
-      position: "relative",
-      animation: "slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
     },
     
     title: {
@@ -118,7 +101,7 @@ const DeleteAccount = () => {
       display: "block",
       fontSize: "14px",
       fontWeight: "600",
-      color: "#374151",
+      color: "#6b7280",
       marginBottom: "8px",
     },
 
@@ -231,6 +214,60 @@ const DeleteAccount = () => {
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.textContent = `
+    .modal {
+  padding: 32px;
+  border-radius: 16px;
+  width: 450px;
+  max-width: 90vw;
+  text-align: center;
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* 🌞 Light Theme */
+.modal.light {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #fed7aa;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #9a3412;
+}
+
+/* 🌙 Dark Theme */
+.modal.dark {
+  background: rgba(44, 44, 44, 0.85);
+  backdrop-filter: blur(14px);
+  border: 1px solid #facc15;
+  box-shadow:
+    0 20px 40px rgba(250, 204, 21, 0.08),
+    0 8px 16px rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #fcd34d;
+}
+
+/* Optional: Modal Heading/Text */
+.modal .title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* Optional: Modal animation */
+@keyframes slideUp {
+  0% {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -426,7 +463,7 @@ localStorage.clear();
     <>
       {showModal && (
         <div style={styles.overlay} onClick={!isDeleting ? handleCancel : undefined}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={`modal ${theme}`} onClick={(e) => e.stopPropagation()}>
             <h3 style={styles.title}>⚠️ Delete Account</h3>
             <p style={styles.message}>
               This action cannot be undone. Your account and all associated data will be permanently deleted.
