@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { StorageService } from "./utils/storage";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { backend_url} from "./utils/backend";
+import { ThemeContext } from "./ThemeContext";
 const Logout = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
-
+  const { theme } = useContext(ThemeContext);
   // Enhanced styles
   const styles = {
     overlay: {
@@ -25,27 +26,10 @@ const Logout = () => {
       animation: "fadeIn 0.2s ease-out",
     },
     
-    modal: {
-      background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
-      padding: "32px",
-      borderRadius: "16px",
-      width: "380px",
-      maxWidth: "90vw",
-      boxShadow: `
-        0 20px 40px rgba(0, 0, 0, 0.15),
-        0 8px 16px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(255, 255, 255, 0.05)
-      `,
-      textAlign: "center",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
-      position: "relative",
-      animation: "slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-    },
     
     title: {
       fontSize: "24px",
       fontWeight: "700",
-      color: "#1a1a1a",
       marginBottom: "8px",
       letterSpacing: "-0.5px",
     },
@@ -101,6 +85,39 @@ const Logout = () => {
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.textContent = `
+    .modal {
+  padding: 32px;
+  border-radius: 18px;
+  width: 380px;
+  max-width: 90vw;
+  text-align: center;
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Light Theme */
+.modal.light {
+  background: linear-gradient(135deg, #fffdf6, #fff7ed);
+  color: #9a3412;
+  border: 1px solid #fcd34d;
+  box-shadow:
+    0 15px 35px rgba(154, 52, 18, 0.1),
+    0 8px 16px rgba(154, 52, 18, 0.05);
+}
+
+/* Dark Theme */
+.modal.dark {
+  background: rgba(44, 44, 44, 0.85);
+  backdrop-filter: blur(12px);
+  color: #fcd34d;
+  border: 1px solid #facc15;
+  box-shadow:
+    0 20px 40px rgba(250, 204, 21, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -214,7 +231,7 @@ const Logout = () => {
     <>
       {showModal && (
         <div style={styles.overlay} onClick={handleCancel}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={`modal ${theme}`} onClick={(e) => e.stopPropagation()}>
             <h3 style={styles.title}>Confirm Logout</h3>
             <p style={styles.message}>
               Are you sure you want to log out of your account?
