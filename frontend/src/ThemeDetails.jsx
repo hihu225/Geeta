@@ -1,13 +1,13 @@
 import {useContext } from "react";
 import { ThemeContext } from "./ThemeContext";
-const theme=useContext(ThemeContext);
+
 const ThemeDetails = ({ themeData, onClose }) => {
   if (!themeData) return null;
-  
+  const theme=useContext(ThemeContext);
   const { name, description, verses, krishnaAdvice } = themeData;
   
   return (
-    <div className={`theme-details-container ${theme}`}>
+    <div className={"theme-details-container"}>
       <div className="theme-details-header">
         <h2>{name}</h2>
         <button className="close-button" onClick={onClose}>×</button>
