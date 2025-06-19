@@ -694,6 +694,7 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
     padding: 0.75rem 0.5rem;
     border-radius: 8px;
     width: 100%; 
+    max-width: 320px; 
   }
 
   /* Improve theme heading visibility */
