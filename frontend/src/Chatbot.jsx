@@ -1546,6 +1546,7 @@ const getISTGreeting = () => {
   const [selectMode, setSelectMode] = useState(false);
   const [showThemeSection, setShowThemeSection] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(null);
+  const [themeData, setThemeData] = useState(null);
   const { theme, setTheme } = useContext(ThemeContext);
   const [loadingStates, setLoadingStates] = useState({});
   // Add ref for auto-
