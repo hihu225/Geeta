@@ -50,8 +50,8 @@ button.scroll-to-top:hover {
   border: 1px solid #F0E3C0;
 }
 
-body.dark-theme .krishna-advice-container p {
-  background-color: #252525;
+body.dark .krishna-advice-container p {
+  background-color: #1E2E24;
   border: 1px solid #3D3420;
 }
 
@@ -61,13 +61,12 @@ body.dark-theme .krishna-advice-container p {
   max-width: 1000px;
   margin: 0.5rem auto 1rem auto;
   padding: 1rem 0.75rem;
-  background-color: var(--navigation-bg);
+  background: var(--navigation-bg);
   border-radius: 12px;
   border: var(--border-style);
   box-shadow: var(--box-shadow);
   transition: all 0.3s ease;
   overflow-x: hidden;
-  
 }
 
 .theme-heading {
@@ -223,8 +222,8 @@ body.dark-theme .krishna-advice-container p {
   border: 1px solid #F0E3C0;
 }
 
-body.dark-theme .theme-description {
-  background-color: #252525;
+body.dark .theme-description {
+  background-color:  #4A2A36;;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid #3D3420;
 }
@@ -240,7 +239,7 @@ body.dark-theme .theme-description {
   box-sizing: border-box;
 }
 
-body.dark-theme .krishna-advice-container {
+body.dark .krishna-advice-container {
   background-color: #2A2518;
 }
 
@@ -273,8 +272,8 @@ body.dark-theme .krishna-advice-container {
   box-sizing: border-box;
 }
 
-body.dark-theme .verse-card {
-  background-color: #252525;
+body.dark .verse-card {
+  background-color: #2A2518;
   border: 1px solid #3D3420;
 }
 
@@ -321,6 +320,12 @@ body.dark-theme .verse-card {
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+.verse-relevance-text {
+  font-weight: 500;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--relevance-text-color); 
 }
 
 .verse-relevance h5 {
@@ -385,73 +390,69 @@ body.dark-theme .verse-card {
 
 /* CSS Variables for Theme Switching */
 :root {
-  /* Light theme variables */
-  --light-bg-primary: rgba(255, 252, 240, 0.97);
-  --light-bg-secondary: #F0E3C0;
-  --light-heading: #333333;
-  --light-text-primary: #2A2A2A;
-  --light-text-secondary: #5A5A5A;
-  --light-border-color: #E6C87F;
-  --light-card-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  --light-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-  --light-box-shadow: 0 10px 25px rgba(139, 0, 0, 0.12), 0 6px 12px rgba(139, 0, 0, 0.08);
-  --light-scrollbar: rgba(0, 0, 0, 0.3);
-  --light-shloka-bg: #E8F5E9;
-  --light-relevance-bg: #4A2C2A;
-  --light-relevance-heading: #b8860b;
-  --light-krishna-advice-bg: #F5EDD8;
-  --light-border-style: 2px solid #D4A017;
-  --light-shloka-border: 1px solid #E6D5B8;
+  /* Light theme colors */
+  --light-bg-primary: #F5F5F5;
+  --light-bg-secondary: rgba(248, 245, 230, 0.9);
+  --light-heading: #2C1810;
+  --light-text-primary: #1A1A1A;
+  --light-text-secondary: #4A4A4A;
+  --light-border-color: #D4A017;
+  --light-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --light-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --light-box-shadow: 0 8px 20px rgba(212, 160, 23, 0.15), 0 4px 8px rgba(212, 160, 23, 0.08);
+  --light-scrollbar: rgba(212, 160, 23, 0.4);
+  --light-shloka-bg: rgba(245, 237, 216, 0.8);
+  --light-relevance-bg: rgba(245, 237, 216, 0.9);
+  --light-relevance-heading: #8B4513;
+  --light-krishna-advice-bg: rgba(255, 248, 225, 0.9);
+  --light-border-style: 1px solid rgba(212, 160, 23, 0.3);
+  --light-shloka-border: 1px solid rgba(212, 160, 23, 0.2);
   --light-accent-hover-color: #B8860B;
-  
-  /* Theme-specific background colors - Light mode */
-  --light-theme-duty-bg: #EAEFFF;
-  --light-theme-knowledge-bg: #E6FAF0;
-  --light-theme-love-bg: #FEE6F0;
-  --light-theme-devotion-bg: #FFF5DB;
-  --light-theme-action-bg: #FFF0E6;
-  
-  /* Theme-specific advice backgrounds - Light mode */
-  --light-theme-duty-advice-bg: #DCE4FF;
-  --light-theme-knowledge-advice-bg: #D0F2E6;
-  --light-theme-love-advice-bg: #FFDAEA;
-  --light-theme-devotion-advice-bg: #F5E9C2;
-  --light-theme-action-advice-bg: #FFE0D0;
-  
-  /* Dark theme variables */
-  --dark-bg-primary: rgba(30, 30, 30, 0.97);
-  --dark-bg-secondary: #242424;
-  --dark-heading: #FFE0B2;
-  --dark-text-primary: #F0F0F0;
-  --dark-text-secondary: #BDBDBD;
-  --dark-border-color: #664D00;
-  --dark-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --dark-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-  --dark-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 6px 12px rgba(0, 0, 0, 0.25);
-  --dark-scrollbar: rgba(255, 255, 255, 0.3);
-  --dark-shloka-bg: #2A2A2A;
-  --dark-relevance-bg: #1A365D;
-  --dark-relevance-heading: #77BBFF;
-  --dark-krishna-advice-bg: #3A3020;
-  --dark-border-style: 2px solid #9F7200;
-  --dark-shloka-border: 1px solid #4A4A4A;
-  --dark-accent-hover-color: #C99700;
-  
-  /* Theme-specific background colors - Dark mode */
-  --dark-theme-duty-bg: #1A2366;
-  --dark-theme-knowledge-bg: #163D25;
-  --dark-theme-love-bg: #441529;
-  --dark-theme-devotion-bg: #3D2F14;
-  --dark-theme-action-bg: #3D2010;
-  
-  /* Theme-specific advice backgrounds - Dark mode */
-  --dark-theme-duty-advice-bg: #2A3380;
-  --dark-theme-knowledge-advice-bg: #1E4D30;
-  --dark-theme-love-advice-bg: #5A1F34;
-  --dark-theme-devotion-advice-bg: #4D3C20;
-  --dark-theme-action-advice-bg: #4D2918;
+  --relevance-text-color: black;
+  --light-theme-duty-bg: rgba(234, 239, 255, 0.85);
+  --light-theme-knowledge-bg: rgba(230, 250, 240, 0.85);
+  --light-theme-love-bg: rgba(254, 230, 240, 0.85);
+  --light-theme-devotion-bg: rgba(255, 245, 219, 0.85);
+  --light-theme-action-bg: rgba(255, 240, 230, 0.85);
 
-  /* Default to light theme */
+  --light-theme-duty-advice-bg: rgba(220, 228, 255, 0.9);
+  --light-theme-knowledge-advice-bg: rgba(208, 242, 230, 0.9);
+  --light-theme-love-advice-bg: rgba(255, 218, 234, 0.9);
+  --light-theme-devotion-advice-bg: rgba(245, 233, 194, 0.9);
+  --light-theme-action-advice-bg: rgba(255, 224, 208, 0.9);
+
+  /* Dark theme colors */
+  --dark-bg-primary: rgba(42, 42, 42, 0.95);
+  --dark-bg-secondary: rgba(35, 35, 35, 0.9);
+  --dark-heading: #FFE4B5;
+  --dark-text-primary: #F5F5F5;
+  --dark-text-secondary: #BDBDBD;
+  --dark-border-color: #8B6914;
+  --dark-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --dark-hover-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --dark-box-shadow: 0 8px 20px rgba(139, 105, 20, 0.2), 0 4px 8px rgba(139, 105, 20, 0.1);
+  --dark-scrollbar: rgba(255, 184, 28, 0.4);
+  --dark-shloka-bg: rgba(45, 42, 35, 0.85);
+  --dark-relevance-bg: rgba(45, 45, 45, 0.9);
+  --dark-relevance-heading: #FFB81C;
+  --dark-krishna-advice-bg: rgba(58, 48, 32, 0.9);
+  --dark-border-style: 1px solid rgba(139, 105, 20, 0.4);
+  --dark-shloka-border: 1px solid rgba(139, 105, 20, 0.3);
+  --dark-accent-hover-color: #C99700;
+
+  --dark-theme-duty-bg: rgba(26, 35, 102, 0.85);
+  --dark-theme-knowledge-bg: rgba(22, 61, 37, 0.85);
+  --dark-theme-love-bg: rgba(68, 21, 41, 0.85);
+  --dark-theme-devotion-bg: rgba(61, 47, 20, 0.85);
+  --dark-theme-action-bg: rgba(61, 32, 16, 0.85);
+
+  --dark-theme-duty-advice-bg: rgba(42, 51, 128, 0.9);
+  --dark-theme-knowledge-advice-bg: rgba(30, 77, 48, 0.9);
+  --dark-theme-love-advice-bg: rgba(90, 31, 52, 0.9);
+  --dark-theme-devotion-advice-bg: rgba(77, 60, 32, 0.9);
+  --dark-theme-action-advice-bg: rgba(77, 41, 24, 0.9);
+
+  /* Fallbacks (default light values) */
   --navigation-bg: var(--light-bg-secondary);
   --heading-color: var(--light-heading);
   --text-primary: var(--light-text-primary);
@@ -470,15 +471,11 @@ body.dark-theme .verse-card {
   --shloka-border: var(--light-shloka-border);
   --accent-color: #FFB81C;
   --accent-hover-color: var(--light-accent-hover-color);
-  
-  /* Theme-specific backgrounds - Default to light */
   --theme-duty-bg: var(--light-theme-duty-bg);
   --theme-knowledge-bg: var(--light-theme-knowledge-bg);
   --theme-love-bg: var(--light-theme-love-bg);
   --theme-devotion-bg: var(--light-theme-devotion-bg);
   --theme-action-bg: var(--light-theme-action-bg);
-  
-  /* Theme-specific advice backgrounds - Default to light */
   --theme-duty-advice-bg: var(--light-theme-duty-advice-bg);
   --theme-knowledge-advice-bg: var(--light-theme-knowledge-advice-bg);
   --theme-love-advice-bg: var(--light-theme-love-advice-bg);
@@ -486,10 +483,43 @@ body.dark-theme .verse-card {
   --theme-action-advice-bg: var(--light-theme-action-advice-bg);
 }
 
-/* Dark theme class to be toggled with JavaScript */
-body.dark-theme {
+/* Light theme override */
+.light {
+  --navigation-bg: var(--light-bg-secondary);
+  --heading-color: var(--light-heading);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --border-color: var(--light-border-color);
+  --card-bg: var(--light-bg-primary);
+  --card-shadow: var(--light-card-shadow);
+  --card-hover-shadow: var(--light-hover-shadow);
+  --box-shadow: var(--light-box-shadow);
+  --scrollbar-color: var(--light-scrollbar);
+  --shloka-bg: var(--light-shloka-bg);
+  --relevance-bg: var(--light-relevance-bg);
+  --relevance-heading: var(--light-relevance-heading);
+  --krishna-advice-bg: var(--light-krishna-advice-bg);
+  --border-style: var(--light-border-style);
+  --shloka-border: var(--light-shloka-border);
+  --accent-hover-color: var(--light-accent-hover-color);
+
+  --theme-duty-bg: var(--light-theme-duty-bg);
+  --theme-knowledge-bg: var(--light-theme-knowledge-bg);
+  --theme-love-bg: var(--light-theme-love-bg);
+  --theme-devotion-bg: var(--light-theme-devotion-bg);
+  --theme-action-bg: var(--light-theme-action-bg);
+  --theme-duty-advice-bg: var(--light-theme-duty-advice-bg);
+  --theme-knowledge-advice-bg: var(--light-theme-knowledge-advice-bg);
+  --theme-love-advice-bg: var(--light-theme-love-advice-bg);
+  --theme-devotion-advice-bg: var(--light-theme-devotion-advice-bg);
+  --theme-action-advice-bg: var(--light-theme-action-advice-bg);
+}
+
+/* Dark theme override */
+.dark {
   --navigation-bg: var(--dark-bg-secondary);
   --heading-color: var(--dark-heading);
+  --relevance-text-color: white;
   --text-primary: var(--dark-text-primary);
   --text-secondary: var(--dark-text-secondary);
   --border-color: var(--dark-border-color);
@@ -504,17 +534,13 @@ body.dark-theme {
   --krishna-advice-bg: var(--dark-krishna-advice-bg);
   --border-style: var(--dark-border-style);
   --shloka-border: var(--dark-shloka-border);
-  --accent-color: #FFB81C;
   --accent-hover-color: var(--dark-accent-hover-color);
-  
-  /* Theme-specific backgrounds - Dark mode */
+
   --theme-duty-bg: var(--dark-theme-duty-bg);
   --theme-knowledge-bg: var(--dark-theme-knowledge-bg);
   --theme-love-bg: var(--dark-theme-love-bg);
   --theme-devotion-bg: var(--dark-theme-devotion-bg);
   --theme-action-bg: var(--dark-theme-action-bg);
-  
-  /* Theme-specific advice backgrounds - Dark mode */
   --theme-duty-advice-bg: var(--dark-theme-duty-advice-bg);
   --theme-knowledge-advice-bg: var(--dark-theme-knowledge-advice-bg);
   --theme-love-advice-bg: var(--dark-theme-love-advice-bg);
@@ -522,18 +548,19 @@ body.dark-theme {
   --theme-action-advice-bg: var(--dark-theme-action-advice-bg);
 }
 
+
 /* Theme-specific styling */
 .theme-details-container[data-theme="duty"] {
   background-color: var(--theme-duty-bg);
 }
 
 .theme-details-container[data-theme="duty"] .krishna-advice-container {
-  background-color: #EDF0FF;
+  background-color: rgba(237, 240, 255, 0.9);
   border-left-color: #5163FF;
 }
 
-body.dark-theme .theme-details-container[data-theme="duty"] .krishna-advice-container {
-  background-color: #1E234F;
+body.dark .theme-details-container[data-theme="duty"] .krishna-advice-container {
+  background-color: rgba(30, 35, 79, 0.9);
 }
 
 .theme-details-container[data-theme="duty"] .krishna-advice-container h3 {
@@ -545,12 +572,12 @@ body.dark-theme .theme-details-container[data-theme="duty"] .krishna-advice-cont
 }
 
 .theme-details-container[data-theme="knowledge"] .krishna-advice-container {
-  background-color: #E0F8EE;
+  background-color: rgba(224, 248, 238, 0.9);
   border-left-color: #0ECC78;
 }
 
-body.dark-theme .theme-details-container[data-theme="knowledge"] .krishna-advice-container {
-  background-color: #1A3D2A;
+body.dark .theme-details-container[data-theme="knowledge"] .krishna-advice-container {
+  background-color: rgba(26, 61, 42, 0.9);
 }
 
 .theme-details-container[data-theme="knowledge"] .krishna-advice-container h3 {
@@ -562,12 +589,12 @@ body.dark-theme .theme-details-container[data-theme="knowledge"] .krishna-advice
 }
 
 .theme-details-container[data-theme="love"] .krishna-advice-container {
-  background-color: #FFECF5;
+  background-color: rgba(255, 236, 245, 0.9);
   border-left-color: #FF4C96;
 }
 
-body.dark-theme .theme-details-container[data-theme="love"] .krishna-advice-container {
-  background-color: #3D1A2A;
+body.dark .theme-details-container[data-theme="love"] .krishna-advice-container {
+  background-color: rgba(61, 26, 42, 0.9);
 }
 
 .theme-details-container[data-theme="love"] .krishna-advice-container h3 {
@@ -579,12 +606,12 @@ body.dark-theme .theme-details-container[data-theme="love"] .krishna-advice-cont
 }
 
 .theme-details-container[data-theme="devotion"] .krishna-advice-container {
-  background-color: #FFF8E6;
+  background-color: rgba(255, 248, 230, 0.9);
   border-left-color: #FFB81C;
 }
 
-body.dark-theme .theme-details-container[data-theme="devotion"] .krishna-advice-container {
-  background-color: #3D3420;
+body.dark .theme-details-container[data-theme="devotion"] .krishna-advice-container {
+  background-color: rgba(61, 52, 32, 0.9);
 }
 
 .theme-details-container[data-theme="devotion"] .krishna-advice-container h3 {
@@ -596,17 +623,18 @@ body.dark-theme .theme-details-container[data-theme="devotion"] .krishna-advice-
 }
 
 .theme-details-container[data-theme="action"] .krishna-advice-container {
-  background-color: #FFF0E8;
+  background-color: rgba(255, 240, 232, 0.9);
   border-left-color: #FF6B3D;
 }
 
-body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-container {
-  background-color: #3D2010;
+body.dark .theme-details-container[data-theme="action"] .krishna-advice-container {
+  background-color: rgba(61, 32, 16, 0.9);
 }
 
 .theme-details-container[data-theme="action"] .krishna-advice-container h3 {
   color: #FF6B3D;
 }
+
 .popup-container.light {
   background-color: #ffffff;
   border-radius: 16px;
@@ -619,6 +647,7 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
   border: 1px solid #fed7aa;
   color: #9a3412;
 }
+
 .popup-container.dark {
   background-color: #1e1e1e;
   border-radius: 16px;
@@ -629,8 +658,9 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
   box-shadow: 0 20px 25px -5px rgba(255, 255, 255, 0.04),
               0 10px 10px -5px rgba(255, 255, 255, 0.02);
   border: 1px solid #444;
-  color: #fcd34d; /* Soft golden-yellow */
+  color: #fcd34d;
 }
+
 .popup-container.light::before,
 .popup-container.dark::before {
   content: "";
@@ -643,14 +673,15 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
 }
 
 .popup-container.light::before {
-  background-color: #f97316; /* orange */
+  background-color: #f97316;
   box-shadow: 0 0 6px rgba(251, 146, 60, 0.3);
 }
 
 .popup-container.dark::before {
-  background-color: #facc15; /* glowing yellow */
+  background-color: #facc15;
   box-shadow: 0 0 6px rgba(250, 204, 21, 0.4);
 }
+
 .popup-title {
   font-size: 20px;
   font-weight: 700;
@@ -674,8 +705,8 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
 
 /* 🌙 Dark Theme */
 .popup-title.dark {
-  color: #fb923c; /* Vibrant warm orange */
-  text-shadow: 0 0 6px rgba(251, 146, 60, 0.3); /* subtle glow */
+  color: #fb923c;
+  text-shadow: 0 0 6px rgba(251, 146, 60, 0.3);
 }
 
 .popup-title.dark span {
@@ -686,8 +717,6 @@ body.dark-theme .theme-details-container[data-theme="action"] .krishna-advice-co
 .popup-title.dark:hover {
   text-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
 }
-
-
 @media (max-width: 480px) {
   /* Fix theme navigation container */
   .theme-navigation {

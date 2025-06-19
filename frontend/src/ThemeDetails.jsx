@@ -3,9 +3,10 @@ import { ThemeContext } from "./ThemeContext";
 
 const ThemeDetails = ({ themeData, onClose }) => {
   if (!themeData) return null;
-  const theme=useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const { name, description, verses, krishnaAdvice } = themeData;
-  
+  console.log("theme from context:", theme);
+
   return (
     <div className={"theme-details-container"}>
       <div className="theme-details-header">
@@ -48,14 +49,10 @@ const ThemeDetails = ({ themeData, onClose }) => {
             
             <div className="verse-relevance">
               <h5>Why this verse?</h5>
-              <p style={{
-                    fontWeight: 500,             
-                    fontSize: '1.05rem',         
-                    lineHeight: '1.6',           
-                    color: 'white'       
-                  }}>
-              {verse.relevance}
-              </p>
+              <p className="verse-relevance-text">
+  {verse.relevance}
+</p>
+
 
             </div>
           </div>
