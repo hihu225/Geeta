@@ -78,7 +78,7 @@ const saveTokenToBackend = async (token) => {
   try {
     tokenSaveInProgress = true;
     const authToken = Cookies.get("token");
-    
+    console.log("Auth Token from Cookie:", authToken);
     const response = await axios.post(
       `${backend_url}/api/notifications/save-token`,
       { token: token },
@@ -97,8 +97,12 @@ const saveTokenToBackend = async (token) => {
       currentFCMToken = token;
     }
   } catch (backendError) {
-    console.error("Failed to save token to backend:", backendError);
-    throw backendError;
+  if (backendError.response) {
+    console.error("Backend response error:", backendError.response.data);
+    console.error("Status code:", backendError.response.status);
+  } else {
+    console.error("Token save error:", backendError.message);
+  }
   } finally {
     tokenSaveInProgress = false;
   }
