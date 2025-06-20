@@ -134,9 +134,8 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
       });
 
       const today = new Date();
-      const fileName = `BhagavadGita_Wisdom_${today
-        .toLocaleDateString()
-        .replace(/\//g, "-")}.pdf`;
+      const fileName = `BhagavadGita_Wisdom_${today.toISOString().slice(0, 10)}.pdf`;
+
 
       if (
         Capacitor.getPlatform() === "android" ||
@@ -144,12 +143,12 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
       ) {
         const pdfOutput = doc.output("datauristring");
         const base64 = pdfOutput.split(",")[1];
-
+        await Filesystem.requestPermissions();
         // Save PDF to device
         await Filesystem.writeFile({
           path: fileName,
           data: base64,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
 
         // Show success message first
@@ -210,7 +209,7 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
         if (result.isConfirmed) {
           try {
             const fileUri = await Filesystem.getUri({
-              directory: Directory.Documents,
+              directory: Directory.Data,
               path: fileName,
             });
 
