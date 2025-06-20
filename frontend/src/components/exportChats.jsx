@@ -133,8 +133,9 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
         align: "center",
       });
 
-      const today = new Date();
-      const fileName = `BhagavadGita_Wisdom_${today.toISOString().slice(0, 10)}.pdf`;
+      const timestamp = today.toISOString().replace(/[:.]/g, "-");
+const fileName = `BhagavadGita_Wisdom_${timestamp}.pdf`;
+
 
 
       if (
