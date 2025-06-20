@@ -148,7 +148,7 @@ const fileName = `BhagavadGita_Wisdom_${timestamp}.pdf`;
 await Filesystem.writeFile({
   path: fileName,
   data: base64,
-  directory: Directory.External, 
+  directory: Directory.Documents, 
 });
 
         // Show success message first
@@ -209,7 +209,7 @@ await Filesystem.writeFile({
         if (result.isConfirmed) {
           try {
             const fileUri = await Filesystem.getUri({
-  directory: Directory.External,
+  directory: Directory.Documents,
   path: fileName,
 });
 
