@@ -133,10 +133,9 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
         align: "center",
       });
 
-      const timestamp = today.toISOString().replace(/[:.]/g, "-");
+      const today = new Date();
+const timestamp = today.toISOString().replace(/[:.]/g, "-");
 const fileName = `BhagavadGita_Wisdom_${timestamp}.pdf`;
-
-
 
       if (
         Capacitor.getPlatform() === "android" ||
