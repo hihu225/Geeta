@@ -143,13 +143,13 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
       ) {
         const pdfOutput = doc.output("datauristring");
         const base64 = pdfOutput.split(",")[1];
-        await Filesystem.requestPermissions();
-        // Save PDF to device
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Data,
-        });
+        await Filesystem.requestPermissions({ permissions: ['publicStorage'] });
+
+await Filesystem.writeFile({
+  path: fileName,
+  data: base64,
+  directory: Directory.External, 
+});
 
         // Show success message first
         await Swal.fire({
@@ -209,16 +209,16 @@ const exportChats = ({ chats, visibleChats,fontSize }) => {
         if (result.isConfirmed) {
           try {
             const fileUri = await Filesystem.getUri({
-              directory: Directory.Data,
-              path: fileName,
-            });
+  directory: Directory.External,
+  path: fileName,
+});
 
-            await Share.share({
-              title: "Share Bhagavad Gita PDF",
-              text: "Here is your exported conversation from Geeta GPT",
-              url: fileUri.uri,
-              dialogTitle: "Share PDF",
-            });
+await Share.share({
+  title: "Share Bhagavad Gita PDF",
+  text: "Here is your exported conversation from Geeta GPT",
+  url: fileUri.uri,
+  dialogTitle: "Share PDF",
+});
           } catch (shareError) {
             console.error("Error sharing PDF:", shareError);
             await Swal.fire({
