@@ -82,9 +82,9 @@ const saveTokenToBackend = async (token) => {
     const response = await axios.post(
       `${backend_url}/api/notifications/save-token`,
       { token: token },
-      {
-        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      }
+      // {
+      //   headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      // }
     );
     
     if (response.status === 200) {
