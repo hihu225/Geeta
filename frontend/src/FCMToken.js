@@ -78,7 +78,7 @@ const saveTokenToBackend = async (token) => {
   try {
     tokenSaveInProgress = true;
     const authToken = Cookies.get("token");
-    console.log("Auth Token from Cookie:", authToken);
+    //console.log("Auth Token from Cookie:", authToken);
     const response = await axios.post(
       `${backend_url}/api/notifications/save-token`,
       { token: token },
