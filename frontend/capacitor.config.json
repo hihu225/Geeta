@@ -1,6 +1,6 @@
 {
   "appId": "com.hihu.geetagpt",
-  "appName": "Geeta Gpt",
+  "appName": "Geeta GPT",
   "webDir": "dist",
   "plugins": {
     "SpeechRecognition": {
