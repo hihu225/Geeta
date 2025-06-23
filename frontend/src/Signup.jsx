@@ -469,6 +469,12 @@ setUser(signupData.user);
               Sign in here
             </Link>
           </p>
+          <p>
+            Know more about us?
+            <Link to="/landing">
+              Visit our landing page
+            </Link>
+          </p>
         </div>
       </div>
     </div>

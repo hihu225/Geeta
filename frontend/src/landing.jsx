@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, MessageCircle, Mic, Bell, Send, Flower } from 'lucide-react';
 import { toast } from 'react-toastify';
 const GeetaGPTLanding = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [email, setEmail] = useState('');
 
@@ -42,23 +43,31 @@ const GeetaGPTLanding = () => {
     }
   ];
 
-  // Carousel navigation
- const nextSlide = () => {
-  setCurrentSlide((prev) => (prev + 1) % features.length);
-};
-
-const prevSlide = () => {
-  setCurrentSlide((prev) => (prev - 1 + features.length) % features.length);
-};
-
-
-  // Auto-advance carousel
+  // Auto-play functionality
   useEffect(() => {
-  if (features.length > 1) {
-    const interval = setInterval(nextSlide, 5000);
+    if (!isAutoPlaying) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % features.length);
+    }, 4000);
+
     return () => clearInterval(interval);
-  }
-}, [features.length]);
+  }, [isAutoPlaying, features.length]);
+
+  const nextSlide = () => {
+    setIsAutoPlaying(false);
+    setCurrentSlide((prev) => (prev + 1) % features.length);
+  };
+
+  const prevSlide = () => {
+    setIsAutoPlaying(false);
+    setCurrentSlide((prev) => (prev - 1 + features.length) % features.length);
+  };
+
+  const goToSlide = (index) => {
+    setIsAutoPlaying(false);
+    setCurrentSlide(index);
+  };
 
   // Chat demo animation
   useEffect(() => {
@@ -195,26 +204,28 @@ const prevSlide = () => {
       </section>
 
       {/* Features Carousel */}
-      <section className="features-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Sacred Features</h2>
-            <p className="section-description">Discover the wisdom of the Gita through modern technology</p>
-          </div>
+      <div className="features-section">
+      <div className="container">
+        <div className="section-header">
+          <h2 className="section-title">Sacred Features</h2>
+          <p className="section-description">
+            Discover the wisdom of the Gita through modern technology
+          </p>
+        </div>
 
-          <div className="carousel-wrapper">
-            <div
-  className="carousel-inner"
-  style={{
-    transform: `translateX(-${currentSlide * 100}%)`,
-    width: `${features.length * 100}%`,
-  }}
->
-
+        <div className="carousel-container">
+          <div className="carousel-track-wrapper">
+            <div 
+              className="carousel-track"
+              style={{
+                transform: `translateX(-${currentSlide * 100}%)`,
+                transition: 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              }}
+            >
               {features.map((feature, index) => (
-                <div key={index} className="carousel-item">
+                <div key={index} className="carousel-slide">
                   <div className="feature-card">
-                    <div className="feature-icon-wrapper">
+                    <div className="feature-icon-container">
                       {feature.icon}
                     </div>
                     <h3 className="feature-title">{feature.title}</h3>
@@ -223,37 +234,53 @@ const prevSlide = () => {
                 </div>
               ))}
             </div>
+          </div>
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={prevSlide}
-              className="carousel-nav-btn carousel-nav-prev"
-              aria-label="Previous Feature"
-            >
-              <ChevronLeft className="carousel-arrow-icon" />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="carousel-nav-btn carousel-nav-next"
-              aria-label="Next Feature"
-            >
-              <ChevronRight className="carousel-arrow-icon" />
-            </button>
+          {/* Navigation Controls */}
+          <button
+            onClick={prevSlide}
+            className="nav-button nav-button-prev"
+            aria-label="Previous feature"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <button
+            onClick={nextSlide}
+            className="nav-button nav-button-next"
+            aria-label="Next feature"
+          >
+            <ChevronRight size={20} />
+          </button>
 
-            {/* Dots Indicator */}
-            <div className="carousel-dots">
-              {features.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
+          {/* Dot Indicators */}
+          <div className="carousel-indicators">
+            {features.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`indicator-dot ${index === currentSlide ? 'active' : ''}`}
+                aria-label={`Go to feature ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
-      </section>
+
+        {/* Feature Grid for larger screens */}
+        <div className="features-grid">
+          {features.map((feature, index) => (
+            <div key={index} className="grid-feature-card">
+              <div className="grid-feature-icon-container">
+                {feature.icon}
+              </div>
+              <h3 className="grid-feature-title">{feature.title}</h3>
+              <p className="grid-feature-description">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      </div>
+
 
       {/* Interactive Chat Demo */}
       <section className="chat-demo-section">
@@ -362,6 +389,14 @@ const prevSlide = () => {
       </section>
 
       <style jsx>{`
+        /* Add this to ensure consistent box model behavior */
+        html {
+          box-sizing: border-box;
+        }
+        *, *::before, *::after {
+          box-sizing: inherit;
+        }
+
         /* Overall HTML/Body for Laptop View */
 
 /* Base Styles (apply to all unless overridden by media queries) */
@@ -374,13 +409,7 @@ const prevSlide = () => {
   width: 100vw;
 }
 
-.container {
-  max-width: 1280px; /* max-w-7xl default, will be overridden for mobile */
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem; /* px-4 */
-}
+
 
 .section-header {
   text-align: center;
@@ -710,143 +739,242 @@ const prevSlide = () => {
 
 /* --- Features Carousel --- */
 .features-section {
-  padding-top: 4rem; /* py-16 */
-  padding-bottom: 4rem; /* py-16 */
-  background-color: #fff; /* bg-white */
-}
+          padding: 4rem 0;
+          background: linear-gradient(135deg, #fef7e0 0%, #fff8f0 100%);
+          position: relative;
+          overflow: hidden;
+        }
 
-.carousel-wrapper {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-}
+        .features-section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(251, 146, 60, 0.1) 0%, transparent 50%);
+          pointer-events: none;
+        }
 
-.carousel-inner {
-  display: flex;
-  transition: transform 0.5s ease-in-out; /* transition-transform duration-500 ease-in-out */
-  border-radius: 1rem; /* rounded-2xl */
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); /* shadow-xl */
-  overflow: hidden;
-}
+        .container {
+          width: 100%;
+          margin: 0 auto;
+          padding: 0 1rem;
+          position: relative;
+          z-index: 1;
+          justify-content: center;
+          align-items: center;
+          display: flex;
+        }
 
-.carousel-item {
-  min-width: 100%; /* w-full */
-  flex-shrink: 0;
-  padding: 1rem; /* p-4 */
-  flex: 0 0 100%; /* ✅ Each slide takes 100% width */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+        .section-header {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
 
-.feature-card {
-  background: linear-gradient(to bottom right, #fffdf8, #fff9f9); /* from-amber-50 to-red-50 */
-  border-radius: 1rem; /* rounded-2xl */
-  padding: 1.5rem; /* p-6 */
-  text-align: center;
-  max-width: 20rem; /* max-w-xs */
-  margin-left: auto; /* mx-auto */
-  margin-right: auto; /* mx-auto */
-  min-height: 17.5rem; /* min-h-[280px] */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+        .section-title {
+          font-size: 2.5rem;
+          font-weight: 800;
+          color: #1a202c;
+          margin-bottom: 1rem;
+          background: linear-gradient(135deg, #b45309, #d97706);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
 
-.feature-icon-wrapper {
-  width: 4rem; /* w-16 */
-  height: 4rem; /* h-16 */
-  background-color: #fff; /* bg-white */
-  border-radius: 9999px; /* rounded-full */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto; /* mx-auto */
-  margin-right: auto; /* mx-auto */
-  margin-bottom: 1.5rem; /* mb-6 */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-}
+        .section-description {
+          font-size: 1.125rem;
+          color: #6b7280;
+          max-width: 600px;
+          margin: 0 auto;
+          line-height: 1.6;
+        }
 
-.feature-icon {
-  width: 2rem; /* w-8 */
-  height: 2rem; /* h-8 */
-  color: #b45309; /* text-amber-700 */
-}
+        /* Carousel for mobile/tablet */
+        .carousel-container {
+          position: relative;
+          display: block; 
+        }
 
-.feature-title {
-  font-size: 1.25rem; /* text-xl */
-  font-weight: 700; /* font-bold */
-  color: #1a202c; /* gray-900 */
-  margin-bottom: 0.75rem; /* mb-3 */
-}
+        .carousel-track-wrapper {
+          overflow: hidden;
+          border-radius: 1rem;
+        }
 
-.feature-description {
-  color: #4a5568; /* gray-700 */
-  line-height: 1.625; /* leading-relaxed */
-  font-size: 0.875rem; /* text-sm */
-}
+        .carousel-track {
+          display: flex;
+          width: ${features.length * 90}%;
+        }
 
-.carousel-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5rem; /* w-10 */
-  height: 2.5rem; /* h-10 */
-  background-color: #fff; /* bg-white */
-  border-radius: 9999px; /* rounded-full */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease-in-out; /* transition-all duration-300 */
-  outline: none; /* focus:outline-none */
-  cursor: pointer;
-}
+        .carousel-slide {
+          flex: 0 0 100%;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        }
 
-.carousel-nav-btn:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); /* hover:shadow-xl */
-}
+        .feature-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(251, 191, 36, 0.2);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          text-align: center;
+          max-width: 1200px; 
+          min-height: 320px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-.carousel-nav-btn:focus {
-  box-shadow: 0 0 0 4px rgba(253, 230, 138, 0.5); /* focus:ring-4 focus:ring-amber-300 */
-}
+        .feature-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
 
-.carousel-nav-prev {
-  left: 0.5rem; /* left-2 */
-}
+        .feature-icon-container {
+          width: 4.5rem;
+          height: 4.5rem;
+          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem auto;
+          box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
+        }
 
-.carousel-nav-next {
-  right: 0.5rem; /* right-2 */
-}
+        .feature-icon {
+          width: 2rem;
+          height: 2rem;
+          color: white;
+        }
 
-.carousel-arrow-icon {
-  width: 1.25rem; /* w-5 */
-  height: 1.25rem; /* h-5 */
-  color: #4a5568; /* text-gray-600 */
-}
+        .feature-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 1rem;
+        }
 
-.carousel-dots {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem; /* mt-8 */
-  gap: 0.5rem; /* gap-2 */
-}
+        .feature-description {
+          color: #4b5563;
+          line-height: 1.7;
+          font-size: 1rem;
+        }
 
-.carousel-dot {
-  width: 0.75rem; /* w-3 */
-  height: 0.75rem; /* h-3 */
-  border-radius: 9999px; /* rounded-full */
-  background-color: #cbd5e0; /* bg-gray-300 */
-  transition: all 0.3s ease-in-out; /* transition-all duration-300 */
-  outline: none; /* focus:outline-none */
-  cursor: pointer;
-}
+        /* Navigation Buttons */
+        .nav-button {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3rem;
+          height: 3rem;
+          background: white;
+          border: 2px solid rgba(251, 191, 36, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          z-index: 10;
+        }
 
-.carousel-dot.active {
-  background-color: #d97706; /* bg-amber-600 */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-}
+        .nav-button:hover {
+          background: #fbbf24;
+          color: white;
+          border-color: #fbbf24;
+          box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .nav-button-prev {
+          left: -1.5rem;
+        }
+
+        .nav-button-next {
+          right: -1.5rem;
+        }
+
+        /* Indicators */
+        .carousel-indicators {
+          display: flex;
+          justify-content: center;
+          margin-top: 2rem;
+          gap: 0.75rem;
+        }
+
+        .indicator-dot {
+          width: 0.75rem;
+          height: 0.75rem;
+          border-radius: 50%;
+          border: none;
+          background: #d1d5db;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .indicator-dot.active {
+          background: #f59e0b;
+          transform: scale(1.2);
+          box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Grid for larger screens */
+        .features-grid {
+          display: none; /* Hidden by default for smaller screens */
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 2rem;
+          margin-top: 3rem;
+        }
+
+        .grid-feature-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(251, 191, 36, 0.2);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          text-align: center;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .grid-feature-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .grid-feature-icon-container {
+          width: 4.5rem;
+          height: 4.5rem;
+          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem auto;
+          box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
+        }
+
+        .grid-feature-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 1rem;
+        }
+
+        .grid-feature-description {
+          color: #4b5563;
+          line-height: 1.7;
+          font-size: 1rem;
+        }
+
 
 /* --- Interactive Chat Demo --- */
 .chat-demo-section {
@@ -1055,21 +1183,21 @@ const prevSlide = () => {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #c09152; /* Darker amber on hover */
 }
-
-/* -------------------------------------------------------------------------- */
-/* Mobile View                                 */
-/* -------------------------------------------------------------------------- */
 @media (max-width: 480px) {
-  .container {
-    width: 100%;
-    padding-left: 1rem; /* Consistent with base */
-    padding-right: 1rem; /* Consistent with base */
-  }
-        .hero-section {
-        width: 100%;
+    .features-section {
+      padding: 2rem 1rem; 
+      width: 100%;
+    }
+  .feature-card {
+    padding: 1rem;
+    min-height: 280px; 
+    max-width: 600px;
       }
-}
-
+    .container{
+      width: 100%;
+      padding: 0 1rem;
+      }
+      }
       `}</style>
     </div>
   );
