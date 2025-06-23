@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, MessageCircle, Mic, Bell, Send, Flower } from 'lucide-react';
 import { toast } from 'react-toastify';
+import FeaturesSection from './featuresSection';
 const GeetaGPTLanding = () => {
    const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [email, setEmail] = useState('');
-
+  const support = () => {
+    window.location.href = 'mailto:hihu2005ag@gmail.com?subject=Geeta GPT - Inquiry&body=Hi, I would like to know more about...';
+  };
   const features = [
     {
       icon: <BookOpen className="feature-icon" />,
@@ -31,17 +34,28 @@ const GeetaGPTLanding = () => {
   ];
 
   const demoMessages = [
-    {
-      type: 'user',
-      text: "What is my dharma?",
-      delay: 1000
-    },
-    {
-      type: 'krishna',
-      text: "श्रेयान्स्वधर्मो विगुणः परधर्मात्स्वनुष्ठितात्।\nस्वधर्मे निधनं श्रेयः परधर्मो भयावहः॥\n\n\"Better is one's own dharma, though imperfectly performed, than the dharma of another well performed. Death in one's own dharma is better; the dharma of another is fraught with danger.\" Your dharma is your unique path - embrace your authentic nature and duties.",
-      delay: 2500
-    }
-  ];
+  {
+    type: 'user',
+    text: "How can I find peace in life?",
+    delay: 1000
+  },
+  {
+    type: 'krishna',
+    text: "विहाय कामान्यः सर्वान्पुमांश्चरति निःस्पृहः।\nनिर्ममो निरहंकारः स शांतिमधिगच्छति॥\n\n\"One who abandons all desires and moves about without longing, without the sense of 'mine' or ego, attains peace.\" Let go of attachments and ego — that is the path to inner peace.",
+    delay: 2500
+  },
+  {
+    type: 'user',
+    text: "Why should I not fear challenges?",
+    delay: 1000
+  },
+  {
+    type: 'krishna',
+    text: "सुखदुःखे समे कृत्वा लाभालाभौ जयाजयौ।\nततो युद्धाय युज्यस्व नैवं पापमवाप्स्यसि॥\n\n\"Treat pleasure and pain, gain and loss, victory and defeat the same, and then engage in your duty. In this way, you will not incur sin.\" Face challenges with balance — rise above fear by focusing on your duty, not the outcome.",
+    delay: 2500
+  }
+];
+
 
   // Auto-play functionality
   useEffect(() => {
@@ -82,11 +96,6 @@ const GeetaGPTLanding = () => {
     showMessages();
   }, []);
 
-  const handleEmailSubmit = (e) => {
-    toast.success("Email window opened. We'll get back to you soon!");
-  window.location.href = 'mailto:hihu2005use@gmail.com?subject=Geeta GPT - Inquiry&body=Hi, I would like to know more about...';
-  };
-
   const handleStartNow = () => {
     window.location.href = '/signup';
   };
@@ -99,7 +108,7 @@ const GeetaGPTLanding = () => {
     <div className="geeta-gpt-landing">
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="container">
+        <div className=".cta-container">
           <div className="hero-content-wrapper">
             {/* Left Content */}
             <div className="hero-left-content">
@@ -204,87 +213,12 @@ const GeetaGPTLanding = () => {
       </section>
 
       {/* Features Carousel */}
-      <div className="features-section">
-      <div className="container">
-        <div className="section-header">
-          <h2 className="section-title">Sacred Features</h2>
-          <p className="section-description">
-            Discover the wisdom of the Gita through modern technology
-          </p>
-        </div>
-
-        <div className="carousel-container">
-          <div className="carousel-track-wrapper">
-            <div 
-              className="carousel-track"
-              style={{
-                transform: `translateX(-${currentSlide * 100}%)`,
-                transition: 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-              }}
-            >
-              {features.map((feature, index) => (
-                <div key={index} className="carousel-slide">
-                  <div className="feature-card">
-                    <div className="feature-icon-container">
-                      {feature.icon}
-                    </div>
-                    <h3 className="feature-title">{feature.title}</h3>
-                    <p className="feature-description">{feature.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation Controls */}
-          <button
-            onClick={prevSlide}
-            className="nav-button nav-button-prev"
-            aria-label="Previous feature"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <button
-            onClick={nextSlide}
-            className="nav-button nav-button-next"
-            aria-label="Next feature"
-          >
-            <ChevronRight size={20} />
-          </button>
-
-          {/* Dot Indicators */}
-          <div className="carousel-indicators">
-            {features.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`indicator-dot ${index === currentSlide ? 'active' : ''}`}
-                aria-label={`Go to feature ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Feature Grid for larger screens */}
-        <div className="features-grid">
-          {features.map((feature, index) => (
-            <div key={index} className="grid-feature-card">
-              <div className="grid-feature-icon-container">
-                {feature.icon}
-              </div>
-              <h3 className="grid-feature-title">{feature.title}</h3>
-              <p className="grid-feature-description">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-      </div>
+      <FeaturesSection/>
 
 
       {/* Interactive Chat Demo */}
       <section className="chat-demo-section">
-        <div className="container">
+        <div className=".cta-container">
           <div className="section-header">
             <h2 className="section-title">Experience Divine Conversations</h2>
             <p className="section-description">See how Krishna guides you through life's questions</p>
@@ -348,45 +282,33 @@ const GeetaGPTLanding = () => {
               </div>
             </div>
           </div>
+          <p className="section-description2">Seek more in our app — join us now and start your journey.</p>
         </div>
       </section>
 
       {/* Call to Action */}
       <section className="cta-section">
-        <div className="container">
-          <h2 className="cta-title">Begin Your Spiritual Journey</h2>
-          <p className="cta-description">Join thousands who have found peace and purpose through eternal wisdom</p>
+  <div className="cta-container">
+    <h2 className="cta-title">Begin Your Spiritual Journey</h2>
+    <p className="cta-description">
+      Join thousands who have found peace and purpose through eternal wisdom
+    </p>
 
-          <div className="cta-content">
-            <button
-              onClick={handleStartNow}
-              className="btn btn-cta"
-            >
-              Embark Now
-            </button>
+    <div className="cta-content">
+      <button onClick={handleStartNow} className="btn btn-cta">
+        Embark Now
+      </button>
 
-            <div className="inquiry-form-wrapper">
-              <p className="inquiry-text">Have questions? Send us an inquiry</p>
-              <form onSubmit={handleEmailSubmit} className="inquiry-form">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  className="inquiry-input"
-                />
-                <button
-                  type="submit"
-                  className="inquiry-submit-btn"
-                >
-                  Submit
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div className="inquiry-form-wrapper">
+        <p className="inquiry-text">Have questions? Send us an inquiry</p>
+        <button onClick={support} type="submit" className="inquiry-submit-btn">
+          Email Us
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       <style jsx>{`
         /* Add this to ensure consistent box model behavior */
@@ -427,6 +349,13 @@ const GeetaGPTLanding = () => {
   font-size: 1.125rem; /* text-lg */
   color: #4a5568; /* gray-600 */
 }
+  .section-description2 {
+  font-size: 1.125rem; /* text-lg */
+  color: #4a5568; /* gray-600 */
+  text-align: center;
+  margin-top: 4rem; /* mt-4 */
+}
+
 
 /* --- Buttons --- */
 .btn {
@@ -474,6 +403,7 @@ const GeetaGPTLanding = () => {
   display: grid;
   gap: 3rem; /* gap-12 */
   align-items: center;
+  padding: 0 2rem; 
 }
 
 .hero-left-content {
@@ -519,7 +449,7 @@ const GeetaGPTLanding = () => {
 .hero-title {
   font-size: 3rem; /* text-5xl */
   font-weight: 800; /* font-extrabold */
-  color: #1a202c; /* gray-900 */
+  color:rgb(94, 96, 100); /* gray-900 */
   line-height: 1.25; /* leading-tight */
   margin-bottom: 1rem; /* space-y-4 */
 }
@@ -545,6 +475,7 @@ const GeetaGPTLanding = () => {
   flex-direction: column;
   gap: 1rem; /* gap-4 */
   justify-content: center;
+  width: 100%;
 }
 
 /* --- Phone Mockup --- */
@@ -737,244 +668,6 @@ const GeetaGPTLanding = () => {
   height: 1.25rem; /* h-5 */
 }
 
-/* --- Features Carousel --- */
-.features-section {
-          padding: 4rem 0;
-          background: linear-gradient(135deg, #fef7e0 0%, #fff8f0 100%);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .features-section::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 20%, rgba(251, 146, 60, 0.1) 0%, transparent 50%);
-          pointer-events: none;
-        }
-
-        .container {
-          width: 100%;
-          margin: 0 auto;
-          padding: 0 1rem;
-          position: relative;
-          z-index: 1;
-          justify-content: center;
-          align-items: center;
-          display: flex;
-        }
-
-        .section-header {
-          text-align: center;
-          margin-bottom: 3rem;
-        }
-
-        .section-title {
-          font-size: 2.5rem;
-          font-weight: 800;
-          color: #1a202c;
-          margin-bottom: 1rem;
-          background: linear-gradient(135deg, #b45309, #d97706);
-          background-clip: text;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .section-description {
-          font-size: 1.125rem;
-          color: #6b7280;
-          max-width: 600px;
-          margin: 0 auto;
-          line-height: 1.6;
-        }
-
-        /* Carousel for mobile/tablet */
-        .carousel-container {
-          position: relative;
-          display: block; 
-        }
-
-        .carousel-track-wrapper {
-          overflow: hidden;
-          border-radius: 1rem;
-        }
-
-        .carousel-track {
-          display: flex;
-          width: ${features.length * 90}%;
-        }
-
-        .carousel-slide {
-          flex: 0 0 100%;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-        }
-
-        .feature-card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(251, 191, 36, 0.2);
-          border-radius: 1.5rem;
-          padding: 2rem;
-          text-align: center;
-          max-width: 1200px; 
-          min-height: 320px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .feature-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        .feature-icon-container {
-          width: 4.5rem;
-          height: 4.5rem;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.5rem auto;
-          box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-        }
-
-        .feature-icon {
-          width: 2rem;
-          height: 2rem;
-          color: white;
-        }
-
-        .feature-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1a202c;
-          margin-bottom: 1rem;
-        }
-
-        .feature-description {
-          color: #4b5563;
-          line-height: 1.7;
-          font-size: 1rem;
-        }
-
-        /* Navigation Buttons */
-        .nav-button {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3rem;
-          height: 3rem;
-          background: white;
-          border: 2px solid rgba(251, 191, 36, 0.3);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          z-index: 10;
-        }
-
-        .nav-button:hover {
-          background: #fbbf24;
-          color: white;
-          border-color: #fbbf24;
-          box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
-        }
-
-        .nav-button-prev {
-          left: -1.5rem;
-        }
-
-        .nav-button-next {
-          right: -1.5rem;
-        }
-
-        /* Indicators */
-        .carousel-indicators {
-          display: flex;
-          justify-content: center;
-          margin-top: 2rem;
-          gap: 0.75rem;
-        }
-
-        .indicator-dot {
-          width: 0.75rem;
-          height: 0.75rem;
-          border-radius: 50%;
-          border: none;
-          background: #d1d5db;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .indicator-dot.active {
-          background: #f59e0b;
-          transform: scale(1.2);
-          box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
-        }
-
-        /* Grid for larger screens */
-        .features-grid {
-          display: none; /* Hidden by default for smaller screens */
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 2rem;
-          margin-top: 3rem;
-        }
-
-        .grid-feature-card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(251, 191, 36, 0.2);
-          border-radius: 1.5rem;
-          padding: 2rem;
-          text-align: center;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .grid-feature-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        .grid-feature-icon-container {
-          width: 4.5rem;
-          height: 4.5rem;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.5rem auto;
-          box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-        }
-
-        .grid-feature-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1a202c;
-          margin-bottom: 1rem;
-        }
-
-        .grid-feature-description {
-          color: #4b5563;
-          line-height: 1.7;
-          font-size: 1rem;
-        }
-
 
 /* --- Interactive Chat Demo --- */
 .chat-demo-section {
@@ -1046,44 +739,51 @@ const GeetaGPTLanding = () => {
 
 /* --- Call to Action --- */
 .cta-section {
-  padding-top: 4rem; /* py-16 */
-  padding-bottom: 4rem; /* py-16 */
-  background-color: #1a202c; /* bg-gray-900 */
+  background: linear-gradient(135deg, #fff8e1, #fff5db);
+  padding: 3rem 1rem;
+  text-align: center;
 }
 
-.cta-section .container {
-  text-align: center;
-  max-width: 28rem; /* max-w-4xl */
+.cta-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .cta-title {
-  font-size: 2.25rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  color: #fff; /* text-white */
-  margin-bottom: 1rem; /* mb-4 */
+  font-size: 2rem;
+  font-weight: bold;
+  color: #7c2d12;
+  margin-bottom: 1rem;
 }
 
+
 .cta-description {
-  font-size: 1.125rem; /* text-lg */
-  color: #a0aec0; /* gray-300 */
-  margin-bottom: 2rem; /* mb-8 */
+  color: #4b5563;
+  margin-bottom: 2rem;
+  font-size: 1.125rem;
 }
 
 .cta-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem; /* space-y-8 */
+  gap: 1.5rem;
+  align-items: center;
 }
 
 .btn-cta {
-  padding: 1rem 3rem; /* px-12 py-4 */
-  font-size: 1.125rem; /* text-lg */
-  background: linear-gradient(to right, #d97706, #dc2626); /* from-amber-600 to-red-600 */
-  color: #fff; /* text-white */
-  border-radius: 0.75rem; /* rounded-xl */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-  transition: all 0.3s ease-in-out; /* transition-all duration-300 */
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .btn-cta:hover {
@@ -1195,8 +895,14 @@ const GeetaGPTLanding = () => {
       }
     .container{
       width: 100%;
-      padding: 0 1rem;
+      padding: 1rem 1rem;
       }
+      .cta-title {
+        color: #1a202c; /* gray-900 */
+        font-size: 1.5rem; /* text-2xl */
+      }
+        .hero-title {
+          color: #1a202c; /* gray-900 */
       }
       `}</style>
     </div>

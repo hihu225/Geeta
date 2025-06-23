@@ -469,10 +469,11 @@ setUser(signupData.user);
               Sign in here
             </Link>
           </p>
+          <br />
           <p>
-            Know more about us?
-            <Link to="/landing">
-              Visit our landing page
+            Want to know more about us?
+            <Link to="/landing" className="login-link">
+             Click here
             </Link>
           </p>
         </div>
