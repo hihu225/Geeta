@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,7 +6,7 @@ import "./signup.css";
 import { backend_url } from "./utils/backend";
 import { StorageService } from "./utils/storage";
 import Swal from "sweetalert2"; 
-
+import {UserContext} from "./UserContext.jsx";
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -20,7 +20,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDemoAccount, setIsDemoAccount] = useState(false);
-
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   // Animation trigger
@@ -104,6 +104,12 @@ const Signup = () => {
 
     setLoading(true);
     try {
+      const newUser = {
+      name: "Spiritual Seeker",
+      email: "demo@geetagpt.com",
+      isDemo: true,
+      avatar: "🕉️"
+    };
       const { confirmPassword, ...submitData } = formData;
 
       const response = await axios.post(
@@ -130,13 +136,13 @@ const Signup = () => {
         
         // Store user data in localStorage (works for both platforms)
         if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-          console.log("User data stored:", response.data.user);
-        }
+  localStorage.setItem("user", JSON.stringify(response.data.user));
+  setUser(response.data.user);
+}
+
         
         // Show success message
         toast.success("Demo account created successfully! Welcome aboard! 🎉");
-        
         // Navigate to chat
         setTimeout(() => {
           console.log("Navigating to /chat");
@@ -221,11 +227,14 @@ const Signup = () => {
     }
 
     if (signupData.user) {
-      localStorage.setItem("user", JSON.stringify(signupData.user));
-    }
+  localStorage.setItem("user", JSON.stringify(signupData.user));
+  setUser(signupData.user);
+}
 
-    toast.success("Signup successful! Welcome aboard! 🎉");
-    navigate("/chat");
+toast.success("Signup successful! Welcome aboard! 🎉");
+navigate("/chat");
+setUser(signupData.user);
+
 
   } catch (err) {
     console.error("Signup error:", err);

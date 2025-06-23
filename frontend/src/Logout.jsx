@@ -168,10 +168,10 @@ const Logout = () => {
   try {
     // Call the logout API endpoint
     await axios.post(`${backend_url}/api/auth/logout`, {}, {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${await StorageService.get("token")}`
-      }
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   "Authorization": `Bearer ${await StorageService.get("token")}`
+      // }
     });
     
     // Clear all stored data

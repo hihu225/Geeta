@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,7 +6,7 @@ import "./login.css";
 import { backend_url } from "./utils/backend";
 import { StorageService } from "./utils/storage";
 import swal from "sweetalert2";
-
+import { UserContext } from "./UserContext";
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -17,7 +17,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [mounted, setMounted] = useState(false);
-
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   // Load saved credentials from storage on component mount
@@ -150,6 +150,13 @@ const Login = () => {
         }
         
         toast.success("Welcome back! Login successful! 🎉");
+        const loggedInUser = response.data.user;
+
+if (loggedInUser) {
+  localStorage.setItem("user", JSON.stringify(loggedInUser));
+  setUser(loggedInUser);
+}
+
         localStorage.removeItem("loggedOut");
         navigate("/chat");
       }

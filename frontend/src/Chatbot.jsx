@@ -1551,6 +1551,8 @@ const getISTGreeting = () => {
   const [loadingStates, setLoadingStates] = useState({});
   // Add ref for auto-
   const { user } = useContext(UserContext);
+  const isDemoUser = user?.email?.endsWith('@example.com');
+  const displayName = isDemoUser ? "Spiritual Seeker" : user?.name || "Seeker";
   const messagesEndRef = useRef(null);
   useEffect(() => {
     const fetchChats = async () => {
@@ -1903,7 +1905,7 @@ const getRandomQuote = () => {
 </p>
 
 <p className={`greeting ${fontSize}`}>
-  {getISTGreeting()}, {user?.name || "seeker of wisdom"}! 🙏
+  {getISTGreeting()}, {displayName}! 🙏
 </p>
 
 

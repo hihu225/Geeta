@@ -4,13 +4,12 @@ import { toast } from "react-toastify";
 import { ArrowLeft } from 'lucide-react';
 import { FiSettings } from 'react-icons/fi';
 import { MdNotificationsActive } from "react-icons/md";
-import NotificationSettings from "./NotificationSettings";
-import Notifications from "./Notifications";
 import "./hihu.css";
 import { ThemeContext } from "./ThemeContext";
+import { UserContext } from "./UserContext";
 const AccountSettings = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useContext(UserContext);
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState('🕉️');
@@ -19,6 +18,10 @@ const AccountSettings = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const { theme } = useContext(ThemeContext);
   const [feedbackText, setFeedbackText] = useState('');
+  const isDemoUser = user?.email?.endsWith('@example.com');
+const displayName = isDemoUser ? "Spiritual Seeker" : user?.name || "Seeker";
+const displayEmail = isDemoUser ? "demo@example.com" : user?.email || "Not provided";
+
   const [notifications, setNotifications] = useState([
   {
     id: 1,
@@ -394,42 +397,15 @@ verse: {
       document.head.removeChild(styleElement);
     };
   }, []);
-
-  // Get user info from localStorage or make API call
   useEffect(() => {
-    const getUserInfo = () => {
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setSelectedAvatar(userData.avatar || '🕉️');
-        } else {
-          // Fallback if nothing is stored
-          const defaultUser = {
-            name: "Spiritual Seeker",
-            email: "seeker@example.com",
-            isDemo: false,
-            avatar: '🕉️'
-          };
-          setUser(defaultUser);
-          setSelectedAvatar('🕉️');
-        }
-      } catch (error) {
-        console.error('Error parsing user info from localStorage:', error);
-        const defaultUser = {
-          name: "Spiritual Seeker",
-          email: "seeker@example.com",
-          isDemo: false,
-          avatar: '🕉️'
-        };
-        setUser(defaultUser);
-        setSelectedAvatar('🕉️');
-      }
-    };
+  if (user && user.avatar) {
+    setSelectedAvatar(user.avatar);
+  } else {
+    setSelectedAvatar('🕉️');
+  }
+}, [user]);
 
-    getUserInfo();
-  }, []);
+
 
   const handleBack = () => {
     navigate(-1);
@@ -473,6 +449,7 @@ verse: {
     // Save to localStorage (in real app, this would be an API call)
     try {
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
       toast?.("Avatar updated successfully!", { type: 'success' });
     } catch (error) {
       console.error('Error saving avatar:', error);
@@ -580,8 +557,9 @@ const handleCloseModal = (setter) => {
               <div style={styles.avatarEdit}>✏️</div>
             </div>
             <div style={styles.userDetails}>
-              <div className={`user-name ${theme}`}>{user.name}</div>
-              <div className={`user-email ${theme}`}>{user.email}</div>
+              <div className={`user-name ${theme}`}>{displayName}</div>
+<div className={`user-email ${theme}`}>{displayEmail}</div>
+
               {user.isDemo && (
                 <div className={`demo-tag ${theme}`}>Demo Seeker</div>
               )}
