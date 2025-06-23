@@ -25,6 +25,8 @@ import NotificationSettings from "./NotificationSettings";
 import Notifications from "./Notifications";
 import { UserProvider } from "./UserContext";
 import { ThemeProvider } from "./ThemeContext";
+import GeetaGPTLanding from './landing';
+import RootRedirect from "./RootRedirect";
 // Component to handle navigation-aware FCM setup
 const FCMSetup = () => {
   const navigate = useNavigate();
@@ -88,67 +90,6 @@ const FCMSetup = () => {
   return null; // doesn't render anything
 };
 
-// Component to handle async token checking for root route
-const RootRedirect = () => {
-  const [loading, setLoading] = useState(true);
-  const [hasToken, setHasToken] = useState(false);
-
-  useEffect(() => {
-    setupPushNotifications();
-  }, []);
-
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        const token = await StorageService.get("token");
-        setHasToken(!!token);
-      } catch (error) {
-        console.error("Error checking token:", error);
-        setHasToken(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkToken();
-  }, []);
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        flexDirection: 'column',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #3498db',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          marginBottom: '20px'
-        }}></div>
-        <p>Loading...</p>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  return hasToken ? (
-    <Navigate to="/dashboard" replace />
-  ) : (
-    <Navigate to="/login" replace />
-  );
-};
 
 // Main App Routes component that has access to navigate
 const AppRoutes = () => {
@@ -183,6 +124,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/landing" element={<GeetaGPTLanding />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/account-settings" element={<AccountSettings />} />
