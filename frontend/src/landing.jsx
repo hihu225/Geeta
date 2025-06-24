@@ -114,14 +114,18 @@ const GeetaGPTLanding = () => {
             <div className="hero-left-content">
               <div className="hero-tagline">
                 <Flower className="flower-icon animate-pulse-custom" />
-                <span className="hero-tagline-text">Spiritual Guidance</span>
+                <span className="hero-tagline-text">Spiritual Guidance Chatbot</span>
               </div>
-              <h1 className="hero-title">
-                Your Personal
-                <span className="hero-title-gradient">
-                  Krishna Guide
-                </span>
-              </h1>
+<h1 className="geeta-gpt-title">
+  <span className="geeta-word">GEETA</span><br />
+  <span className="gpt-word">GPT</span>
+</h1>
+
+<h1 className="hero-title">
+  Your Personal
+  <span className="hero-title-gradient">Krishna Guide</span>
+</h1>
+
               <p className="hero-description">
                 Timeless Bhagavad Gita wisdom, whenever you seek it.
               </p>
@@ -423,7 +427,7 @@ const GeetaGPTLanding = () => {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 2rem; /* space-y-8 */
+  gap: 1rem; /* space-y-8 */
 }
 
 .hero-tagline {
@@ -458,13 +462,44 @@ const GeetaGPTLanding = () => {
   letter-spacing: 0.05em; /* tracking-wider */
   text-transform: uppercase;
 }
+.geeta-gpt-title {
+  font-size: 5rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  font-family: 'Georgia', serif;
+  text-transform: uppercase;
+}
+
+/* Sacred saffron for 'GEETA' */
+.geeta-word {
+  color: #d97706;
+  transition: text-shadow 0.3s ease;
+}
+
+/* Deep maroon for 'GPT' */
+.gpt-word {
+  color: #7f1d1d;
+  transition: text-shadow 0.3s ease;
+}
+
+/* Glow on hover */
+.geeta-gpt-title:hover .geeta-word {
+  text-shadow: 0 0 10px rgba(217, 119, 6, 0.4); /* saffron glow */
+}
+
+.geeta-gpt-title:hover .gpt-word {
+  text-shadow: 0 0 10px rgba(127, 29, 29, 0.4); /* maroon glow */
+}
 
 .hero-title {
-  font-size: 3rem; /* text-5xl */
+  font-size: 2.5rem; /* text-5xl */
   font-weight: 800; /* font-extrabold */
   color:rgb(94, 96, 100); /* gray-900 */
   line-height: 1.25; /* leading-tight */
   margin-bottom: 1rem; /* space-y-4 */
+  margin-top: 0; /* mt-0 */
 }
 
 .hero-title-gradient {
@@ -885,7 +920,6 @@ const GeetaGPTLanding = () => {
 .animate-fade-in-custom {
   animation: fade-in-custom 0.6s ease-out forwards;
 }
-
 /* Custom scrollbar for chat demo */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
@@ -922,9 +956,14 @@ const GeetaGPTLanding = () => {
         color: #1a202c; /* gray-900 */
         font-size: 1.5rem; /* text-2xl */
       }
+        .geeta-gpt-title { 
+          font-size: 3.5rem; /* text-4xl */
+          text-align: center;
+        }
         .hero-title {
-          color: #1a202c; /* gray-900 */
-      }
+          font-size: 1.875rem; /* text-4xl */
+          line-height: 1.25; /* leading-tight */
+        }
       `}</style>
     </div>
   );
