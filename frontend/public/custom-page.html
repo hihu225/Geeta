@@ -353,13 +353,13 @@
             }, 12000);
         }
 
-        // Scroll event handler
+        // Scroll event handler with reversible functionality
         window.addEventListener('scroll', () => {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const windowHeight = window.innerHeight;
             const scrollPercent = scrollTop / windowHeight;
 
-            // Activate circle when scrolling down
+            // Activate circle when scrolling down past 10%
             if (scrollPercent > 0.1) {
                 sacredCircle.classList.add('active');
                 omSymbol.classList.add('visible');
@@ -382,11 +382,29 @@
                 if (Math.random() < 0.3) {
                     createBubble();
                 }
+            } else {
+                // Revert back when scrolling up past 10%
+                sacredCircle.classList.remove('active');
+                sacredCircle.classList.remove('expanded');
+                omSymbol.classList.remove('visible');
+                
+                // Deactivate energy rays
+                energyRays.forEach(ray => {
+                    ray.classList.remove('active');
+                });
+                
+                // Deactivate mandala rings
+                mandalaRings.forEach(ring => {
+                    ring.classList.remove('active');
+                });
             }
 
-            // Expand circle further down
+            // Expand circle further down past 50%
             if (scrollPercent > 0.5) {
                 sacredCircle.classList.add('expanded');
+            } else if (scrollPercent <= 0.5) {
+                // Remove expanded class when scrolling back up
+                sacredCircle.classList.remove('expanded');
             }
 
             // Update circle position slightly for dynamic effect
@@ -396,17 +414,12 @@
             lastScrollTop = scrollTop;
         });
 
-        // Create initial bubbles for ambient effect
+        // Create initial bubbles for ambient effect (only when circle is active)
         setInterval(() => {
             if (sacredCircle.classList.contains('active') && Math.random() < 0.4) {
                 createBubble();
             }
         }, 2000);
-
-        // Add some initial ambient bubbles
-        for (let i = 0; i < 5; i++) {
-            setTimeout(createBubble, i * 1000);
-        }
     </script>
     </div>
 </body>
