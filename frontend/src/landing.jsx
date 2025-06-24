@@ -468,54 +468,10 @@ const GeetaGPTLanding = () => {
 }
 
 .hero-tagline-text {
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* font-medium */
+  font-size: 1rem; /* text-sm */
+  font-weight: 600; /* font-medium */
   letter-spacing: 0.05em; /* tracking-wider */
   text-transform: uppercase;
-}
-.geeta-gpt-title {
-  position: relative;
-  display: inline-block;
-  font-size: 5rem;
-  font-weight: 800;
-  text-align: center;
-  letter-spacing: 0.05em;
-  margin-bottom: 1rem;
-  font-family: 'Georgia', serif;
-  text-transform: uppercase;
-}
-
-.geeta-gpt-title::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: -8px;
-  width: 60%;
-  height: 4px;
-  background: linear-gradient(to right, #d97706, #a16207);
-  border-radius: 9999px;
-}
-
-/* Sacred saffron for 'GEETA' */
-.geeta-word {
-  color: #d97706;
-  transition: text-shadow 0.3s ease;
-}
-
-/* Deep maroon for 'GPT' */
-.gpt-word {
-  color: #7f1d1d;
-  transition: text-shadow 0.3s ease;
-}
-
-/* Glow on hover */
-.geeta-gpt-title:hover .geeta-word {
-  text-shadow: 0 0 10px rgba(217, 119, 6, 0.4); /* saffron glow */
-}
-
-.geeta-gpt-title:hover .gpt-word {
-  text-shadow: 0 0 10px rgba(127, 29, 29, 0.4); /* maroon glow */
 }
 
 .hero-title {
@@ -981,10 +937,6 @@ const GeetaGPTLanding = () => {
         color: #1a202c; /* gray-900 */
         font-size: 1.5rem; /* text-2xl */
       }
-        .geeta-gpt-title { 
-          font-size: 3.5rem; /* text-4xl */
-          text-align: center;
-        }
         .hero-title {
           font-size: 1.875rem; /* text-4xl */
           line-height: 1.25; /* leading-tight */
