@@ -5,6 +5,7 @@ import {
   Navigate,
   Link,
   useNavigate,
+  useLocation
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { StorageService } from "./utils/storage";
@@ -27,6 +28,7 @@ import { UserProvider } from "./UserContext";
 import { ThemeProvider } from "./ThemeContext";
 import GeetaGPTLanding from './landing';
 import RootRedirect from "./RootRedirect";
+import { AnimatePresence } from "framer-motion";
 // Component to handle navigation-aware FCM setup
 const FCMSetup = () => {
   const navigate = useNavigate();
@@ -93,21 +95,19 @@ const FCMSetup = () => {
 
 // Main App Routes component that has access to navigate
 const AppRoutes = () => {
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen for messages from service worker
     if ('serviceWorker' in navigator) {
       const handleMessage = (event) => {
         if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
-          // Navigate to notifications page using React Router
           navigate('/notifications');
         }
       };
 
       navigator.serviceWorker.addEventListener('message', handleMessage);
 
-      // Cleanup
       return () => {
         navigator.serviceWorker.removeEventListener('message', handleMessage);
       };
@@ -116,85 +116,78 @@ const AppRoutes = () => {
 
   return (
     <>
-      {/* FCM Setup Component */}
       <FCMSetup />
-      
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/landing" element={<GeetaGPTLanding />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/delete-account" element={<DeleteAccount />} />
-        <Route path="/account-settings" element={<AccountSettings />} />
-        
-        {/* Protected Routes wrapped in Layout */}
-        <Route
-          path="/dashboard"
-          element={
-            <Layout>
-              <Dashboard />
-            </Layout>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <Layout>
-              <BhagavadGitaBot />
-            </Layout>
-          }
-        />
 
-        {/* Root route with async token checking */}
-        <Route path="/" element={<RootRedirect />} />
-        
-        <Route
-          path="/notification-settings"
-          element={
-            <Layout>
-              <NotificationSettings />
-            </Layout>
-          }
-        />
-        
-        <Route
-          path="/notifications"
-          element={
-            <Layout>
-              <Notifications />
-            </Layout>
-          }
-        />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* Your <Route />s remain unchanged */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/landing" element={<GeetaGPTLanding />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
 
-        {/* 404 */}
-        <Route
-          path="*"
-          element={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                flexDirection: "column",
-              }}
-            >
-              <h1>404 - Page Not Found</h1>
-              <p>The page you're looking for doesn't exist.</p>
-            </div>
-          }
-        />
-      </Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <Layout>
+                <Dashboard />
+              </Layout>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <Layout>
+                <BhagavadGitaBot />
+              </Layout>
+            }
+          />
+          <Route path="/" element={<RootRedirect />} />
+          <Route
+            path="/notification-settings"
+            element={
+              <Layout>
+                <NotificationSettings />
+              </Layout>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <Layout>
+                <Notifications />
+              </Layout>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100vh",
+                  flexDirection: "column",
+                }}
+              >
+                <h1>404 - Page Not Found</h1>
+                <p>The page you're looking for doesn't exist.</p>
+              </div>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
     </>
   );
 };
-
 function App() {
-  
+
   useEffect(() => {
-    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then((registration) => {
@@ -208,14 +201,16 @@ function App() {
 
   return (
     <ThemeProvider>
-    <UserProvider>
-    <>
-      <Router>
-        <AppRoutes />
-      </Router>
-      <ToastContainer position="top-right" autoClose={3000} />
-    </>
-    </UserProvider>
+      <UserProvider>
+        <>
+          <Router>
+            <AnimatePresence mode="wait">
+              <AppRoutes location={location} key={location.pathname} />
+            </AnimatePresence>
+          </Router>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </>
+      </UserProvider>
     </ThemeProvider>
   );
 }

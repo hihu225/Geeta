@@ -7,6 +7,7 @@ import { backend_url } from "./utils/backend";
 import { StorageService } from "./utils/storage";
 import Swal from "sweetalert2"; 
 import {UserContext} from "./UserContext.jsx";
+import {motion} from "framer-motion";
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -22,7 +23,11 @@ const Signup = () => {
   const [isDemoAccount, setIsDemoAccount] = useState(false);
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
-
+const pageVariants = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
   // Animation trigger
   useEffect(() => {
     setMounted(true);
@@ -273,6 +278,13 @@ setUser(signupData.user);
   };
 
   return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4 }}
+    >
     <div className="signup-container">
       <div className="signup-background">
         <div className="signup-background-shape shape-1"></div>
@@ -479,6 +491,7 @@ setUser(signupData.user);
         </div>
       </div>
     </div>
+    </motion.div>
   );
 };
 

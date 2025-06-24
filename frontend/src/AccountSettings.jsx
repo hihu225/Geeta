@@ -7,6 +7,7 @@ import { MdNotificationsActive } from "react-icons/md";
 import "./hihu.css";
 import { ThemeContext } from "./ThemeContext";
 import { UserContext } from "./UserContext";
+import {motion} from "framer-motion";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
@@ -21,7 +22,11 @@ const AccountSettings = () => {
   const isDemoUser = user?.email?.endsWith('@example.com');
 const displayName = isDemoUser ? "Spiritual Seeker" : user?.name || "Seeker";
 const displayEmail = isDemoUser ? "demo@example.com" : user?.email || "Not provided";
-
+ const pageVariants = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
   const [notifications, setNotifications] = useState([
   {
     id: 1,
@@ -526,6 +531,13 @@ const handleCloseModal = (setter) => {
   }
 
   return (
+     <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4 }}
+    >
     <div className={`container-acc ${theme}`}>
       <button onClick={handleBack} className={`back-btn-acc ${theme}`}>
   <ArrowLeft size={20} className="icon" />
@@ -915,6 +927,7 @@ const handleCloseModal = (setter) => {
   </div>
 )}
     </div>
+    </motion.div>
   );
 };
 

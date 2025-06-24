@@ -2,11 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, MessageCircle, Mic, Bell, Send, Flower } from 'lucide-react';
 import { toast } from 'react-toastify';
 import FeaturesSection from './featuresSection';
+import {motion} from 'framer-motion';
 const GeetaGPTLanding = () => {
    const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [email, setEmail] = useState('');
+  const pageVariants = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
   const support = () => {
     window.location.href = 'mailto:hihu2005ag@gmail.com?subject=Geeta GPT - Inquiry&body=Hi, I would like to know more about...';
   };
@@ -105,6 +111,13 @@ const GeetaGPTLanding = () => {
   };
 
   return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4 }}
+    >
     <div className="geeta-gpt-landing">
       {/* Hero Section */}
       <section className="hero-section">
@@ -980,6 +993,7 @@ const GeetaGPTLanding = () => {
         }
       `}</style>
     </div>
+    </motion.div>
   );
 };
 
