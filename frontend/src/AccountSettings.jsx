@@ -834,7 +834,7 @@ const handleCloseModal = (setter) => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
         <div style={styles.popupIcon}>🕉️</div>
         <h3 className={`popup-title ${theme}`}>
@@ -891,7 +891,7 @@ const handleCloseModal = (setter) => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
         <div style={styles.popupIcon}>🔒</div>
         <h3 className={`popup-title ${theme}`}>Privacy & Data Protection</h3>
@@ -949,7 +949,7 @@ const handleCloseModal = (setter) => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
         <div style={styles.popupIcon}>💭</div>
         <h3 className={`popup-title ${theme}`}>Share Your Experience</h3>
