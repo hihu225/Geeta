@@ -429,7 +429,7 @@ voiceButton : {
   opensidebarbutton: {
     position: 'fixed',
               left: '10px',
-              top: '10px',
+              top: '25px',
               padding: '8px 15px',
               backgroundColor: theme === "light" ? '#8B0000' : '#B22222',
               color: 'white',
@@ -444,7 +444,7 @@ voiceButton : {
   logoutbutton: {
     position: 'fixed',
               right: '10px',
-              top: '10px',
+              top: '25px',
               padding: '8px 15px',
               backgroundColor: theme === "light" ? '#8B0000' : '#B22222',
               color: 'white',

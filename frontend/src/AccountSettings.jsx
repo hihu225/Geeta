@@ -7,7 +7,7 @@ import { MdNotificationsActive } from "react-icons/md";
 import "./hihu.css";
 import { ThemeContext } from "./ThemeContext";
 import { UserContext } from "./UserContext";
-import {motion} from "framer-motion";
+import {motion, AnimatePresence} from "framer-motion";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
@@ -726,50 +726,62 @@ const handleCloseModal = (setter) => {
       </div>
 
       {/* Avatar Selector Modal */}
-      {showAvatarSelector && (
-        <div style={styles.avatarSelectorOverlay} onClick={handleAvatarCancel}>
-          <div style={styles.avatarSelectorContainer} onClick={(e) => e.stopPropagation()}>
-            <h3 style={styles.avatarSelectorTitle}>Choose Your Spiritual Avatar</h3>
-            <div style={styles.avatarGrid}>
-              {avatarOptions.map((option, index) => (
-                <div
-                  key={index}
-                  style={{
-                    ...styles.avatarOption,
-                    ...(selectedAvatar === option.icon ? styles.avatarOptionSelected : {})
-                  }}
-                  onClick={() => handleAvatarSelect(option.icon)}
-                  title={option.name}
-                >
-                  {option.icon}
-                </div>
-              ))}
+      <AnimatePresence>
+  {showAvatarSelector && (
+    <motion.div
+      style={styles.avatarSelectorOverlay}
+      onClick={handleAvatarCancel}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        style={styles.avatarSelectorContainer}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+      >
+        <h3 style={styles.avatarSelectorTitle}>Choose Your Spiritual Avatar</h3>
+
+        <div style={styles.avatarGrid}>
+          {avatarOptions.map((option, index) => (
+            <div
+              key={index}
+              style={{
+                ...styles.avatarOption,
+                ...(selectedAvatar === option.icon ? styles.avatarOptionSelected : {}),
+              }}
+              onClick={() => handleAvatarSelect(option.icon)}
+              title={option.name}
+            >
+              {option.icon}
             </div>
-            <div style={styles.avatarButtons}>
-              <button
-                onClick={handleAvatarSave}
-                style={{
-                  ...styles.popupButton,
-                  ...styles.popupButtonPrimary,
-                }}
-                className="popup-btn-primary"
-              >
-                Save Avatar
-              </button>
-              <button
-                onClick={handleAvatarCancel}
-                style={{
-                  ...styles.popupButton,
-                  ...styles.popupButtonSecondary,
-                }}
-                className="popup-btn-secondary"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+
+        <div style={styles.avatarButtons}>
+          <button
+            onClick={handleAvatarSave}
+            style={{ ...styles.popupButton, ...styles.popupButtonPrimary }}
+            className="popup-btn-primary"
+          >
+            Save Avatar
+          </button>
+          <button
+            onClick={handleAvatarCancel}
+            style={{ ...styles.popupButton, ...styles.popupButtonSecondary }}
+            className="popup-btn-secondary"
+          >
+            Cancel
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
       {/* Demo Account Popup */}
       {showDemoPopup && (
@@ -807,125 +819,174 @@ const handleCloseModal = (setter) => {
         </div>
       )}
       {/* About Modal */}
-{showAboutModal && (
-  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowAboutModal)}>
-    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
-      <div style={styles.popupIcon}>🕉️</div>
-      <h3 className={`popup-title ${theme}`}>
-  About Geeta Gpt <br />
-  <span>(Spiritual Guidance Chatbot)</span>
-</h3>
+      <AnimatePresence>
+  {showAboutModal && (
+    <motion.div
+      style={styles.popupOverlay}
+      onClick={() => handleCloseModal(setShowAboutModal)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={`popup-container ${theme}`}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+      >
+        <div style={styles.popupIcon}>🕉️</div>
+        <h3 className={`popup-title ${theme}`}>
+          About Geeta Gpt <br />
+          <span>(Spiritual Guidance Chatbot)</span>
+        </h3>
 
-
-      <div style={styles.modalContent}>
-        <div style={styles.verse}>
-          "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।<br/>
-          अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्।।"<br/>
-          <small>- Bhagavad Gita 4.7</small>
+        <div style={styles.modalContent}>
+          <div style={styles.verse}>
+            "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।<br/>
+            अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्।।"<br/>
+            <small>- Bhagavad Gita 4.7</small>
+          </div>
+          <p style={styles.modalText}>
+            Our AI-powered spiritual guidance chatbot draws wisdom from the timeless teachings of the Bhagavad Gita to provide personalized spiritual counsel and life guidance.
+          </p>
+          <p style={styles.modalText}>
+            <strong>Features:</strong><br/>
+            • Personalized spiritual guidance based on Gita's teachings<br/>
+            • AI-powered responses using advanced language models<br/>
+            • Secure and private conversations<br/>
+            • Multilingual support for universal accessibility
+          </p>
+          <p style={styles.modalText}>
+            <strong>Technology:</strong> Powered by Google's Gemini AI for intelligent, contextual responses rooted in ancient wisdom.
+          </p>
         </div>
-        <p style={styles.modalText}>
-          Our AI-powered spiritual guidance chatbot draws wisdom from the timeless teachings of the Bhagavad Gita to provide personalized spiritual counsel and life guidance.
-        </p>
-        <p style={styles.modalText}>
-          <strong>Features:</strong><br/>
-          • Personalized spiritual guidance based on Gita's teachings<br/>
-          • AI-powered responses using advanced language models<br/>
-          • Secure and private conversations<br/>
-          • Multilingual support for universal accessibility
-        </p>
-        <p style={styles.modalText}>
-          <strong>Technology:</strong> Powered by Google's Gemini AI for intelligent, contextual responses rooted in ancient wisdom.
-        </p>
-      </div>
-      <div style={styles.popupButtons}>
-        <button
-          onClick={() => handleCloseModal(setShowAboutModal)}
-          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
-          className="popup-btn-primary"
-        >
-          Understood 🙏
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div style={styles.popupButtons}>
+          <button
+            onClick={() => handleCloseModal(setShowAboutModal)}
+            style={{ ...styles.popupButton, ...styles.popupButtonPrimary }}
+            className="popup-btn-primary"
+          >
+            Understood 🙏
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
-{/* Privacy Modal */}
-{showPrivacyModal && (
-  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowPrivacyModal)}>
-    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
-      <div style={styles.popupIcon}>🔒</div>
-      <h3 className={`popup-title ${theme}`}>Privacy & Data Protection</h3>
-      <div style={styles.modalContent}>
-        <p style={styles.modalText}>
-          <strong>Your Privacy Matters:</strong><br/>
-          We respect your spiritual journey and maintain strict confidentiality of your conversations.
-        </p>
-        <p style={styles.modalText}>
-          <strong>Data We Collect:</strong><br/>
-          • Chat messages for providing relevant guidance<br/>
-          • Basic profile information (name, avatar preference)<br/>
-          • Session data for improving our service
-        </p>
-        <p style={styles.modalText}>
-          <strong>Data We Don't Share:</strong><br/>
-          • Personal conversations remain private<br/>
-          • No selling of personal information<br/>
-          • Secure encryption for all communications
-        </p>
-        <p style={styles.modalText}>
-          <strong>Your Rights:</strong> You can request data deletion, export your conversations, or modify your privacy settings at any time.
-        </p>
-      </div>
-      <div style={styles.popupButtons}>
-        <button
-          onClick={() => handleCloseModal(setShowPrivacyModal)}
-          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
-          className="popup-btn-primary"
-        >
-          Accept
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+<AnimatePresence>
+  {showPrivacyModal && (
+    <motion.div
+      style={styles.popupOverlay}
+      onClick={() => handleCloseModal(setShowPrivacyModal)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={`popup-container ${theme}`}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+      >
+        <div style={styles.popupIcon}>🔒</div>
+        <h3 className={`popup-title ${theme}`}>Privacy & Data Protection</h3>
+
+        <div style={styles.modalContent}>
+          <p style={styles.modalText}>
+            <strong>Your Privacy Matters:</strong><br />
+            We respect your spiritual journey and maintain strict confidentiality of your conversations.
+          </p>
+          <p style={styles.modalText}>
+            <strong>Data We Collect:</strong><br />
+            • Chat messages for providing relevant guidance<br />
+            • Basic profile information (name, avatar preference)<br />
+            • Session data for improving our service
+          </p>
+          <p style={styles.modalText}>
+            <strong>Data We Don't Share:</strong><br />
+            • Personal conversations remain private<br />
+            • No selling of personal information<br />
+            • Secure encryption for all communications
+          </p>
+          <p style={styles.modalText}>
+            <strong>Your Rights:</strong> You can request data deletion, export your conversations, or modify your privacy settings at any time.
+          </p>
+        </div>
+
+        <div style={styles.popupButtons}>
+          <button
+            onClick={() => handleCloseModal(setShowPrivacyModal)}
+            style={{ ...styles.popupButton, ...styles.popupButtonPrimary }}
+            className="popup-btn-primary"
+          >
+            Accept
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
 {/* Feedback Modal */}
-{showFeedbackModal && (
-  <div style={styles.popupOverlay} onClick={() => handleCloseModal(setShowFeedbackModal)}>
-    <div className={`popup-container ${theme}`} onClick={(e) => e.stopPropagation()}>
-      <div style={styles.popupIcon}>💭</div>
-      <h3 className={`popup-title ${theme}`}>Share Your Experience</h3>
-      <div style={styles.modalContent}>
-        <p style={styles.modalText}>
-          Your feedback helps us improve the spiritual guidance experience for all seekers.
-        </p>
-        <textarea
-          style={styles.feedbackTextarea}
-          placeholder="Share your thoughts, suggestions, or experiences with our spiritual guidance chatbot..."
-          value={feedbackText}
-          onChange={(e) => setFeedbackText(e.target.value)}
-        />
-      </div>
-      <div style={styles.popupButtons}>
-        <button
-          onClick={handleSubmitFeedback}
-          style={{...styles.popupButton, ...styles.popupButtonPrimary}}
-          className="popup-btn-primary"
-        >
-          Submit Feedback
-        </button>
-        <button
-          onClick={() => handleCloseModal(setShowFeedbackModal)}
-          style={{...styles.popupButton, ...styles.popupButtonSecondary}}
-          className="popup-btn-secondary"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+<AnimatePresence>
+  {showFeedbackModal && (
+    <motion.div
+      style={styles.popupOverlay}
+      onClick={() => handleCloseModal(setShowFeedbackModal)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={`popup-container ${theme}`}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+      >
+        <div style={styles.popupIcon}>💭</div>
+        <h3 className={`popup-title ${theme}`}>Share Your Experience</h3>
+
+        <div style={styles.modalContent}>
+          <p style={styles.modalText}>
+            Your feedback helps us improve the spiritual guidance experience for all seekers.
+          </p>
+          <textarea
+            style={styles.feedbackTextarea}
+            placeholder="Share your thoughts, suggestions, or experiences with our spiritual guidance chatbot..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+          />
+        </div>
+
+        <div style={styles.popupButtons}>
+          <button
+            onClick={handleSubmitFeedback}
+            style={{ ...styles.popupButton, ...styles.popupButtonPrimary }}
+            className="popup-btn-primary"
+          >
+            Submit Feedback
+          </button>
+          <button
+            onClick={() => handleCloseModal(setShowFeedbackModal)}
+            style={{ ...styles.popupButton, ...styles.popupButtonSecondary }}
+            className="popup-btn-secondary"
+          >
+            Cancel
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
     </div>
     </motion.div>
   );

@@ -578,6 +578,7 @@ const updatePreferences = async (newSettings) => {
   width: fit-content;
   margin-left: 0;
   margin-right: auto;
+  margin-top: 20px;
 }
 
 .back-button:hover {

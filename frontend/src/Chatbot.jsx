@@ -346,7 +346,7 @@ const getISTGreeting = () => {
             }}
             style={{
               position: "absolute",
-              top: "6px",
+              top: "20px",
               right: "15px",
               background: theme === "light" ? "#8B0000" : "#B22222",
               color: "white",
@@ -370,21 +370,22 @@ const getISTGreeting = () => {
 
           <div
             style={{
-              padding: "15px",
+              padding: "45px 35px 20px 15px",
               textAlign: "center",
               borderBottom:
                 theme === "light" ? "2px solid #D4A017" : "2px solid #664D00",
             }}
           >
-            <h3
+            <div
               style={{
                 color: theme === "light" ? "#8B0000" : "#FF6B6B",
-                margin: "10px 0",
                 fontSize: "1.3rem",
+                fontWeight: "bold",
+
               }}
             >
               Conversation History
-            </h3>
+            </div>
           </div>
 
           <div
