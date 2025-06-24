@@ -463,6 +463,8 @@ const GeetaGPTLanding = () => {
   text-transform: uppercase;
 }
 .geeta-gpt-title {
+  position: relative;
+  display: inline-block;
   font-size: 5rem;
   font-weight: 800;
   text-align: center;
@@ -470,6 +472,18 @@ const GeetaGPTLanding = () => {
   margin-bottom: 1rem;
   font-family: 'Georgia', serif;
   text-transform: uppercase;
+}
+
+.geeta-gpt-title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -8px;
+  width: 60%;
+  height: 4px;
+  background: linear-gradient(to right, #d97706, #a16207);
+  border-radius: 9999px;
 }
 
 /* Sacred saffron for 'GEETA' */
