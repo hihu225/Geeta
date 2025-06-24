@@ -193,7 +193,7 @@ const GeetaGPTLanding = () => {
                     <div className="chat-input-wrapper">
                       <input
                         type="text"
-                        placeholder="Ask Krishna for guidance... (Demo mode)"
+                        placeholder="Ask Krishna for guidance... (Demo here)"
                         disabled
                         className="chat-input-field"
                       />
@@ -282,7 +282,12 @@ const GeetaGPTLanding = () => {
               </div>
             </div>
           </div>
-          <p className="section-description2">Seek more in our app — join us now and start your journey.</p>
+          <p className="section-description2">
+  Seek more in our app — join us now and start your journey.
+  <br />
+  <span className="spiritual-line">श्रीकृष्णः सदा सहायते।</span>
+</p>
+
         </div>
       </section>
 
@@ -300,11 +305,12 @@ const GeetaGPTLanding = () => {
       </button>
 
       <div className="inquiry-form-wrapper">
-        <p className="inquiry-text">Have questions? Send us an inquiry</p>
-        <button onClick={support} type="submit" className="inquiry-submit-btn">
-          Email Us
-        </button>
-      </div>
+  <p className="inquiry-text">Have questions? Send us an inquiry</p>
+  <button onClick={support} type="button" className="inquiry-link-btn">
+    Email Us
+  </button>
+</div>
+
     </div>
   </div>
 </section>
@@ -354,6 +360,13 @@ const GeetaGPTLanding = () => {
   color: #4a5568; /* gray-600 */
   text-align: center;
   margin-top: 4rem; /* mt-4 */
+}
+.spiritual-line {
+  font-style: italic;
+  color: #fb923c; /* spiritual orange */
+  font-weight: 500;
+  display: block;
+  margin-top: 0.5rem;
 }
 
 
@@ -831,23 +844,31 @@ const GeetaGPTLanding = () => {
   box-shadow: 0 0 0 2px rgba(237, 137, 45, 0.5); /* focus:ring-2 focus:ring-amber-500 */
 }
 
-.inquiry-submit-btn {
-  padding: 0.75rem 1.5rem; /* px-6 py-3 */
-  background-color: #d97706; /* bg-amber-600 */
-  color: #fff; /* text-white */
-  border-radius: 0.75rem; /* rounded-xl */
-  transition: background-color 0.3s ease-in-out; /* transition-colors duration-300 */
-  outline: none; /* focus:outline-none */
+.inquiry-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #fb923c;
+  text-decoration: underline;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  outline: none; /* Removes the default focus outline */
+  -webkit-tap-highlight-color: transparent; /* Removes tap highlight on mobile */
+}
+.inquiry-link-btn:hover {
+  color: #f97316;
+  text-decoration: none;
+}
+.inquiry-link-btn:focus {
+  outline: none;
+  box-shadow: none; /* Prevents any default focus ring */
+}
+.inquiry-link-btn:focus-visible {
+  outline: 2px dashed #fb923c;
+  outline-offset: 2px;
 }
 
-.inquiry-submit-btn:hover {
-  background-color: #b45309; /* hover:bg-amber-700 */
-}
-
-.inquiry-submit-btn:focus {
-  box-shadow: 0 0 0 4px rgba(237, 137, 45, 0.5); /* focus:ring-4 focus:ring-amber-500 */
-}
 
 /* --- Animations --- */
 @keyframes fade-in-custom {
