@@ -137,7 +137,7 @@ const GeetaGPTLanding = () => {
   <span className="hero-title-gradient">Krishna Guide</span>
 </h1>
               <p className="hero-description">
-                Where ancient wisdom meets modern technology.
+                Where ancient wisdom meets modern technology.<br/>
                 Timeless Bhagavad Gita wisdom, whenever you seek it.
               </p>
               
