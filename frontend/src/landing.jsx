@@ -122,17 +122,15 @@ const GeetaGPTLanding = () => {
       {/* Hero Section */}
       <section className="hero-section">
         <div className=".cta-container">
-          <div className="hero-content-wrapper">
+          
             {/* Left Content */}
             <div className="hero-left-content">
               <div className="hero-tagline">
                 <Flower className="flower-icon animate-pulse-custom" />
                 <span className="hero-tagline-text">Spiritual Guidance Chatbot</span>
               </div>
-<h1 className="geeta-gpt-title">
-  <span className="geeta-word">GEETA</span><br />
-  <span className="gpt-word">GPT</span>
-</h1>
+<iframe src="/custom-page.html" style={{ width: '100%', height: '100vh', border: 'none' }} />
+<div className="hero-content-wrapper">
 
 <h1 className="hero-title">
   Your Personal

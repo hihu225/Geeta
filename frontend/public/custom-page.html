@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEETA GPT - Spiritual Landing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .spiritual-page {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(135deg, #fff7ed 0%, #facc15 40%, #fb923c 100%);
+    min-height: 280vh;
+    overflow-x: hidden;
+    color: #1f2937;
+    padding: 2rem;
+    width: 100%;
+}
+
+        .container {
+            width: 100%;
+            position: relative;
+        }
+
+        .title-section {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .geeta-gpt-title {
+            position: relative;
+            display: inline-block;
+            font-size: 5rem;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            font-family: 'Georgia', serif;
+            text-transform: uppercase;
+        }
+
+        .geeta-gpt-title::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -8px;
+            width: 60%;
+            height: 4px;
+            background: linear-gradient(to right, #d97706, #a16207);
+            border-radius: 9999px;
+        }
+
+        .geeta-word {
+            color: #d97706;
+            transition: text-shadow 0.3s ease;
+        }
+
+        .gpt-word {
+            color: #7f1d1d;
+            transition: text-shadow 0.3s ease;
+        }
+
+        .geeta-gpt-title:hover .geeta-word {
+            text-shadow: 0 0 10px rgba(217, 119, 6, 0.4);
+        }
+
+        .geeta-gpt-title:hover .gpt-word {
+            text-shadow: 0 0 10px rgba(127, 29, 29, 0.4);
+        }
+
+        /* Sacred Circle Animation */
+        .sacred-circle {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 5;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .sacred-circle.active {
+            width: 300px;
+            height: 300px;
+            border-color: rgba(217, 119, 6, 0.8);
+            opacity: 1;
+            box-shadow: 
+                0 0 30px rgba(217, 119, 6, 0.5),
+                inset 0 0 30px rgba(217, 119, 6, 0.2);
+        }
+
+        .sacred-circle.expanded {
+            width: 600px;
+            height: 600px;
+            border-color: rgba(217, 119, 6, 0.4);
+            box-shadow: 
+                0 0 60px rgba(217, 119, 6, 0.3),
+                inset 0 0 60px rgba(217, 119, 6, 0.1);
+        }
+
+        /* Om Symbol in Center */
+        .om-symbol {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            color: #d97706;
+            opacity: 0;
+            transition: all 0.8s ease;
+            text-shadow: 0 0 20px rgba(217, 119, 6, 0.6);
+        }
+
+        .om-symbol.visible {
+            opacity: 1;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* Spiritual Bubbles */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(217, 119, 6, 0.8), rgba(127, 29, 29, 0.4));
+            opacity: 0;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .bubble:nth-child(odd) {
+            background: radial-gradient(circle at 30% 30%, rgba(127, 29, 29, 0.8), rgba(217, 119, 6, 0.4));
+        }
+
+        .bubble.active {
+            opacity: 0.7;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(20px) rotate(240deg); }
+        }
+
+        /* Energy Rays */
+        .energy-ray {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(217, 119, 6, 0.8), transparent);
+            transform-origin: bottom center;
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+
+        .energy-ray.active {
+            opacity: 1;
+            animation: rayPulse 4s infinite;
+        }
+
+        @keyframes rayPulse {
+            0%, 100% { transform: scaleY(1) rotate(var(--rotation)); }
+            50% { transform: scaleY(1.5) rotate(var(--rotation)); }
+        }
+
+        /* Mandala Patterns */
+        .mandala-ring {
+            position: absolute;
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 50%;
+            opacity: 0;
+            transform: rotate(0deg);
+            transition: all 1s ease;
+        }
+
+        .mandala-ring.active {
+            opacity: 0.6;
+            animation: rotate 20s linear infinite;
+        }
+
+        .mandala-ring:nth-child(even) {
+            animation-direction: reverse;
+            border-color: rgba(127, 29, 29, 0.3);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Content Section */
+        .content-section {
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            margin-top: 50vh;
+            position: relative;
+            z-index: 15;
+        }
+
+        .divine-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.4rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .divine-quote {
+            font-style: italic;
+            font-size: 1.5rem;
+             color: #3b1f0f;
+            margin: 2rem 0;
+            text-shadow: 0 0 10px rgba(217, 119, 6, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .geeta-gpt-title {
+                font-size: 3rem;
+            }
+            
+            .sacred-circle.active {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .sacred-circle.expanded {
+                width: 400px;
+                height: 400px;
+            }
+            
+            .om-symbol {
+                font-size: 1.8rem;
+            }
+            .spiritual-page {
+                width: 100%;
+            }
+            .divine-content {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="spiritual-page">
+    <div class="container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <h1 class="geeta-gpt-title">
+                <span class="geeta-word">GEETA</span><br>
+                <span class="gpt-word">GPT</span>
+            </h1>
+        </div>
+
+        <!-- Sacred Circle with Spiritual Elements -->
+        <div class="sacred-circle" id="sacredCircle">
+            <div class="om-symbol" id="omSymbol">ॐ</div>
+            
+            <!-- Energy Rays -->
+            <div class="energy-ray" style="--rotation: 0deg; top: -50px; left: 50%; transform: translateX(-50%);"></div>
+            <div class="energy-ray" style="--rotation: 45deg; top: -35px; right: -35px;"></div>
+            <div class="energy-ray" style="--rotation: 90deg; top: 50%; right: -50px; transform: translateY(-50%);"></div>
+            <div class="energy-ray" style="--rotation: 135deg; bottom: -35px; right: -35px;"></div>
+            <div class="energy-ray" style="--rotation: 180deg; bottom: -50px; left: 50%; transform: translateX(-50%);"></div>
+            <div class="energy-ray" style="--rotation: 225deg; bottom: -35px; left: -35px;"></div>
+            <div class="energy-ray" style="--rotation: 270deg; top: 50%; left: -50px; transform: translateY(-50%);"></div>
+            <div class="energy-ray" style="--rotation: 315deg; top: -35px; left: -35px;"></div>
+            
+            <!-- Mandala Rings -->
+            <div class="mandala-ring" style="width: 400px; height: 400px; top: -50px; left: -50px;"></div>
+            <div class="mandala-ring" style="width: 500px; height: 500px; top: -100px; left: -100px;"></div>
+            <div class="mandala-ring" style="width: 600px; height: 600px; top: -150px; left: -150px;"></div>
+        </div>
+
+        <!-- Spiritual Bubbles Container -->
+        <div id="bubblesContainer"></div>
+
+        <!-- Content Section -->
+        <div class="content-section">
+            <div class="divine-content">
+                <div class="divine-quote">
+                    "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।<br>
+                    अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥"
+                </div>
+                <p>
+                    Welcome to GEETA GPT, where ancient wisdom meets modern technology. 
+                    Dive deep into the timeless teachings of the Bhagavad Gita and discover 
+                    spiritual guidance for life's eternal questions.
+                </p>
+                <p>
+                    Let the divine knowledge illuminate your path as you explore the sacred 
+                    verses that have guided humanity for millennia. Experience the profound 
+                    wisdom of Lord Krishna through the power of AI.
+                </p>
+<p>
+    Whether you're seeking peace, direction, or self-discovery, Geeta GPT is your digital companion on the path of dharma.
+</p>
+
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Scroll animation logic
+        let lastScrollTop = 0;
+        const sacredCircle = document.getElementById('sacredCircle');
+        const omSymbol = document.getElementById('omSymbol');
+        const bubblesContainer = document.getElementById('bubblesContainer');
+        const energyRays = document.querySelectorAll('.energy-ray');
+        const mandalaRings = document.querySelectorAll('.mandala-ring');
+
+        // Create spiritual bubbles
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            
+            const size = Math.random() * 30 + 10;
+            const x = Math.random() * window.innerWidth;
+            const y = window.innerHeight + size;
+            
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = x + 'px';
+            bubble.style.top = y + 'px';
+            bubble.style.animationDelay = Math.random() * 6 + 's';
+            bubble.style.animationDuration = (Math.random() * 4 + 6) + 's';
+            
+            bubblesContainer.appendChild(bubble);
+            
+            // Remove bubble after animation
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.parentNode.removeChild(bubble);
+                }
+            }, 12000);
+        }
+
+        // Scroll event handler
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const scrollPercent = scrollTop / windowHeight;
+
+            // Activate circle when scrolling down
+            if (scrollPercent > 0.1) {
+                sacredCircle.classList.add('active');
+                omSymbol.classList.add('visible');
+                
+                // Activate energy rays
+                energyRays.forEach((ray, index) => {
+                    setTimeout(() => {
+                        ray.classList.add('active');
+                    }, index * 100);
+                });
+                
+                // Activate mandala rings
+                mandalaRings.forEach((ring, index) => {
+                    setTimeout(() => {
+                        ring.classList.add('active');
+                    }, index * 200);
+                });
+
+                // Start creating bubbles
+                if (Math.random() < 0.3) {
+                    createBubble();
+                }
+            }
+
+            // Expand circle further down
+            if (scrollPercent > 0.5) {
+                sacredCircle.classList.add('expanded');
+            }
+
+            // Update circle position slightly for dynamic effect
+            const translateY = Math.min(scrollPercent * 50, 50);
+            sacredCircle.style.transform = `translate(-50%, calc(-50% + ${translateY}px))`;
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Create initial bubbles for ambient effect
+        setInterval(() => {
+            if (sacredCircle.classList.contains('active') && Math.random() < 0.4) {
+                createBubble();
+            }
+        }, 2000);
+
+        // Add some initial ambient bubbles
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createBubble, i * 1000);
+        }
+    </script>
+    </div>
+</body>
+</html>
