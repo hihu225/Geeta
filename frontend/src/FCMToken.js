@@ -10,6 +10,7 @@ let isRegistrationInProgress = false;
 let registrationListeners = [];
 let currentFCMToken = null; // Cache current token
 let tokenSaveInProgress = false;
+let currentUserId = null; // Track current user to detect user changes
 
 // Multi-language fallback messages
 const getFallbackMessages = (language) => {
@@ -35,6 +36,56 @@ const getFallbackMessages = (language) => {
   };
   
   return messages[language] || messages.english;
+};
+
+// Function to get current user identifier (you can modify this based on how you identify users)
+const getCurrentUserId = () => {
+  try {
+    // Try to get user ID from auth token or cookies
+    const authToken = Cookies.get("token");
+    if (authToken) {
+      return authToken;
+    }
+    
+    // Try to get from localStorage if you store user info there
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      return parsed.id || parsed.userId || parsed.email;
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn('Error getting current user ID:', error);
+    return null;
+  }
+};
+
+// Function to check if user has changed and clear cache if needed
+const checkAndClearCacheForNewUser = () => {
+  const newUserId = getCurrentUserId();
+  
+  // If user has changed, clear the token cache
+  if (currentUserId !== newUserId) {
+    console.log('User changed, clearing FCM token cache');
+    console.log('Previous user:', currentUserId);
+    console.log('New user:', newUserId);
+    
+    currentFCMToken = null;
+    currentUserId = newUserId;
+    
+    // Also clear any stored token preferences for the previous user
+    try {
+      localStorage.removeItem('fcmTokenCache');
+      localStorage.removeItem('lastTokenSaveTime');
+    } catch (error) {
+      console.warn('Error clearing localStorage:', error);
+    }
+    
+    return true; // User changed
+  }
+  
+  return false; // Same user
 };
 
 // Function to get user's language preference
@@ -69,40 +120,55 @@ const saveTokenToBackend = async (token) => {
     return;
   }
 
-  // Check if token is already cached and same
-  if (currentFCMToken === token) {
-    console.log('Token unchanged, skipping backend save');
+  // Check if token is already cached and same (but only for same user)
+  if (currentFCMToken === token && !checkAndClearCacheForNewUser()) {
+    console.log('Token unchanged for same user, skipping backend save');
     return;
   }
 
   try {
     tokenSaveInProgress = true;
     const authToken = Cookies.get("token");
-    //console.log("Auth Token from Cookie:", authToken);
+    
     const response = await axios.post(
       `${backend_url}/api/notifications/save-token`,
-      { token: token },
-      // {
-      //   headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      // }
+      { 
+        token: token,
+        userId: getCurrentUserId() // Include user ID in request
+      },
+      {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      }
     );
     
     if (response.status === 200) {
       if (response.data.alreadyExists) {
-        console.log("Token already exists in backend, no update needed");
+        console.log("Token already exists in backend for this user, no update needed");
       } else {
-        console.log("Token saved successfully to backend");
+        console.log("Token saved successfully to backend for user:", getCurrentUserId());
       }
       // Cache the token after successful save
       currentFCMToken = token;
+      currentUserId = getCurrentUserId();
+      
+      // Optionally store in localStorage with timestamp
+      try {
+        localStorage.setItem('fcmTokenCache', JSON.stringify({
+          token: token,
+          userId: currentUserId,
+          timestamp: Date.now()
+        }));
+      } catch (error) {
+        console.warn('Error storing token cache:', error);
+      }
     }
   } catch (backendError) {
-  if (backendError.response) {
-    console.error("Backend response error:", backendError.response.data);
-    console.error("Status code:", backendError.response.status);
-  } else {
-    console.error("Token save error:", backendError.message);
-  }
+    if (backendError.response) {
+      console.error("Backend response error:", backendError.response.data);
+      console.error("Status code:", backendError.response.status);
+    } else {
+      console.error("Token save error:", backendError.message);
+    }
   } finally {
     tokenSaveInProgress = false;
   }
@@ -116,16 +182,24 @@ const FCMToken = async (navigate = null) => {
       return null;
     }
 
+    // Check if user has changed and clear cache if needed
+    const userChanged = checkAndClearCacheForNewUser();
+    
     // Prevent duplicate registrations
     if (isRegistrationInProgress) {
       console.log('Registration already in progress, skipping...');
       return null;
     }
 
-    // If we already have a token cached, return it
-    if (currentFCMToken) {
-      console.log('Using cached FCM token:', currentFCMToken);
+    // If we already have a token cached for the current user, return it
+    if (currentFCMToken && !userChanged) {
+      console.log('Using cached FCM token for current user:', currentFCMToken);
       return currentFCMToken;
+    }
+
+    // If user changed, force new token generation
+    if (userChanged) {
+      console.log('User changed, generating new FCM token');
     }
 
     isRegistrationInProgress = true;
@@ -159,6 +233,7 @@ const FCMToken = async (navigate = null) => {
         isResolved = true;
         
         console.log('Push registration success, FCM token: ' + token.value);
+        console.log('Token generated for user:', getCurrentUserId());
         
         try {
           // Save token to backend (with duplicate prevention)
@@ -252,7 +327,7 @@ const setupNotificationListeners = (navigate) => {
     // Add transition effect and navigate
     addPageTransitionEffect();
     
-  window.location.href = '/notifications';
+    window.location.href = '/notifications';
   });
 };
 
@@ -649,10 +724,153 @@ const addPageTransitionEffect = () => {
   }, 800);
 };
 
+// Function to initialize FCM for existing logged-in users
+export const initializeFCMForExistingUser = async (navigate = null) => {
+  try {
+    const currentUser = getCurrentUserId();
+    if (!currentUser) {
+      console.log('No user logged in, skipping FCM initialization');
+      return null;
+    }
+
+    console.log('Initializing FCM for existing user:', currentUser);
+    
+    // Check if we have a cached token for this user
+    try {
+      const cachedData = localStorage.getItem('fcmTokenCache');
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        
+        // If cached token is for current user and not too old (e.g., 24 hours)
+        const isRecent = (Date.now() - parsed.timestamp) < (24 * 60 * 60 * 1000);
+        if (parsed.userId === currentUser && isRecent) {
+          console.log('Using recent cached FCM token for current user');
+          currentFCMToken = parsed.token;
+          currentUserId = currentUser;
+          return parsed.token;
+        }
+      }
+    } catch (error) {
+      console.warn('Error reading FCM token cache:', error);
+    }
+
+    // Generate new token if no valid cache found
+    return await FCMToken(navigate);
+  } catch (error) {
+    console.error('Error initializing FCM for existing user:', error);
+    return null;
+  }
+};
+
+// Function to update notification preferences
+export const updateNotificationPreferences = (preferences) => {
+  try {
+    localStorage.setItem('notificationPreferences', JSON.stringify({
+      ...preferences,
+      timestamp: Date.now()
+    }));
+    console.log('Notification preferences updated:', preferences);
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+  }
+};
+
+// Function to check FCM token health 
+export const checkFCMTokenHealth = async (navigate = null) => {
+  try {
+    const currentUser = getCurrentUserId();
+    if (!currentUser) {
+      console.log('No user logged in, skipping FCM health check');
+      return false;
+    }
+
+    // Check if current token is still valid for current user
+    if (!currentFCMToken || currentUserId !== currentUser) {
+      console.log('FCM token needs refresh for current user');
+      await forceNewFCMToken(navigate);
+      return true;
+    }
+
+    // Check cache age
+    try {
+      const cachedData = localStorage.getItem('fcmTokenCache');
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        const ageInHours = (Date.now() - parsed.timestamp) / (1000 * 60 * 60);
+        
+        // Refresh if token is older than 7 days
+        if (ageInHours > (7 * 24)) {
+          console.log('FCM token is old, refreshing...');
+          await forceNewFCMToken(navigate);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking FCM token age:', error);
+    }
+
+    console.log('FCM token health check passed');
+    return false;
+  } catch (error) {
+    console.error('Error checking FCM token health:', error);
+    return false;
+  }
+};
+
+// Function to get current FCM token status (useful for debugging)
+export const getFCMTokenStatus = () => {
+  const currentUser = getCurrentUserId();
+  
+  return {
+    hasToken: !!currentFCMToken,
+    currentToken: currentFCMToken ? `${currentFCMToken.substring(0, 20)}...` : null,
+    currentUser: currentUser,
+    userMatch: currentUserId === currentUser,
+    cacheInfo: (() => {
+      try {
+        const cachedData = localStorage.getItem('fcmTokenCache');
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          return {
+            hasCache: true,
+            cacheAge: Math.round((Date.now() - parsed.timestamp) / (1000 * 60 * 60)),
+            cacheUser: parsed.userId
+          };
+        }
+        return { hasCache: false };
+      } catch {
+        return { hasCache: false, error: true };
+      }
+    })()
+  };
+};
 // Export function to reset cached token (useful for testing or logout)
 export const resetFCMToken = () => {
   currentFCMToken = null;
+  currentUserId = null;
+  
+  // Clear localStorage cache
+  try {
+    localStorage.removeItem('fcmTokenCache');
+    localStorage.removeItem('lastTokenSaveTime');
+  } catch (error) {
+    console.warn('Error clearing localStorage:', error);
+  }
+  
   console.log('FCM token cache reset');
+};
+
+// Export function to manually clear cache for user change
+export const clearFCMTokenForUserChange = () => {
+  console.log('Clearing FCM token cache for user change');
+  resetFCMToken();
+};
+
+// Export function to force new token generation (useful when user logs in)
+export const forceNewFCMToken = async (navigate = null) => {
+  console.log('Forcing new FCM token generation');
+  resetFCMToken();
+  return await FCMToken(navigate);
 };
 
 export default FCMToken;

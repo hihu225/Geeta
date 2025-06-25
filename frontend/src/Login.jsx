@@ -7,6 +7,7 @@ import { backend_url } from "./utils/backend";
 import { StorageService } from "./utils/storage";
 import swal from "sweetalert2";
 import { UserContext } from "./UserContext";
+import { forceNewFCMToken } from "./FCMToken";
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -117,69 +118,78 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+  setLoading(true);
+  
+  try {
+    const response = await axios.post(`${backend_url}/api/auth/login`, {
+      ...formData,
+      rememberMe,
+    });
 
-    if (!validateForm()) return;
+    if (response.data.success) {
+      // Save credentials if remember me is checked
+      await saveCredentials();
 
-    setLoading(true);
-    try {
-      const response = await axios.post(`${backend_url}/api/auth/login`, {
-        ...formData,
-        rememberMe,
+      // Save token using our storage service
+      await StorageService.set("token", response.data.token, {
+        expires: rememberMe ? 30 : 7,
+        sameSite: "strict",
+        secure: window.location.protocol === 'https:'
       });
 
-      if (response.data.success) {
-        // Save credentials if remember me is checked
-        await saveCredentials();
+      // Set default axios header for future requests
+      axios.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${response.data.token}`;
 
-        // Save token using our storage service
-        await StorageService.set("token", response.data.token, {
-          expires: rememberMe ? 30 : 7,
-          sameSite: "strict",
-          secure: window.location.protocol === 'https:'
-        });
-
-        // Set default axios header for future requests
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${response.data.token}`;
-        
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
-        
-        toast.success("Welcome back! Login successful! 🎉");
-        const loggedInUser = response.data.user;
-
-if (loggedInUser) {
-  localStorage.setItem("user", JSON.stringify(loggedInUser));
-  setUser(loggedInUser);
-}
-
-        localStorage.removeItem("loggedOut");
-        navigate("/chat");
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
-    } catch (error) {
-      if (error.response?.data?.message) {
-        const message = error.response.data.message.toLowerCase();
 
-        if (message === "email not found") {
-          setErrors({ email: "Email not found" });
-          toast.error("Email not found");
-          // Clear saved credentials if email is not found
-          await clearSavedCredentials();
-        } else if (message === "incorrect password") {
-          setErrors({ password: "Incorrect password" });
-          toast.error("Incorrect password");
-          // Clear saved credentials if password is incorrect
-          await clearSavedCredentials();
-        }
+      toast.success("Welcome back! Login successful! 🎉");
+      const loggedInUser = response.data.user;
+      
+      if (loggedInUser) {
+        localStorage.setItem("user", JSON.stringify(loggedInUser));
+        setUser(loggedInUser);
       }
-    } finally {
-      setLoading(false);
+
+      localStorage.removeItem("loggedOut");
+
+      // Force new FCM token generation for the newly logged-in user
+      try {
+        console.log('Generating FCM token for newly logged-in user');
+        await forceNewFCMToken(navigate);
+      } catch (fcmError) {
+        console.warn('FCM token generation failed during login:', fcmError);
+        // Don't block login flow if FCM fails
+      }
+
+      navigate("/chat");
     }
-  };
+  } catch (error) {
+    if (error.response?.data?.message) {
+      const message = error.response.data.message.toLowerCase();
+
+      if (message === "email not found") {
+        setErrors({ email: "Email not found" });
+        toast.error("Email not found");
+        // Clear saved credentials if email is not found
+        await clearSavedCredentials();
+      } else if (message === "incorrect password") {
+        setErrors({ password: "Incorrect password" });
+        toast.error("Incorrect password");
+        // Clear saved credentials if password is incorrect
+        await clearSavedCredentials();
+      }
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleRememberMeChange = async (e) => {
     const checked = e.target.checked;

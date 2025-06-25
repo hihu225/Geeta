@@ -48,7 +48,7 @@ class NotificationService {
         user.preferences?.quoteType || "random",
         user // Pass user object for sequential progress tracking
       );
-      console.log("Gemini Quote Data:", quoteData);
+      //console.log("Gemini Quote Data:", quoteData);
 
       // If Gemini API fails, use fallback quote
       if (!quoteData.success) {

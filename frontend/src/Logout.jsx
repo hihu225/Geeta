@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { backend_url} from "./utils/backend";
 import { ThemeContext } from "./ThemeContext";
+import { clearFCMTokenForUserChange } from './FCMToken'; 
 const Logout = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
@@ -164,39 +165,55 @@ const Logout = () => {
     };
   }, []);
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
   try {
-    // Call the logout API endpoint
     await axios.post(`${backend_url}/api/auth/logout`, {}, {
       // headers: {
       //   "Content-Type": "application/json",
       //   "Authorization": `Bearer ${await StorageService.get("token")}`
       // }
     });
-    
+
+    // Clear FCM token cache for user change BEFORE clearing other data
+    try {
+      clearFCMTokenForUserChange();
+      console.log('FCM token cache cleared for logout');
+    } catch (fcmError) {
+      console.warn('Error clearing FCM token cache during logout:', fcmError);
+    }
+
     // Clear all stored data
     await StorageService.remove("token");
     await StorageService.remove("saved_email");
     await StorageService.remove("saved_password");
     await StorageService.remove("remember_me");
-    
+
     // Clear localStorage data
     localStorage.removeItem("user");
     localStorage.setItem("loggedOut", "true");
     
+    // Clear notification preferences
+    localStorage.removeItem("notificationPreferences");
+
     // Clear axios authorization header
     delete axios.defaults.headers.common["Authorization"];
-    
-    // Show success message
+
     toast.success("Logged out successfully! 👋");
-    
+
     // Redirect to login page
     navigate("/login", { replace: true });
-    
+
   } catch (error) {
     console.error("Logout error:", error);
     toast.error("Error during logout, but you've been logged out locally.");
-    
+
+    // Still clear FCM token cache even if API call fails
+    try {
+      clearFCMTokenForUserChange();
+    } catch (fcmError) {
+      console.warn('Error clearing FCM token cache during logout cleanup:', fcmError);
+    }
+
     // Still clear local data even if API call fails
     await StorageService.remove("token");
     await StorageService.remove("saved_email");
@@ -204,8 +221,9 @@ const Logout = () => {
     await StorageService.remove("remember_me");
     localStorage.removeItem("user");
     localStorage.setItem("loggedOut", "true");
+    localStorage.removeItem("notificationPreferences");
     delete axios.defaults.headers.common["Authorization"];
-    
+
     // Still redirect even if there's an error
     navigate("/login", { replace: true });
   }

@@ -66,7 +66,7 @@ class GeminiService {
       const response = await result.response;
       
       const rawText = response.text();
-      console.log("Raw Gemini Response:", rawText);
+      //console.log("Raw Gemini Response:", rawText);
       
       const parsedQuote = this.parseQuoteResponse(rawText, quoteType);
       console.log("Parsed Quote:", parsedQuote);
