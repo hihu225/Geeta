@@ -277,8 +277,13 @@ const updatePreferences = async (newSettings) => {
 
         <div className="greeting-card">
           <p className="greeting-text">
-             {getISTGreeting()}, {user?.name || "seeker of wisdom"}! 🙏
-          </p>
+  {getISTGreeting()},{" "}
+  {(user?.email?.endsWith("@example.com"))
+    ? "spiritual seeker"
+    : (user?.name || "seeker of wisdom")}
+  ! 🙏
+</p>
+
           <p className="sanskrit-quote">
             यदा यदा हि धर्मस्य ग्लानिर्भवति भारत
           </p>
