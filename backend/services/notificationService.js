@@ -183,7 +183,7 @@ class NotificationService {
     console.warn(`Removing invalid FCM token for user ${userId}`);
 
     // Remove the token from the DB
-    await UserModel.updateOne({ _id: userId }, { $unset: { fcmToken: 1 } });
+    await User.updateOne({ _id: userId }, { $unset: { fcmToken: 1 } });
   }
 
   // Mark the notification as failed
