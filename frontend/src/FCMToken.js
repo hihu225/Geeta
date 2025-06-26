@@ -190,16 +190,39 @@ const FCMToken = async (navigate = null) => {
         }
 
         const token = await getToken(messaging, {
-          vapidKey: 'BB4_1ASpKcUEyiBS5B8hWK-BZVvN2TOB2eWBGx-XPC5tJXp5VrD22EmyF7u_DmLoI3jHaAi6NTtX8WXYCYF-_sw' 
+          vapidKey: 'BB4_1ASpKcUEyiBS5B8hWK-BZVvN2TOB2eWBGx-XPC5tJXp5VrD22EmyF7u_DmLoI3jHaAi6NTtX8WXYCYF-_sw', 
+          serviceWorkerRegistration: await navigator.serviceWorker.ready,
         });
         if (token) {
           console.log('Web FCM Token:', token);
           await saveTokenToBackend(token);
 
           onMessage(messaging, (payload) => {
-            console.log('Foreground web message:', payload);
-            // Show UI updates/toast if needed
-          });
+  console.log('Foreground web message:', payload);
+
+  const title = payload.notification?.title || '📿 Bhagavad Gita Wisdom';
+  const body = payload.notification?.body || 'Click to read today’s message.';
+  const url = payload?.data?.url || '/notifications';
+
+  // Show banner using Notification API
+  if (Notification.permission === 'granted') {
+    const notification = new Notification(title, {
+      body,
+      icon: '/vite.svg',  // 🔁 Customize your icon if needed
+      data: { url },
+    });
+
+    notification.onclick = (event) => {
+      event.preventDefault();
+      window.focus();
+      window.location.href = url;
+    };
+  } else {
+    console.warn('Notification permission not granted at foreground');
+  }
+});
+
+
 
           return token;
         } else {
