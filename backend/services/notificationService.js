@@ -173,18 +173,30 @@ class NotificationService {
           userProgress: quoteData.userProgress,
         };
       } catch (fcmError) {
-        console.error(`FCM delivery failed for user ${userId}:`, fcmError);
+  console.error(`FCM delivery failed for user ${userId}:`, fcmError);
 
-        // Mark notification as failed but don't reset lastSent
-        await notificationRecord.markAsFailed(fcmError.message);
+  // ✅ If the token is invalid, clean it from the database
+  if (
+    fcmError.code === 'messaging/registration-token-not-registered' ||
+    fcmError.errorInfo?.code === 'messaging/registration-token-not-registered'
+  ) {
+    console.warn(`Removing invalid FCM token for user ${userId}`);
 
-        return {
-          success: false,
-          error: fcmError.message,
-          notificationId: notificationRecord._id,
-          sequentialProgress: sequentialProgress, // Still return progress even if FCM failed
-        };
-      }
+    // Remove the token from the DB
+    await UserModel.updateOne({ _id: userId }, { $unset: { fcmToken: 1 } });
+  }
+
+  // Mark the notification as failed
+  await notificationRecord.markAsFailed(fcmError.message);
+
+  return {
+    success: false,
+    error: fcmError.message,
+    notificationId: notificationRecord._id,
+    sequentialProgress: sequentialProgress, // Still return progress even if FCM failed
+  };
+}
+
     } catch (error) {
       console.error(`Error sending quote to user ${userId}:`, error);
 
