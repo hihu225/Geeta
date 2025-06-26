@@ -26,7 +26,7 @@
     "@react-native-voice/voice": "^3.2.4",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
-    "firebase": "^11.8.1",
+    "firebase": "^11.9.1",
     "framer-motion": "^12.19.1",
     "js-cookie": "^3.0.5",
     "jspdf": "^3.0.1",

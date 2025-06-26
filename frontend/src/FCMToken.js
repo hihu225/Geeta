@@ -4,6 +4,8 @@ import { Capacitor } from '@capacitor/core';
 import { backend_url } from "./utils/backend";
 import Cookies from "js-cookie";
 import axios from "axios";
+import { messaging } from './firebase';
+import { getToken, onMessage } from "firebase/messaging";
 
 // Global flags to prevent duplicate operations
 let isRegistrationInProgress = false;
@@ -176,98 +178,107 @@ const saveTokenToBackend = async (token) => {
 
 const FCMToken = async (navigate = null) => {
   try {
-    // Only work on native Android platform
+    const platform = Capacitor.getPlatform();
+
+    // ✅ WEB PLATFORM HANDLING
+    if (platform === 'web') {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          console.warn("Web push permission not granted");
+          return null;
+        }
+
+        const token = await getToken(messaging, {
+          vapidKey: 'BB4_1ASpKcUEyiBS5B8hWK-BZVvN2TOB2eWBGx-XPC5tJXp5VrD22EmyF7u_DmLoI3jHaAi6NTtX8WXYCYF-_sw' 
+        });
+        if (token) {
+          console.log('Web FCM Token:', token);
+          await saveTokenToBackend(token);
+
+          onMessage(messaging, (payload) => {
+            console.log('Foreground web message:', payload);
+            // Show UI updates/toast if needed
+          });
+
+          return token;
+        } else {
+          console.warn('No token retrieved from Firebase');
+          return null;
+        }
+      } catch (webError) {
+        console.error("Error getting web token:", webError);
+        return null;
+      }
+    }
+
+    // ✅ NATIVE ANDROID PLATFORM HANDLING
     if (!Capacitor.isNativePlatform()) {
-      console.log('FCM notifications only supported on native Android platform');
+      console.log('Push notifications only supported on web or native Android platforms');
       return null;
     }
 
-    // Check if user has changed and clear cache if needed
     const userChanged = checkAndClearCacheForNewUser();
-    
-    // Prevent duplicate registrations
+
     if (isRegistrationInProgress) {
       console.log('Registration already in progress, skipping...');
       return null;
     }
 
-    // If we already have a token cached for the current user, return it
     if (currentFCMToken && !userChanged) {
       console.log('Using cached FCM token for current user:', currentFCMToken);
       return currentFCMToken;
     }
 
-    // If user changed, force new token generation
     if (userChanged) {
       console.log('User changed, generating new FCM token');
     }
 
     isRegistrationInProgress = true;
-    console.log('Running on native Android platform');
-    
-    // Clean up any existing listeners first
     cleanupListeners();
-    
-    // Request permission for push notifications
+
     let permStatus = await PushNotifications.checkPermissions();
-    
     if (permStatus.receive === 'prompt') {
       permStatus = await PushNotifications.requestPermissions();
     }
-    
+
     if (permStatus.receive !== 'granted') {
       console.warn('Push notification permissions not granted');
       isRegistrationInProgress = false;
       return null;
     }
-    
-    console.log('Push notification permissions granted');
-    
-    // Set up listeners BEFORE calling register
+
     return new Promise((resolve, reject) => {
       let isResolved = false;
-      
-      // Set up registration success listener
+
       const registrationListener = PushNotifications.addListener('registration', async (token) => {
         if (isResolved) return;
         isResolved = true;
-        
+
         console.log('Push registration success, FCM token: ' + token.value);
-        console.log('Token generated for user:', getCurrentUserId());
-        
-        try {
-          // Save token to backend (with duplicate prevention)
-          await saveTokenToBackend(token.value);
-        } catch (backendError) {
-          console.error("Failed to save token to backend:", backendError);
-          // Don't reject the promise, just log the error
-        }
-        
-        // Clean up and resolve
+        await saveTokenToBackend(token.value).catch(err =>
+          console.error("Failed to save token to backend:", err)
+        );
+
         cleanup();
         resolve(token.value);
       });
-      
-      // Set up registration error listener
+
       const errorListener = PushNotifications.addListener('registrationError', (error) => {
         if (isResolved) return;
         isResolved = true;
-        
         console.error('Error on registration: ' + JSON.stringify(error));
         cleanup();
         reject(error);
       });
-      
-      // Store listeners for cleanup
+
       registrationListeners.push(registrationListener, errorListener);
-      
-      // Set up one-time notification listeners (only if not already set)
+
       if (!window.fcmNotificationListenersSet) {
         setupNotificationListeners(navigate);
         window.fcmNotificationListenersSet = true;
       }
-      
-      // Set timeout to avoid hanging forever
+
       const timeoutId = setTimeout(() => {
         if (!isResolved) {
           isResolved = true;
@@ -275,15 +286,13 @@ const FCMToken = async (navigate = null) => {
           reject(new Error('Registration timeout - no response after 15 seconds'));
         }
       }, 15000);
-      
-      // Cleanup function
+
       const cleanup = () => {
         clearTimeout(timeoutId);
         cleanupListeners();
         isRegistrationInProgress = false;
       };
-      
-      // Now register for push notifications
+
       PushNotifications.register().catch((error) => {
         if (!isResolved) {
           isResolved = true;
@@ -292,13 +301,14 @@ const FCMToken = async (navigate = null) => {
         }
       });
     });
-    
+
   } catch (err) {
     console.error("An error occurred while retrieving token: ", err);
     isRegistrationInProgress = false;
     return null;
   }
 };
+
 
 // Clean up existing listeners
 const cleanupListeners = () => {
