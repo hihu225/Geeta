@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.vite/
+
+# Env — never commit
+.env
+.env.*
+!.env.example
+
+# Capacitor / Android build output
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+
+# Logs
+*.log
+replay_pid*.log
+
+# OS
+.DS_Store

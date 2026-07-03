@@ -1,0 +1,213 @@
+// backend/routes/notifications.js
+const express = require("express");
+const auth = require("../middleware/auth");
+const User = require("../models/usermodels");
+const Notification = require("../models/notificationModels");
+const notificationService = require("../services/notificationService");
+
+const router = express.Router();
+
+// Backend route with token comparison
+router.post("/save-token", auth, async (req, res) => {
+  try {
+    console.log("Incoming save-token request");
+    console.log("Request body:", req.body);
+
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: "FCM token missing" });
+    }
+
+    // First, get the current user to check existing token
+    const currentUser = await User.findById(req.user.userId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check if the token is already saved and is the same
+    if (currentUser.fcmToken === token) {
+      console.log(`FCM token already exists for user ${req.user.userId}, skipping save`);
+      return res.status(200).json({
+        success: true,
+        message: "FCM token already exists, no update needed",
+        alreadyExists: true
+      });
+    }
+
+    // Only update if token is different or doesn't exist
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { 
+        $set: { 
+          fcmToken: token,
+          fcmTokenUpdatedAt: new Date() // Track when token was last updated
+        } 
+      },
+      { new: true }
+    );
+
+    console.log(`FCM token updated for user ${req.user.userId}`);
+
+    res.status(200).json({
+      success: true,
+      message: "FCM token saved successfully",
+      tokenUpdated: true
+    });
+  } catch (error) {
+    console.error("Error saving FCM token:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update daily quote preferences
+router.post("/preferences", auth, async (req, res) => {
+  try {
+    const { enabled, time, timezone, language, quoteType } = req.body;
+    const userId = req.user.userId;
+
+    const updateData = {};
+    let scheduleChanged = false;
+
+    // Track if schedule-related fields are being updated
+    if (enabled !== undefined) updateData["dailyQuotes.enabled"] = enabled;
+    
+    if (time) {
+      updateData["dailyQuotes.time"] = time;
+      scheduleChanged = true;
+    }
+    
+    if (timezone) {
+      updateData["dailyQuotes.timezone"] = timezone;
+      scheduleChanged = true;
+    }
+    
+    if (language) updateData["preferences.language"] = language;
+    if (quoteType) updateData["preferences.quoteType"] = quoteType;
+
+    // If time or timezone changed, reset lastSent so the new schedule
+    // fires today (otherwise the "already sent today" guard would block it).
+    if (scheduleChanged) {
+      updateData["dailyQuotes.scheduleUpdatedAt"] = new Date();
+      updateData["dailyQuotes.lastSent"] = null;
+      console.log(`Schedule updated for user ${userId}: time=${time}, timezone=${timezone}`);
+    }
+
+    await User.findByIdAndUpdate(userId, updateData);
+
+    res.status(200).json({
+      success: true,
+      message: "Preferences updated successfully",
+      scheduleChanged: scheduleChanged
+    });
+  } catch (error) {
+    console.error("Error updating preferences:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get user preferences
+router.get("/preferences", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select("dailyQuotes preferences");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      preferences: {
+        dailyQuotes: user.dailyQuotes,
+        preferences: user.preferences,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching preferences:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Manual send to all users (Admin only, guarded by ADMIN_API_KEY header)
+router.post("/send-all", async (req, res) => {
+  try {
+    const key = req.header('x-admin-key');
+    if (!process.env.ADMIN_API_KEY || key !== process.env.ADMIN_API_KEY) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    const result = await notificationService.sendDailyQuotesToAllUsers();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error sending to all users:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Backend routes for notifications management
+router.get('/user-notifications', auth, async (req, res) => {
+  try {
+    const notifications = await Notification.find({ userId: req.user.userId })
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    res.json({ success: true, notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/mark-read/:notificationId', auth, async (req, res) => {
+  try {
+    const updated = await Notification.findOneAndUpdate(
+      { _id: req.params.notificationId, userId: req.user.userId },
+      { isRead: true, readAt: new Date() },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/mark-all-read', auth, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user.userId, isRead: false },
+      { isRead: true, readAt: new Date() }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/delete/:notificationId', auth, async (req, res) => {
+  try {
+    const deleted = await Notification.findOneAndDelete({
+      _id: req.params.notificationId,
+      userId: req.user.userId
+    });
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/clear-all', auth, async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.user.userId });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+module.exports = router;

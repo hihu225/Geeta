@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Env files (never commit secrets)
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+
+# Build output
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# Vite / bundler caches
+.vite/
+**/.vite/
+
+# Capacitor / Android
+android/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+
+# iOS
+frontend/ios/App/build/
+frontend/ios/App/Pods/
+
+# Firebase service account (never commit)
+backend/config/*.json
+!backend/config/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+replay_pid*.log
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Misc
+*.tsbuildinfo

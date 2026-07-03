@@ -1,0 +1,340 @@
+/* ============================================================
+   Geeta — Premium Spiritual Design System
+   Design tokens: colors, typography, spacing, elevation, motion
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* ---------- Palette: warm midnight + saffron gold ---------- */
+  --bg-void:        #0a0715;
+  --bg-primary:     #120a24;
+  --bg-secondary:   #1a1029;
+  --bg-elevated:    #221535;
+  --bg-glass:       rgba(255, 255, 255, 0.035);
+  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+
+  --border-subtle:  rgba(245, 200, 120, 0.08);
+  --border-soft:    rgba(245, 200, 120, 0.14);
+  --border-strong:  rgba(245, 200, 120, 0.28);
+
+  /* Saffron / gold accents */
+  --gold:           #E6B85C;
+  --gold-bright:    #F5C97A;
+  --saffron:        #F5A623;
+  --saffron-deep:   #C67818;
+  --amber-glow:     rgba(245, 166, 35, 0.35);
+
+  /* Cool accents for contrast */
+  --lotus:          #C89EEB;
+  --lotus-deep:     #8E5CC7;
+
+  /* Text — tuned for reading contrast on dark bg */
+  --text-primary:   #FBF1DE;
+  --text-body:      rgba(251, 241, 222, 0.92);
+  --text-secondary: rgba(251, 241, 222, 0.78);
+  --text-muted:     rgba(251, 241, 222, 0.58);
+  --text-faint:     rgba(251, 241, 222, 0.32);
+
+  /* States */
+  --error:          #EF6C6C;
+  --error-soft:     rgba(239, 108, 108, 0.12);
+  --success:        #7BBA8A;
+  --success-soft:   rgba(123, 186, 138, 0.14);
+  --warning:        #F5B85A;
+
+  /* ---------- Gradients ---------- */
+  --grad-bg:        radial-gradient(ellipse at top left, #1e1338 0%, #120a24 45%, #0a0715 100%);
+  --grad-gold:      linear-gradient(135deg, #F5C97A 0%, #E6B85C 45%, #C67818 100%);
+  --grad-gold-soft: linear-gradient(135deg, rgba(245, 201, 122, 0.9) 0%, rgba(198, 120, 24, 0.9) 100%);
+  --grad-glass:     linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+  --grad-divider:   linear-gradient(90deg, transparent 0%, var(--border-soft) 50%, transparent 100%);
+
+  /* ---------- Elevation ---------- */
+  --shadow-sm:      0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md:      0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg:      0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-xl:      0 30px 80px rgba(0, 0, 0, 0.6);
+  --glow-gold:      0 0 40px rgba(245, 166, 35, 0.18);
+  --glow-gold-strong: 0 0 60px rgba(245, 166, 35, 0.35);
+  --glow-lotus:     0 0 40px rgba(200, 158, 235, 0.2);
+
+  /* Input backgrounds — cross-theme */
+  --input-bg:       rgba(10, 6, 22, 0.55);
+  --input-bg-hover: rgba(10, 6, 22, 0.7);
+  --input-bg-focus: rgba(10, 6, 22, 0.75);
+
+  /* ---------- Typography ---------- */
+  --font-display:   'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-body:      'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:      'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:  0.04em;
+  --tracking-wider: 0.12em;
+
+  /* ---------- Spacing & radius ---------- */
+  --r-xs:   6px;
+  --r-sm:   10px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-2xl:  36px;
+  --r-full: 999px;
+
+  /* ---------- Motion ---------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.7, 0, 0.3, 1);
+  --dur-fast:    180ms;
+  --dur-med:     320ms;
+  --dur-slow:    600ms;
+}
+
+/* ------------------------------------------------------------
+   Light mode — sacred ivory palette (clean, high contrast)
+   Applied when <body class="light"> is set by ThemeContext
+   ------------------------------------------------------------ */
+body.light {
+  /* Clean warm ivory backgrounds — reduced yellow saturation for readability */
+  --bg-void:        #EFE7D6;
+  --bg-primary:     #FAF6EC;
+  --bg-secondary:   #FFFCF5;
+  --bg-elevated:    #FFFFFF;
+  --bg-glass:       rgba(255, 255, 255, 0.72);
+  --bg-glass-hover: rgba(255, 255, 255, 0.88);
+
+  /* Warm gold borders — visible against ivory */
+  --border-subtle:  rgba(90, 55, 15, 0.14);
+  --border-soft:    rgba(90, 55, 15, 0.26);
+  --border-strong:  rgba(90, 55, 15, 0.48);
+
+  /* Rich saffron/maroon accents that pop on ivory */
+  --gold:           #B8791A;
+  --gold-bright:    #8A4B0F;
+  --saffron:        #BF5A0E;
+  --saffron-deep:   #7A3608;
+  --amber-glow:     rgba(184, 121, 26, 0.24);
+
+  --lotus:          #7A47B8;
+  --lotus-deep:     #5A2F94;
+
+  /* Deep coffee text — high contrast, easy to read */
+  --text-primary:   #1F1408;
+  --text-body:      #2E1E0E;
+  --text-secondary: rgba(31, 20, 8, 0.78);
+  --text-muted:     rgba(31, 20, 8, 0.58);
+  --text-faint:     rgba(31, 20, 8, 0.36);
+
+  --error:          #B02929;
+  --error-soft:     rgba(176, 41, 41, 0.10);
+  --success:        #2E7A46;
+  --success-soft:   rgba(46, 122, 70, 0.12);
+  --warning:        #B8791A;
+
+  --grad-bg:        radial-gradient(ellipse at top left, #FFFCF5 0%, #FAF6EC 50%, #EFE7D6 100%);
+  --grad-gold:      linear-gradient(135deg, #E5A93F 0%, #BF7318 45%, #7A3608 100%);
+  --grad-gold-soft: linear-gradient(135deg, rgba(229, 169, 63, 0.92) 0%, rgba(122, 54, 8, 0.88) 100%);
+  --grad-glass:     linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,252,245,0.72) 100%);
+  --grad-divider:   linear-gradient(90deg, transparent 0%, var(--border-soft) 50%, transparent 100%);
+
+  --shadow-sm:      0 2px 6px rgba(90, 55, 15, 0.08);
+  --shadow-md:      0 6px 20px rgba(90, 55, 15, 0.12);
+  --shadow-lg:      0 18px 48px rgba(90, 55, 15, 0.14);
+  --shadow-xl:      0 28px 72px rgba(90, 55, 15, 0.18);
+  --glow-gold:      0 0 32px rgba(191, 115, 24, 0.14);
+  --glow-gold-strong: 0 0 52px rgba(191, 115, 24, 0.24);
+  --glow-lotus:     0 0 36px rgba(122, 71, 184, 0.15);
+
+  --input-bg:       #FFFFFF;
+  --input-bg-hover: #FFFCF5;
+  --input-bg-focus: #FFFFFF;
+}
+
+/* Force-dark scope — for marketing/landing pages that must stay immersive dark
+   regardless of the user's theme preference. */
+.force-dark {
+  --bg-void:        #0a0715;
+  --bg-primary:     #120a24;
+  --bg-secondary:   #1a1029;
+  --bg-elevated:    #221535;
+  --bg-glass:       rgba(255, 255, 255, 0.035);
+  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+
+  --border-subtle:  rgba(245, 200, 120, 0.08);
+  --border-soft:    rgba(245, 200, 120, 0.14);
+  --border-strong:  rgba(245, 200, 120, 0.28);
+
+  --gold:           #E6B85C;
+  --gold-bright:    #F5C97A;
+  --saffron:        #F5A623;
+  --saffron-deep:   #C67818;
+  --amber-glow:     rgba(245, 166, 35, 0.35);
+
+  --text-primary:   #FBF1DE;
+  --text-body:      rgba(251, 241, 222, 0.92);
+  --text-secondary: rgba(251, 241, 222, 0.78);
+  --text-muted:     rgba(251, 241, 222, 0.58);
+  --text-faint:     rgba(251, 241, 222, 0.32);
+
+  --grad-bg:        radial-gradient(ellipse at top left, #1e1338 0%, #120a24 45%, #0a0715 100%);
+  --grad-glass:     linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+
+  --input-bg:       rgba(10, 6, 22, 0.55);
+  --input-bg-hover: rgba(10, 6, 22, 0.7);
+  --input-bg-focus: rgba(10, 6, 22, 0.75);
+
+  color: var(--text-body);
+  background: var(--grad-bg);
+}
+
+/* Primary button — cream text on deep-gold gradient reads better than dark-brown on gold in light mode */
+body.light .btn-primary {
+  color: #FFFCF5;
+  border-color: rgba(122, 54, 8, 0.5);
+  box-shadow: var(--shadow-md), var(--glow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+body.light .btn-primary::before {
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+}
+
+/* Ghost buttons keep readable text in light mode */
+body.light .btn-secondary {
+  color: var(--gold-bright);
+  border-color: var(--border-strong);
+}
+body.light .btn-secondary:hover:not(:disabled) {
+  background: rgba(191, 115, 24, 0.08);
+  color: var(--saffron-deep);
+}
+
+/* Inputs — light mode needs solid white background and dark placeholder */
+body.light input,
+body.light textarea,
+body.light select {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-soft);
+}
+body.light input::placeholder,
+body.light textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Scrollbars respect theme */
+body.light ::-webkit-scrollbar-thumb {
+  background: rgba(90, 55, 15, 0.28);
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background: rgba(245, 200, 120, 0.28);
+}
+
+/* ------------------------------------------------------------
+   Reusable primitives
+   ------------------------------------------------------------ */
+
+.glass-card {
+  background: var(--grad-glass);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.gold-divider {
+  height: 1px;
+  background: var(--grad-divider);
+  width: 100%;
+}
+
+/* Ornamental Om / mandala watermark hook */
+.spiritual-mark::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--border-soft) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+  mix-blend-mode: screen;
+}
+
+/* Focus ring — warm gold, subtle */
+.focus-ring:focus-visible,
+input.focus-ring:focus,
+button.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.22), 0 0 0 1px var(--gold);
+}
+
+/* Buttons — shared premium button */
+.btn-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: #1a0f00;
+  background: var(--grad-gold);
+  border: 1px solid rgba(255, 220, 150, 0.4);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-med) var(--ease-out),
+              filter var(--dur-fast) var(--ease-out);
+  box-shadow: var(--shadow-md), var(--glow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), var(--glow-gold-strong), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  filter: brightness(1.05);
+}
+.btn-primary:hover:not(:disabled)::before {
+  transform: translateX(100%);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.3);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 26px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-body);
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.btn-secondary:hover:not(:disabled) {
+  color: var(--gold-bright);
+  border-color: var(--border-strong);
+  background: rgba(245, 200, 120, 0.05);
+}

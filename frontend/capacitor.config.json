@@ -1,0 +1,13 @@
+{
+  "appId": "com.hihu.geetagpt",
+  "appName": "Geeta GPT",
+  "webDir": "dist",
+  "plugins": {
+    "SpeechRecognition": {
+      "language": "en-IN"
+    },
+    "Preferences": {
+      "group": "GeetaGptApp"
+    }
+  }
+}
