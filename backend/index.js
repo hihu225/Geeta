@@ -28,20 +28,35 @@ const SessionMeta = require('./models/sessionMeta');
 
 const app = express();
 
-const allowedOrigins = [
+// Static origins that are always allowed (dev + Capacitor).
+const staticOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://localhost",
-  "capacitor://localhost", // Capacitor Android
-  "http://localhost", // Capacitor iOS
-  process.env.CLIENT_URL,
-].filter(Boolean);
+  "capacitor://localhost",    // Capacitor Android
+  "http://localhost",         // Capacitor iOS
+];
+
+// CLIENT_URL can be a single URL or a comma-separated list of URLs.
+// e.g. CLIENT_URL="https://geeta-gpt14.vercel.app,https://custom-domain.com"
+const envOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [...staticOrigins, ...envOrigins];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (curl, mobile apps) with no origin
+    // Non-browser requests (curl, mobile shells) have no Origin header.
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow every Vercel preview / production URL for this project without
+    // having to update env vars on each deploy.
+    if (/^https:\/\/geeta-gpt[a-z0-9-]*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Rejected origin: ${origin}`);
     return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
